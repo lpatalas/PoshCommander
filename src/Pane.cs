@@ -88,6 +88,10 @@ namespace PoshCommander
                 highlightedIndex = Math.Max(0, highlightedIndex - 1);
             else if (keyInfo.Key == ConsoleKey.DownArrow)
                 highlightedIndex = Math.Min(items.Count - 1, highlightedIndex + 1);
+            else if (keyInfo.Key == ConsoleKey.PageUp)
+                highlightedIndex = Math.Max(0, highlightedIndex - maxVisibleItemCount + 1);
+            else if (keyInfo.Key == ConsoleKey.PageDown)
+                highlightedIndex = Math.Min(items.Count - 1, highlightedIndex + maxVisibleItemCount - 1);
 
             if (highlightedIndex < firstVisibleItemIndex)
                 firstVisibleItemIndex = highlightedIndex;
