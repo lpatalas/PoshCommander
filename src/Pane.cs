@@ -111,12 +111,16 @@ namespace PoshCommander
                 }
             }
 
+            ScrollToHighlightedItem();
+            DrawItems();
+        }
+
+        private void ScrollToHighlightedItem()
+        {
             if (highlightedIndex < firstVisibleItemIndex)
                 firstVisibleItemIndex = highlightedIndex;
             else if (highlightedIndex >= firstVisibleItemIndex + maxVisibleItemCount)
                 firstVisibleItemIndex = highlightedIndex - maxVisibleItemCount + 1;
-
-            DrawItems();
         }
 
         public void Redraw()
@@ -128,10 +132,17 @@ namespace PoshCommander
 
         private void ChangeDirectory(string directoryPath, bool redraw)
         {
+            var previousDirectoryPath = currentDirectoryPath;
             currentDirectoryPath = directoryPath;
             firstVisibleItemIndex = 0;
-            highlightedIndex = 0;
             items = CreateItemList(directoryPath);
+
+            highlightedIndex = items
+                .FirstIndexOf(item => string.Equals(item.FullPath, previousDirectoryPath, StringComparison.OrdinalIgnoreCase))
+                .GetValueOrDefault(0);
+
+            ScrollToHighlightedItem();
+
             if (redraw)
                 Redraw();
         }
