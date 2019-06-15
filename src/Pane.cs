@@ -27,36 +27,64 @@ namespace PoshCommander
         }
     }
 
+    public enum PaneState
+    {
+        Inactive,
+        Active
+    }
+
     public class Pane
     {
-        private static readonly ConsoleTextStyle titleBarStyle
-            = new ConsoleTextStyle(ConsoleColor.DarkGray, ConsoleColor.Yellow);
         private static readonly ConsoleTextStyle itemStyle
             = new ConsoleTextStyle(ConsoleColor.Black, ConsoleColor.White);
+        private static readonly ConsoleTextStyle statusBarStyle
+            = new ConsoleTextStyle(ConsoleColor.DarkGray, ConsoleColor.Black);
+        private static readonly ConsoleTextStyle titleBarStyleActive
+            = new ConsoleTextStyle(ConsoleColor.DarkBlue, ConsoleColor.Yellow);
+        private static readonly ConsoleTextStyle titleBarStyleInactive
+            = new ConsoleTextStyle(ConsoleColor.DarkGray, ConsoleColor.Yellow);
 
         private readonly Rectangle bounds;
         private readonly string directoryPath;
         private readonly IReadOnlyList<Item> items;
         private readonly PSHostUserInterface ui;
 
-        public Pane(string directoryPath, Rectangle bounds, PSHostUserInterface ui)
+        public PaneState State { get; private set; }
+
+        public Pane(
+            string directoryPath,
+            Rectangle bounds,
+            PaneState paneState,
+            PSHostUserInterface ui)
         {
             this.bounds = bounds;
             this.directoryPath = directoryPath;
+            this.State = paneState;
             this.items = CreateItemList(directoryPath);
             this.ui = ui;
+        }
 
-            Redraw();
+        public void Activate()
+        {
+            State = PaneState.Active;
+            DrawTitleBar();
+        }
+
+        public void Deactivate()
+        {
+            State = PaneState.Inactive;
+            DrawTitleBar();
         }
 
         public void ProcessKey(ConsoleKeyInfo keyInfo)
         {
         }
 
-        private void Redraw()
+        public void Redraw()
         {
             DrawTitleBar();
             DrawItems();
+            DrawStatusBar();
         }
 
         private void DrawItems()
@@ -70,11 +98,23 @@ namespace PoshCommander
             }
         }
 
+        private void DrawStatusBar()
+        {
+            var fileCount = items.Count(item => item.Kind == ItemKind.File);
+            var directoryCount = items.Count(item => item.Kind == ItemKind.Directory);
+            var text = $"Files: {fileCount}, Directories: {directoryCount}";
+            ui.WriteBlockAt(text, bounds.GetBottomLeft(), bounds.GetWidth(), statusBarStyle);
+        }
+
         private void DrawTitleBar()
         {
-            var text = directoryPath;
-            text += new string(' ', bounds.GetWidth() - directoryPath.Length);
-            ui.WriteAt(text, bounds.GetTopLeft(), titleBarStyle);
+            ui.WriteBlockAt(
+                directoryPath,
+                bounds.GetTopLeft(),
+                bounds.GetWidth(),
+                State == PaneState.Active
+                    ? titleBarStyleActive
+                    : titleBarStyleInactive);
         }
 
         private static IReadOnlyList<Item> CreateItemList(string directoryPath)

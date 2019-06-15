@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Management.Automation;
 using System.Management.Automation.Host;
 
@@ -27,18 +28,38 @@ namespace PoshCommander
                 var leftPane = new Pane(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                     leftPaneBounds,
+                    PaneState.Active,
                     Host.UI);
 
                 var rightPane = new Pane(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     rightPaneBounds,
+                    PaneState.Inactive,
                     Host.UI);
+
+                leftPane.Redraw();
+                rightPane.Redraw();
 
                 while (true)
                 {
                     var keyInfo = Console.ReadKey(intercept: true);
                     if (keyInfo.Key == ConsoleKey.Q)
                         break;
+
+                    if (keyInfo.Key == ConsoleKey.Tab)
+                    {
+                        if (leftPane.State == PaneState.Active)
+                        {
+                            leftPane.Deactivate();
+                            rightPane.Activate();
+                        }
+                        else
+                        {
+                            leftPane.Activate();
+                            rightPane.Deactivate();
+                        }
+
+                    }
                 }
             }
         }

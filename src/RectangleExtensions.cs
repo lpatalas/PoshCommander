@@ -4,6 +4,9 @@ namespace PoshCommander
 {
     public static class RectangleExtensions
     {
+        public static Coordinates GetBottomLeft(this Rectangle rectangle)
+            => new Coordinates(rectangle.Left, rectangle.Bottom);
+
         public static int GetHeight(this Rectangle rectangle)
             => rectangle.Bottom - rectangle.Top + 1;
 

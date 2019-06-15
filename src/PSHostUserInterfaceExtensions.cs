@@ -16,5 +16,16 @@ namespace PoshCommander
                 textStyle.BackgroundColor,
                 text);
         }
+
+        public static void WriteBlockAt(
+            this PSHostUserInterface ui,
+            string text,
+            Coordinates coordinates,
+            int blockWidth,
+            ConsoleTextStyle textStyle)
+        {
+            var paddedText = text + new string(' ', blockWidth - text.Length);
+            ui.WriteAt(paddedText, coordinates, textStyle);
+        }
     }
 }
