@@ -1,4 +1,5 @@
-﻿using System.Management.Automation;
+﻿using System;
+using System.Management.Automation;
 
 namespace PoshCommander
 {
@@ -7,7 +8,16 @@ namespace PoshCommander
     {
         protected override void BeginProcessing()
         {
-            Host.UI.Write("Hello PoshCommander!");
+            using (new ConsoleBufferSnapshot(Host.UI.RawUI))
+            {
+                Host.UI.Write("Hello PoshCommander!");
+                while (true)
+                {
+                    var keyInfo = Console.ReadKey(intercept: true);
+                    if (keyInfo.Key == ConsoleKey.Q)
+                        break;
+                }
+            }
         }
     }
 }
