@@ -24,6 +24,9 @@ namespace PoshCommander
             int blockWidth,
             ConsoleTextStyle textStyle)
         {
+            if (text.Length > blockWidth)
+                text = text.Substring(0, blockWidth - 3) + "...";
+
             var paddedText = text + new string(' ', blockWidth - text.Length);
             ui.WriteAt(paddedText, coordinates, textStyle);
         }

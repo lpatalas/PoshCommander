@@ -56,10 +56,10 @@ namespace PoshCommander
             = new ConsoleTextStyle(ConsoleColor.DarkGray, ConsoleColor.Yellow);
 
         private readonly Rectangle bounds;
-        private readonly string directoryPath;
+        private string currentDirectoryPath;
         private int firstVisibleItemIndex;
         private int highlightedIndex;
-        private readonly IReadOnlyList<Item> items;
+        private IReadOnlyList<Item> items;
         private readonly int maxVisibleItemCount;
         private readonly PSHostUserInterface ui;
 
@@ -72,11 +72,11 @@ namespace PoshCommander
             PSHostUserInterface ui)
         {
             this.bounds = bounds;
-            this.directoryPath = directoryPath;
             this.State = paneState;
-            this.items = CreateItemList(directoryPath);
             this.maxVisibleItemCount = bounds.GetHeight() - 2;
             this.ui = ui;
+
+            ChangeDirectory(directoryPath, redraw: false);
         }
 
         public void Activate()
@@ -101,6 +101,15 @@ namespace PoshCommander
                 highlightedIndex = Math.Max(0, highlightedIndex - maxVisibleItemCount + 1);
             else if (keyInfo.Key == ConsoleKey.PageDown)
                 highlightedIndex = Math.Min(items.Count - 1, highlightedIndex + maxVisibleItemCount - 1);
+            else if (keyInfo.Key == ConsoleKey.Enter)
+            {
+                var highlightedItem = items[highlightedIndex];
+                if (highlightedItem.Kind == ItemKind.Directory)
+                {
+                    ChangeDirectory(highlightedItem.FullPath, true);
+                    return;
+                }
+            }
 
             if (highlightedIndex < firstVisibleItemIndex)
                 firstVisibleItemIndex = highlightedIndex;
@@ -117,16 +126,29 @@ namespace PoshCommander
             DrawStatusBar();
         }
 
+        private void ChangeDirectory(string directoryPath, bool redraw)
+        {
+            currentDirectoryPath = directoryPath;
+            firstVisibleItemIndex = 0;
+            highlightedIndex = 0;
+            items = CreateItemList(directoryPath);
+            if (redraw)
+                Redraw();
+        }
+
         private void DrawItems()
         {
-            var visibleCount = Math.Min(items.Count, maxVisibleItemCount);
-
-            for (var i = 0; i < visibleCount; i++)
+            for (var i = 0; i < maxVisibleItemCount; i++)
             {
                 var pos = new Coordinates(bounds.Left, bounds.Top + i + 1);
                 var itemIndex = i + firstVisibleItemIndex;
+                var text
+                    = itemIndex < items.Count
+                    ? items[itemIndex].Name
+                    : string.Empty;
+
                 ui.WriteBlockAt(
-                    items[itemIndex].Name,
+                    text,
                     pos,
                     bounds.GetWidth(),
                     itemIndex == highlightedIndex
@@ -146,7 +168,7 @@ namespace PoshCommander
         private void DrawTitleBar()
         {
             ui.WriteBlockAt(
-                directoryPath,
+                currentDirectoryPath,
                 bounds.GetTopLeft(),
                 bounds.GetWidth(),
                 State == PaneState.Active
