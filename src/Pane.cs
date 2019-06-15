@@ -48,8 +48,10 @@ namespace PoshCommander
 
         private readonly Rectangle bounds;
         private readonly string directoryPath;
+        private int firstVisibleItemIndex;
         private int highlightedIndex;
         private readonly IReadOnlyList<Item> items;
+        private readonly int maxVisibleItemCount;
         private readonly PSHostUserInterface ui;
 
         public PaneState State { get; private set; }
@@ -64,6 +66,7 @@ namespace PoshCommander
             this.directoryPath = directoryPath;
             this.State = paneState;
             this.items = CreateItemList(directoryPath);
+            this.maxVisibleItemCount = bounds.GetHeight() - 2;
             this.ui = ui;
         }
 
@@ -86,6 +89,11 @@ namespace PoshCommander
             else if (keyInfo.Key == ConsoleKey.DownArrow)
                 highlightedIndex = Math.Min(items.Count - 1, highlightedIndex + 1);
 
+            if (highlightedIndex < firstVisibleItemIndex)
+                firstVisibleItemIndex = highlightedIndex;
+            else if (highlightedIndex >= firstVisibleItemIndex + maxVisibleItemCount)
+                firstVisibleItemIndex = highlightedIndex - maxVisibleItemCount + 1;
+
             DrawItems();
         }
 
@@ -98,16 +106,17 @@ namespace PoshCommander
 
         private void DrawItems()
         {
-            var visibleCount = bounds.GetHeight() - 2;
+            var visibleCount = Math.Min(items.Count, maxVisibleItemCount);
 
             for (var i = 0; i < visibleCount; i++)
             {
                 var pos = new Coordinates(bounds.Left, bounds.Top + i + 1);
+                var itemIndex = i + firstVisibleItemIndex;
                 ui.WriteBlockAt(
-                    items[i].Name,
+                    items[itemIndex].Name,
                     pos,
                     bounds.GetWidth(),
-                    i == highlightedIndex
+                    itemIndex == highlightedIndex
                         ? itemStyleHighlighted
                         : itemStyle);
             }
