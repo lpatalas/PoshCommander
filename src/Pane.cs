@@ -19,11 +19,20 @@ namespace PoshCommander
         public ItemKind Kind { get; }
         public string Name { get; }
 
-        public Item(ItemKind kind, string fullPath)
+        public static Item Directory(string fullPath)
+            => Directory(fullPath, Path.GetFileName(fullPath));
+
+        public static Item Directory(string fullPath, string name)
+            => new Item(fullPath, ItemKind.Directory, name);
+
+        public static Item File(string fullPath)
+            => new Item(fullPath, ItemKind.File, Path.GetFileName(fullPath));
+
+        private Item(string fullPath, ItemKind kind, string name)
         {
             Kind = kind;
             FullPath = fullPath;
-            Name = Path.GetFileName(fullPath);
+            Name = name;
         }
     }
 
@@ -147,12 +156,19 @@ namespace PoshCommander
 
         private static IReadOnlyList<Item> CreateItemList(string directoryPath)
         {
-            var directories = Directory.EnumerateDirectories(directoryPath)
-                .Select(path => new Item(ItemKind.Directory, path));
-            var files = Directory.EnumerateFiles(directoryPath)
-                .Select(path => new Item(ItemKind.File, path));
+            var parentInfo = Directory.GetParent(directoryPath);
+            var parentItems
+                = parentInfo != null
+                ? Enumerable.Repeat(Item.Directory(parentInfo.FullName, ".."), 1)
+                : Enumerable.Empty<Item>();
 
-            return directories
+            var directories = Directory.EnumerateDirectories(directoryPath)
+                .Select(Item.Directory);
+            var files = Directory.EnumerateFiles(directoryPath)
+                .Select(Item.File);
+
+            return parentItems
+                .Concat(directories)
                 .Concat(files)
                 .ToList();
         }
