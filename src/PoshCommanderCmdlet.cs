@@ -43,10 +43,12 @@ namespace PoshCommander
                 while (true)
                 {
                     var keyInfo = Console.ReadKey(intercept: true);
-                    if (keyInfo.Key == ConsoleKey.Q)
-                        break;
 
-                    if (keyInfo.Key == ConsoleKey.Tab)
+                    if (keyInfo.Key == ConsoleKey.Q)
+                    {
+                        break;
+                    }
+                    else if (keyInfo.Key == ConsoleKey.Tab)
                     {
                         if (leftPane.State == PaneState.Active)
                         {
@@ -59,6 +61,13 @@ namespace PoshCommander
                             rightPane.Deactivate();
                         }
 
+                    }
+                    else
+                    {
+                        if (leftPane.State == PaneState.Active)
+                            leftPane.ProcessKey(keyInfo);
+                        else
+                            rightPane.ProcessKey(keyInfo);
                     }
                 }
             }

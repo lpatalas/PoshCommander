@@ -37,6 +37,8 @@ namespace PoshCommander
     {
         private static readonly ConsoleTextStyle itemStyle
             = new ConsoleTextStyle(ConsoleColor.Black, ConsoleColor.White);
+        private static readonly ConsoleTextStyle itemStyleHighlighted
+            = new ConsoleTextStyle(ConsoleColor.DarkRed, ConsoleColor.White);
         private static readonly ConsoleTextStyle statusBarStyle
             = new ConsoleTextStyle(ConsoleColor.DarkGray, ConsoleColor.Black);
         private static readonly ConsoleTextStyle titleBarStyleActive
@@ -46,6 +48,7 @@ namespace PoshCommander
 
         private readonly Rectangle bounds;
         private readonly string directoryPath;
+        private int highlightedIndex;
         private readonly IReadOnlyList<Item> items;
         private readonly PSHostUserInterface ui;
 
@@ -78,6 +81,12 @@ namespace PoshCommander
 
         public void ProcessKey(ConsoleKeyInfo keyInfo)
         {
+            if (keyInfo.Key == ConsoleKey.UpArrow)
+                highlightedIndex = Math.Max(0, highlightedIndex - 1);
+            else if (keyInfo.Key == ConsoleKey.DownArrow)
+                highlightedIndex = Math.Min(items.Count - 1, highlightedIndex + 1);
+
+            DrawItems();
         }
 
         public void Redraw()
@@ -94,7 +103,13 @@ namespace PoshCommander
             for (var i = 0; i < visibleCount; i++)
             {
                 var pos = new Coordinates(bounds.Left, bounds.Top + i + 1);
-                ui.WriteAt(items[i].Name, pos, itemStyle);
+                ui.WriteBlockAt(
+                    items[i].Name,
+                    pos,
+                    bounds.GetWidth(),
+                    i == highlightedIndex
+                        ? itemStyleHighlighted
+                        : itemStyle);
             }
         }
 
