@@ -37,9 +37,6 @@ namespace PoshCommander
                     PaneState.Inactive,
                     Host.UI);
 
-                leftPane.Redraw();
-                rightPane.Redraw();
-
                 while (true)
                 {
                     var keyInfo = Console.ReadKey(intercept: true);
@@ -52,13 +49,13 @@ namespace PoshCommander
                     {
                         if (leftPane.State == PaneState.Active)
                         {
-                            leftPane.Deactivate();
-                            rightPane.Activate();
+                            leftPane.State = PaneState.Inactive;
+                            rightPane.State = PaneState.Active;
                         }
                         else
                         {
-                            leftPane.Activate();
-                            rightPane.Deactivate();
+                            leftPane.State = PaneState.Active;
+                            rightPane.State = PaneState.Inactive;
                         }
 
                     }

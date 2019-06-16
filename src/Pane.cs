@@ -3,22 +3,21 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management.Automation.Host;
-using System.Text;
 
 namespace PoshCommander
 {
     public class Pane
     {
-        private readonly Rectangle bounds;
         private string currentDirectoryPath;
-        private int firstVisibleItemIndex;
-        private int highlightedIndex;
         private IReadOnlyList<FileSystemItem> items;
-        private readonly int maxVisibleItemCount;
-        private readonly Theme theme = Theme.Default;
-        private readonly PSHostUserInterface ui;
+        private readonly PaneView view;
 
-        public PaneState State { get; private set; }
+        private PaneState stateValue;
+        public PaneState State
+        {
+            get => stateValue;
+            set => ChangePaneState(value);
+        }
 
         public Pane(
             string directoryPath,
@@ -26,43 +25,32 @@ namespace PoshCommander
             PaneState paneState,
             PSHostUserInterface ui)
         {
-            this.bounds = bounds;
-            this.State = paneState;
-            this.maxVisibleItemCount = bounds.GetHeight() - 2;
-            this.ui = ui;
+            this.stateValue = paneState;
+            this.view = new PaneView(bounds, ui)
+            {
+                PaneState = State
+            };
 
-            ChangeDirectory(directoryPath, redraw: false);
-        }
-
-        public void Activate()
-        {
-            State = PaneState.Active;
-            DrawTitleBar();
-        }
-
-        public void Deactivate()
-        {
-            State = PaneState.Inactive;
-            DrawTitleBar();
+            ChangeDirectory(directoryPath, redraw: true);
         }
 
         public void ProcessKey(ConsoleKeyInfo keyInfo)
         {
             if (keyInfo.Key == ConsoleKey.UpArrow)
-                highlightedIndex = Math.Max(0, highlightedIndex - 1);
+                view.HighlightedIndex = Math.Max(0, view.HighlightedIndex - 1);
             else if (keyInfo.Key == ConsoleKey.DownArrow)
-                highlightedIndex = Math.Min(items.Count - 1, highlightedIndex + 1);
+                view.HighlightedIndex = Math.Min(items.Count - 1, view.HighlightedIndex + 1);
             else if (keyInfo.Key == ConsoleKey.PageUp)
-                highlightedIndex = Math.Max(0, highlightedIndex - maxVisibleItemCount + 1);
+                view.HighlightedIndex = Math.Max(0, view.HighlightedIndex - view.MaxVisibleItemCount + 1);
             else if (keyInfo.Key == ConsoleKey.PageDown)
-                highlightedIndex = Math.Min(items.Count - 1, highlightedIndex + maxVisibleItemCount - 1);
+                view.HighlightedIndex = Math.Min(items.Count - 1, view.HighlightedIndex + view.MaxVisibleItemCount - 1);
             else if (keyInfo.Key == ConsoleKey.Home)
-                highlightedIndex = 0;
+                view.HighlightedIndex = 0;
             else if (keyInfo.Key == ConsoleKey.End)
-                highlightedIndex = items.Count - 1;
+                view.HighlightedIndex = items.Count - 1;
             else if (keyInfo.Key == ConsoleKey.Enter)
             {
-                var highlightedItem = items[highlightedIndex];
+                var highlightedItem = items[view.HighlightedIndex];
                 if (highlightedItem.Kind == FileSystemItemKind.Directory)
                 {
                     ChangeDirectory(highlightedItem.FullPath, true);
@@ -70,108 +58,41 @@ namespace PoshCommander
                 }
             }
 
-            ScrollToHighlightedItem();
-            DrawItems();
+            view.ScrollToHighlightedItem();
+            view.DrawItems();
         }
 
-        private void ScrollToHighlightedItem()
+        private void ChangePaneState(PaneState newState)
         {
-            if (highlightedIndex < firstVisibleItemIndex)
-                firstVisibleItemIndex = highlightedIndex;
-            else if (highlightedIndex >= firstVisibleItemIndex + maxVisibleItemCount)
-                firstVisibleItemIndex = highlightedIndex - maxVisibleItemCount + 1;
-        }
-
-        public void Redraw()
-        {
-            DrawTitleBar();
-            DrawItems();
-            DrawStatusBar();
+            stateValue = newState;
+            view.PaneState = State;
+            view.Redraw();
         }
 
         private void ChangeDirectory(string directoryPath, bool redraw)
         {
             var previousDirectoryPath = currentDirectoryPath;
             currentDirectoryPath = directoryPath;
-            firstVisibleItemIndex = 0;
             items = CreateItemList(directoryPath);
 
-            highlightedIndex = items
+            view.HighlightedIndex = items
                 .FirstIndexOf(item => string.Equals(item.FullPath, previousDirectoryPath, StringComparison.OrdinalIgnoreCase))
                 .GetValueOrDefault(0);
 
-            ScrollToHighlightedItem();
+            view.Items = items;
+            view.StatusText = FormatStatusText();
+            view.Title = currentDirectoryPath;
+            view.ScrollToHighlightedItem();
 
             if (redraw)
-                Redraw();
+                view.Redraw();
         }
 
-        private void DrawItems()
-        {
-            for (var i = 0; i < maxVisibleItemCount; i++)
-            {
-                var pos = new Coordinates(bounds.Left, bounds.Top + i + 1);
-                var itemIndex = i + firstVisibleItemIndex;
-
-                var backgroundColor
-                    = itemIndex == highlightedIndex ? theme.RowHightlighedBackground
-                    : (itemIndex % 2) == 0 ? theme.RowEvenBackground
-                    : theme.RowOddBackground;
-
-                var itemStyle = new ConsoleTextStyle(
-                    backgroundColor,
-                    theme.ItemNormalForeground);
-
-                if (itemIndex < items.Count)
-                {
-                    var item = items[itemIndex];
-                    var icon
-                        = item.Kind == FileSystemItemKind.Directory ? $"{AnsiEscapeCodes.ForegroundColor(theme.IconFolderForeground)}\uF74A"
-                        : item.Kind == FileSystemItemKind.File ? "\uF723"
-                        : item.Kind == FileSystemItemKind.SymbolicLink ? "\uF751"
-                        : throw new InvalidOperationException($"Invalid enum value: {item.Kind}");
-
-                    var text = $"{icon} {AnsiEscapeCodes.ForegroundColor(theme.ItemNormalForeground)}{item.Name}";
-
-                    ui.WriteBlockAt(
-                        text,
-                        pos,
-                        bounds.GetWidth(),
-                        itemStyle);
-                }
-                else
-                {
-                    ui.WriteBlockAt(
-                        string.Empty,
-                        pos,
-                        bounds.GetWidth(),
-                        itemStyle);
-                }
-            }
-        }
-
-        private void DrawStatusBar()
+        private string FormatStatusText()
         {
             var fileCount = items.Count(item => item.Kind == FileSystemItemKind.File);
             var directoryCount = items.Count(item => item.Kind == FileSystemItemKind.Directory);
-            var text = $"Files: {fileCount}, Directories: {directoryCount}";
-
-            var statusBarStyle = new ConsoleTextStyle(
-                theme.StatusBarBackground,
-                theme.StatusBarForeground);
-
-            ui.WriteBlockAt(text, bounds.GetBottomLeft(), bounds.GetWidth(), statusBarStyle);
-        }
-
-        private void DrawTitleBar()
-        {
-            ui.WriteBlockAt(
-                currentDirectoryPath,
-                bounds.GetTopLeft(),
-                bounds.GetWidth(),
-                State == PaneState.Active
-                    ? new ConsoleTextStyle(theme.TitleBarActiveBackground, theme.TitleBarActiveForeground)
-                    : new ConsoleTextStyle(theme.TitleBarInactiveBackground, theme.TitleBarInactiveForeground));
+            return $"Files: {fileCount}, Directories: {directoryCount}";
         }
 
         private static IReadOnlyList<FileSystemItem> CreateItemList(string directoryPath)
