@@ -44,10 +44,12 @@ namespace PoshCommander
 
     public class Pane
     {
-        private static readonly ConsoleTextStyle itemStyle
+        private static readonly ConsoleTextStyle itemStyleEven
             = new ConsoleTextStyle(new RgbColor(29, 40, 61), RgbColor.White);
+        private static readonly ConsoleTextStyle itemStyleOdd
+            = new ConsoleTextStyle(new RgbColor(33, 45, 67), RgbColor.White);
         private static readonly ConsoleTextStyle itemStyleHighlighted
-            = new ConsoleTextStyle(new RgbColor(100, 100, 100), RgbColor.White);
+            = new ConsoleTextStyle(new RgbColor(26, 64, 105), RgbColor.White);
         private static readonly ConsoleTextStyle statusBarStyle
             = new ConsoleTextStyle(new RgbColor(80, 80, 80), new RgbColor(200, 200, 200));
         private static readonly ConsoleTextStyle titleBarStyleActive
@@ -166,9 +168,9 @@ namespace PoshCommander
                     text,
                     pos,
                     bounds.GetWidth(),
-                    itemIndex == highlightedIndex
-                        ? itemStyleHighlighted
-                        : itemStyle);
+                    itemIndex == highlightedIndex ? itemStyleHighlighted
+                        : (itemIndex % 2) == 0 ? itemStyleEven
+                        : itemStyleOdd);
             }
         }
 
