@@ -9,25 +9,13 @@ namespace PoshCommander
 {
     public class Pane
     {
-        private static readonly ConsoleTextStyle itemStyleEven
-            = new ConsoleTextStyle(new RgbColor(29, 40, 61), RgbColor.White);
-        private static readonly ConsoleTextStyle itemStyleOdd
-            = new ConsoleTextStyle(new RgbColor(33, 45, 67), RgbColor.White);
-        private static readonly ConsoleTextStyle itemStyleHighlighted
-            = new ConsoleTextStyle(new RgbColor(26, 64, 105), RgbColor.White);
-        private static readonly ConsoleTextStyle statusBarStyle
-            = new ConsoleTextStyle(new RgbColor(80, 80, 80), new RgbColor(200, 200, 200));
-        private static readonly ConsoleTextStyle titleBarStyleActive
-            = new ConsoleTextStyle(new RgbColor(64, 64, 192), new RgbColor(255, 255, 128));
-        private static readonly ConsoleTextStyle titleBarStyleInactive
-            = new ConsoleTextStyle(new RgbColor(64, 64, 64), new RgbColor(128, 128, 128));
-
         private readonly Rectangle bounds;
         private string currentDirectoryPath;
         private int firstVisibleItemIndex;
         private int highlightedIndex;
         private IReadOnlyList<FileSystemItem> items;
         private readonly int maxVisibleItemCount;
+        private readonly Theme theme = Theme.Default;
         private readonly PSHostUserInterface ui;
 
         public PaneState State { get; private set; }
@@ -124,10 +112,15 @@ namespace PoshCommander
             {
                 var pos = new Coordinates(bounds.Left, bounds.Top + i + 1);
                 var itemIndex = i + firstVisibleItemIndex;
-                var itemStyle
-                    = itemIndex == highlightedIndex ? itemStyleHighlighted
-                    : (itemIndex % 2) == 0 ? itemStyleEven
-                    : itemStyleOdd;
+
+                var backgroundColor
+                    = itemIndex == highlightedIndex ? theme.RowHightlighedBackground
+                    : (itemIndex % 2) == 0 ? theme.RowEvenBackground
+                    : theme.RowOddBackground;
+
+                var itemStyle = new ConsoleTextStyle(
+                    backgroundColor,
+                    theme.ItemNormalForeground);
 
                 if (itemIndex < items.Count)
                 {
@@ -162,6 +155,11 @@ namespace PoshCommander
             var fileCount = items.Count(item => item.Kind == FileSystemItemKind.File);
             var directoryCount = items.Count(item => item.Kind == FileSystemItemKind.Directory);
             var text = $"Files: {fileCount}, Directories: {directoryCount}";
+
+            var statusBarStyle = new ConsoleTextStyle(
+                theme.StatusBarBackground,
+                theme.StatusBarForeground);
+
             ui.WriteBlockAt(text, bounds.GetBottomLeft(), bounds.GetWidth(), statusBarStyle);
         }
 
@@ -172,8 +170,8 @@ namespace PoshCommander
                 bounds.GetTopLeft(),
                 bounds.GetWidth(),
                 State == PaneState.Active
-                    ? titleBarStyleActive
-                    : titleBarStyleInactive);
+                    ? new ConsoleTextStyle(theme.TitleBarActiveBackground, theme.TitleBarActiveForeground)
+                    : new ConsoleTextStyle(theme.TitleBarInactiveBackground, theme.TitleBarInactiveForeground));
         }
 
         private static IReadOnlyList<FileSystemItem> CreateItemList(string directoryPath)
