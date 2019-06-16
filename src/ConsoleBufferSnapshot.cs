@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Management.Automation.Host;
 
 namespace PoshCommander
@@ -27,10 +28,9 @@ namespace PoshCommander
             var bufferRect = new Rectangle(0, 0, bufferSize.Width - 1, bufferSize.Height - 1);
             this.originalBuffer = rawUI.GetBufferContents(bufferRect);
 
-            var bufferCell = new BufferCell(' ', ConsoleColor.Gray, ConsoleColor.Black, BufferCellType.Complete);
-            var newBuffer = rawUI.NewBufferCellArray(bufferSize, bufferCell);
-            rawUI.SetBufferContents(ZeroCoordinates, newBuffer);
-            rawUI.CursorPosition = ZeroCoordinates;
+            var windowSize = rawUI.WindowSize;
+            rawUI.WindowPosition = new Coordinates(0, bufferSize.Height - windowSize.Height);
+            rawUI.CursorPosition = new Coordinates(0, bufferSize.Height - windowSize.Height);
             rawUI.CursorSize = 0;
         }
 

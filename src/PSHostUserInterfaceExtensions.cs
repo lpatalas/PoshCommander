@@ -10,11 +10,11 @@ namespace PoshCommander
             Coordinates coordinates,
             ConsoleTextStyle textStyle)
         {
-            ui.RawUI.CursorPosition = coordinates;
-            ui.Write(
-                textStyle.ForegroundColor,
-                textStyle.BackgroundColor,
-                text);
+            ui.RawUI.CursorPosition = new Coordinates(
+                coordinates.X,
+                1000 - ui.RawUI.WindowSize.Height + coordinates.Y);
+            var styledText = textStyle.ApplyTo(text);
+            ui.Write(styledText);
         }
 
         public static void WriteBlockAt(

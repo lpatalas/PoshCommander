@@ -45,15 +45,15 @@ namespace PoshCommander
     public class Pane
     {
         private static readonly ConsoleTextStyle itemStyle
-            = new ConsoleTextStyle(ConsoleColor.Black, ConsoleColor.White);
+            = new ConsoleTextStyle(new RgbColor(29, 40, 61), RgbColor.White);
         private static readonly ConsoleTextStyle itemStyleHighlighted
-            = new ConsoleTextStyle(ConsoleColor.DarkRed, ConsoleColor.White);
+            = new ConsoleTextStyle(new RgbColor(100, 100, 100), RgbColor.White);
         private static readonly ConsoleTextStyle statusBarStyle
-            = new ConsoleTextStyle(ConsoleColor.DarkGray, ConsoleColor.Black);
+            = new ConsoleTextStyle(new RgbColor(80, 80, 80), new RgbColor(200, 200, 200));
         private static readonly ConsoleTextStyle titleBarStyleActive
-            = new ConsoleTextStyle(ConsoleColor.DarkBlue, ConsoleColor.Yellow);
+            = new ConsoleTextStyle(new RgbColor(64, 64, 192), new RgbColor(255, 255, 128));
         private static readonly ConsoleTextStyle titleBarStyleInactive
-            = new ConsoleTextStyle(ConsoleColor.DarkGray, ConsoleColor.Yellow);
+            = new ConsoleTextStyle(new RgbColor(64, 64, 64), new RgbColor(128, 128, 128));
 
         private readonly Rectangle bounds;
         private string currentDirectoryPath;

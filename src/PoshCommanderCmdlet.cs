@@ -16,13 +16,13 @@ namespace PoshCommander
                 var leftPaneBounds = new Rectangle(
                     left: 0,
                     top: 0,
-                    right: windowSize.Width / 2,
+                    right: windowSize.Width / 2 - 1,
                     bottom: windowSize.Height - 1);
 
                 var rightPaneBounds = new Rectangle(
                     left: leftPaneBounds.Right + 2,
                     top: 0,
-                    right: windowSize.Width - 1,
+                    right: windowSize.Width - 2,
                     bottom: windowSize.Height - 1);
 
                 var leftPane = new Pane(
