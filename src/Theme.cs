@@ -2,6 +2,7 @@
 {
     public class Theme
     {
+        public RgbColor IconFolderForeground { get; set; }
         public RgbColor ItemNormalForeground { get; set; }
         public RgbColor RowEvenBackground { get; set; }
         public RgbColor RowHightlighedBackground { get; set; }
@@ -15,6 +16,7 @@
 
         public static readonly Theme Default = new Theme
         {
+            IconFolderForeground = new RgbColor(255, 192, 64),
             ItemNormalForeground = new RgbColor(255, 255, 255),
             RowEvenBackground = new RgbColor(29, 40, 61),
             RowHightlighedBackground = new RgbColor(26, 64, 105),

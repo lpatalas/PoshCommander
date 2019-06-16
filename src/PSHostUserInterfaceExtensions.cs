@@ -24,10 +24,12 @@ namespace PoshCommander
             int blockWidth,
             ConsoleTextStyle textStyle)
         {
-            if (text.Length > blockWidth)
+            var textLength = AnsiEscapeCodes.StripEscapeCodes(text).Length;
+
+            if (textLength > blockWidth)
                 text = text.Substring(0, blockWidth - 3) + "...";
 
-            var paddedText = text + new string(' ', blockWidth - text.Length);
+            var paddedText = text + new string(' ', blockWidth - textLength);
             ui.WriteAt(paddedText, coordinates, textStyle);
         }
     }

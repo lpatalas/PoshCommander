@@ -126,12 +126,12 @@ namespace PoshCommander
                 {
                     var item = items[itemIndex];
                     var icon
-                        = item.Kind == FileSystemItemKind.Directory ? "\uF74A"
+                        = item.Kind == FileSystemItemKind.Directory ? $"{AnsiEscapeCodes.ForegroundColor(theme.IconFolderForeground)}\uF74A"
                         : item.Kind == FileSystemItemKind.File ? "\uF723"
                         : item.Kind == FileSystemItemKind.SymbolicLink ? "\uF751"
                         : throw new InvalidOperationException($"Invalid enum value: {item.Kind}");
 
-                    var text = $"{icon} {item.Name}";
+                    var text = $"{icon} {AnsiEscapeCodes.ForegroundColor(theme.ItemNormalForeground)}{item.Name}";
 
                     ui.WriteBlockAt(
                         text,
