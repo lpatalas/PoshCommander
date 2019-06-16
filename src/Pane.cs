@@ -10,7 +10,8 @@ namespace PoshCommander
     public enum ItemKind
     {
         Directory,
-        File
+        File,
+        SymbolicLink
     }
 
     public class Item
@@ -19,20 +20,21 @@ namespace PoshCommander
         public ItemKind Kind { get; }
         public string Name { get; }
 
-        public static Item Directory(string fullPath)
-            => Directory(fullPath, Path.GetFileName(fullPath));
-
-        public static Item Directory(string fullPath, string name)
-            => new Item(fullPath, ItemKind.Directory, name);
-
-        public static Item File(string fullPath)
-            => new Item(fullPath, ItemKind.File, Path.GetFileName(fullPath));
-
-        private Item(string fullPath, ItemKind kind, string name)
+        public Item(FileSystemInfo fileSystemInfo)
+            : this(fileSystemInfo, fileSystemInfo.Name)
         {
-            Kind = kind;
-            FullPath = fullPath;
-            Name = name;
+        }
+
+        public Item(FileSystemInfo fileSystemInfo, string name)
+        {
+            this.FullPath = fileSystemInfo.FullName;
+            this.Kind
+                = fileSystemInfo.Attributes.HasFlag(FileAttributes.ReparsePoint)
+                    ? ItemKind.SymbolicLink
+                : fileSystemInfo.Attributes.HasFlag(FileAttributes.Directory)
+                    ? ItemKind.Directory
+                : ItemKind.File;
+            this.Name = name;
         }
     }
 
@@ -159,18 +161,36 @@ namespace PoshCommander
             {
                 var pos = new Coordinates(bounds.Left, bounds.Top + i + 1);
                 var itemIndex = i + firstVisibleItemIndex;
-                var text
-                    = itemIndex < items.Count
-                    ? items[itemIndex].Name
-                    : string.Empty;
+                var itemStyle
+                    = itemIndex == highlightedIndex ? itemStyleHighlighted
+                    : (itemIndex % 2) == 0 ? itemStyleEven
+                    : itemStyleOdd;
 
-                ui.WriteBlockAt(
-                    text,
-                    pos,
-                    bounds.GetWidth(),
-                    itemIndex == highlightedIndex ? itemStyleHighlighted
-                        : (itemIndex % 2) == 0 ? itemStyleEven
-                        : itemStyleOdd);
+                if (itemIndex < items.Count)
+                {
+                    var item = items[itemIndex];
+                    var icon
+                        = item.Kind == ItemKind.Directory ? "\uF74A"
+                        : item.Kind == ItemKind.File ? "\uF723"
+                        : item.Kind == ItemKind.SymbolicLink ? "\uF751"
+                        : throw new InvalidOperationException($"Invalid enum value: {item.Kind}");
+
+                    var text = $"{icon} {item.Name}";
+
+                    ui.WriteBlockAt(
+                        text,
+                        pos,
+                        bounds.GetWidth(),
+                        itemStyle);
+                }
+                else
+                {
+                    ui.WriteBlockAt(
+                        string.Empty,
+                        pos,
+                        bounds.GetWidth(),
+                        itemStyle);
+                }
             }
         }
 
@@ -195,20 +215,19 @@ namespace PoshCommander
 
         private static IReadOnlyList<Item> CreateItemList(string directoryPath)
         {
-            var parentInfo = Directory.GetParent(directoryPath);
+            var directoryInfo = new DirectoryInfo(directoryPath);
+
             var parentItems
-                = parentInfo != null
-                ? Enumerable.Repeat(Item.Directory(parentInfo.FullName, ".."), 1)
+                = directoryInfo.Parent != null
+                ? Enumerable.Repeat(new Item(directoryInfo.Parent, ".."), 1)
                 : Enumerable.Empty<Item>();
 
-            var directories = Directory.EnumerateDirectories(directoryPath)
-                .Select(Item.Directory);
-            var files = Directory.EnumerateFiles(directoryPath)
-                .Select(Item.File);
+            var items = directoryInfo.EnumerateDirectories().Cast<FileSystemInfo>()
+                .Concat(directoryInfo.EnumerateFiles().Cast<FileSystemInfo>())
+                .Select(info => new Item(info));
 
             return parentItems
-                .Concat(directories)
-                .Concat(files)
+                .Concat(items)
                 .ToList();
         }
     }
