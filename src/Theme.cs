@@ -7,6 +7,8 @@
         public RgbColor RowEvenBackground { get; set; }
         public RgbColor RowHightlighedBackground { get; set; }
         public RgbColor RowOddBackground { get; set; }
+        public RgbColor SeparatorBackground { get; set; }
+        public RgbColor SeparatorForeground { get; set; }
         public RgbColor StatusBarBackground { get; set; }
         public RgbColor StatusBarForeground { get; set; }
         public RgbColor TitleBarActiveBackground { get; set; }
@@ -21,6 +23,8 @@
             RowEvenBackground = new RgbColor(29, 40, 61),
             RowHightlighedBackground = new RgbColor(26, 64, 105),
             RowOddBackground = new RgbColor(33, 45, 67),
+            SeparatorBackground = new RgbColor(29, 40, 61),
+            SeparatorForeground = new RgbColor(90, 123, 181),
             StatusBarBackground = new RgbColor(80, 80, 80),
             StatusBarForeground = new RgbColor(200, 200, 200),
             TitleBarActiveBackground = new RgbColor(90, 123, 181),
