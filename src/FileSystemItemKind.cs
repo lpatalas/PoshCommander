@@ -4,6 +4,7 @@
     {
         Directory,
         File,
+        ParentDirectory,
         SymbolicLink
     }
 }

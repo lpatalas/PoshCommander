@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace PoshCommander
 {
@@ -8,21 +9,35 @@ namespace PoshCommander
         public FileSystemItemKind Kind { get; }
         public string Name { get; }
 
-        public FileSystemItem(FileSystemInfo fileSystemInfo)
-            : this(fileSystemInfo, fileSystemInfo.Name)
+        public static FileSystemItem FromFileSystemInfo(FileSystemInfo fileSystemInfo)
+            => new FileSystemItem(fileSystemInfo, GetKindFromInfo(fileSystemInfo));
+
+        public static FileSystemItem CreateParentDirectory(FileSystemInfo directoryInfo)
         {
+            if (!directoryInfo.Attributes.HasFlag(FileAttributes.Directory))
+                throw new ArgumentException("Item must be directory", nameof(directoryInfo));
+
+            return new FileSystemItem(
+                directoryInfo,
+                FileSystemItemKind.ParentDirectory,
+                "..");
         }
 
-        public FileSystemItem(FileSystemInfo fileSystemInfo, string name)
+        private FileSystemItem(
+            FileSystemInfo fileSystemInfo,
+            FileSystemItemKind kind,
+            string nameOverride = null)
         {
             this.FullPath = fileSystemInfo.FullName;
-            this.Kind
-                = fileSystemInfo.Attributes.HasFlag(FileAttributes.ReparsePoint)
+            this.Kind = kind;
+            this.Name = nameOverride ?? fileSystemInfo.Name;
+        }
+
+        private static FileSystemItemKind GetKindFromInfo(FileSystemInfo fileSystemInfo)
+            => fileSystemInfo.Attributes.HasFlag(FileAttributes.ReparsePoint)
                     ? FileSystemItemKind.SymbolicLink
                 : fileSystemInfo.Attributes.HasFlag(FileAttributes.Directory)
                     ? FileSystemItemKind.Directory
                 : FileSystemItemKind.File;
-            this.Name = name;
-        }
     }
 }

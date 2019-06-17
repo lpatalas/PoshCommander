@@ -51,7 +51,8 @@ namespace PoshCommander
             else if (keyInfo.Key == ConsoleKey.Enter)
             {
                 var highlightedItem = items[view.HighlightedIndex];
-                if (highlightedItem.Kind == FileSystemItemKind.Directory)
+                if (highlightedItem.Kind == FileSystemItemKind.Directory
+                    || highlightedItem.Kind == FileSystemItemKind.ParentDirectory)
                 {
                     ChangeDirectory(highlightedItem.FullPath, true);
                     return;
@@ -101,12 +102,12 @@ namespace PoshCommander
 
             var parentItems
                 = directoryInfo.Parent != null
-                ? Enumerable.Repeat(new FileSystemItem(directoryInfo.Parent, ".."), 1)
+                ? Enumerable.Repeat(FileSystemItem.CreateParentDirectory(directoryInfo.Parent), 1)
                 : Enumerable.Empty<FileSystemItem>();
 
             var items = directoryInfo.EnumerateDirectories().Cast<FileSystemInfo>()
                 .Concat(directoryInfo.EnumerateFiles().Cast<FileSystemInfo>())
-                .Select(info => new FileSystemItem(info));
+                .Select(FileSystemItem.FromFileSystemInfo);
 
             return parentItems
                 .Concat(items)
