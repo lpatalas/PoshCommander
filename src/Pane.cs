@@ -67,27 +67,26 @@ namespace PoshCommander
         {
             if (keyInfo.Key >= ConsoleKey.A && keyInfo.Key <= ConsoleKey.Z)
             {
-                filter += keyInfo.KeyChar;
                 isFilterActive = true;
+                SetFilter(filter + keyInfo.KeyChar);
             }
             else if (keyInfo.Key == ConsoleKey.Backspace
                 && isFilterActive)
             {
                 if (filter.Length > 0)
-                    filter = filter.Substring(0, filter.Length - 1);
+                    SetFilter(filter.Substring(0, filter.Length - 1));
             }
             else if (keyInfo.Key == ConsoleKey.Escape
                 && isFilterActive)
             {
-                filter = string.Empty;
                 isFilterActive = false;
+                SetFilter(string.Empty);
             }
             else
             {
                 return false;
             }
 
-            UpdateFilter();
             return true;
         }
 
@@ -126,17 +125,22 @@ namespace PoshCommander
                 view.FirstVisibleItemIndex = view.HighlightedIndex - view.MaxVisibleItemCount + 1;
         }
 
-        private void UpdateFilter()
+        private void SetFilter(string newFilter)
         {
             var highlightedItem = view.Items[view.HighlightedIndex];
 
             if (isFilterActive)
             {
-                view.Items = items
-                    .Where(item => item.Name.IndexOf(filter, StringComparison.CurrentCultureIgnoreCase) >= 0)
+                var filteredItems = items
+                    .Where(item => item.Name.IndexOf(newFilter, StringComparison.CurrentCultureIgnoreCase) >= 0)
                     .ToList();
 
-                view.StatusText = $"Filter: {filter}";
+                if (filteredItems.Count > 0)
+                {
+                    filter = newFilter;
+                    view.Items = filteredItems;
+                    view.StatusText = $"Filter: {filter}";
+                }
             }
             else
             {
@@ -165,6 +169,7 @@ namespace PoshCommander
 
             currentDirectoryPath = directoryPath;
             filter = string.Empty;
+            isFilterActive = false;
             items = CreateItemList(directoryPath);
 
             view.HighlightedIndex = items
