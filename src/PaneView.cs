@@ -25,14 +25,6 @@ namespace PoshCommander
             this.ui = ui;
         }
 
-        public void ScrollToHighlightedItem()
-        {
-            if (HighlightedIndex < FirstVisibleItemIndex)
-                FirstVisibleItemIndex = HighlightedIndex;
-            else if (HighlightedIndex >= FirstVisibleItemIndex + MaxVisibleItemCount)
-                FirstVisibleItemIndex = HighlightedIndex - MaxVisibleItemCount + 1;
-        }
-
         public void Redraw()
         {
             DrawTitleBar();
