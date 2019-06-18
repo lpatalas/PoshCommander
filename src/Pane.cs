@@ -10,6 +10,7 @@ namespace PoshCommander
     {
         private string currentDirectoryPath;
         private string filter = string.Empty;
+        private bool isFilterActive;
         private IReadOnlyList<FileSystemItem> items;
         private readonly PaneView view;
 
@@ -67,16 +68,19 @@ namespace PoshCommander
             if (keyInfo.Key >= ConsoleKey.A && keyInfo.Key <= ConsoleKey.Z)
             {
                 filter += keyInfo.KeyChar;
+                isFilterActive = true;
             }
             else if (keyInfo.Key == ConsoleKey.Backspace
-                && !string.IsNullOrEmpty(filter))
+                && isFilterActive)
             {
-                filter = filter.Substring(0, filter.Length - 1);
+                if (filter.Length > 0)
+                    filter = filter.Substring(0, filter.Length - 1);
             }
             else if (keyInfo.Key == ConsoleKey.Escape
-                && !string.IsNullOrEmpty(filter))
+                && isFilterActive)
             {
                 filter = string.Empty;
+                isFilterActive = false;
             }
             else
             {
@@ -99,6 +103,17 @@ namespace PoshCommander
                     return true;
                 }
             }
+            else if (keyInfo.Key == ConsoleKey.Backspace)
+            {
+                var parentItem = items
+                    .FirstOrDefault(item => item.Kind == FileSystemItemKind.ParentDirectory);
+
+                if (parentItem != null)
+                {
+                    ChangeDirectory(parentItem.FullPath, true);
+                    return true;
+                }
+            }
 
             return false;
         }
@@ -115,7 +130,7 @@ namespace PoshCommander
         {
             var highlightedItem = view.Items[view.HighlightedIndex];
 
-            if (!string.IsNullOrEmpty(filter))
+            if (isFilterActive)
             {
                 view.Items = items
                     .Where(item => item.Name.IndexOf(filter, StringComparison.CurrentCultureIgnoreCase) >= 0)
