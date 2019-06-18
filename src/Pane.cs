@@ -45,15 +45,15 @@ namespace PoshCommander
             if (keyInfo.Key == ConsoleKey.UpArrow)
                 view.HighlightedIndex = Math.Max(0, view.HighlightedIndex - 1);
             else if (keyInfo.Key == ConsoleKey.DownArrow)
-                view.HighlightedIndex = Math.Min(items.Count - 1, view.HighlightedIndex + 1);
+                view.HighlightedIndex = Math.Min(view.Items.Count - 1, view.HighlightedIndex + 1);
             else if (keyInfo.Key == ConsoleKey.PageUp)
                 view.HighlightedIndex = Math.Max(0, view.HighlightedIndex - view.MaxVisibleItemCount + 1);
             else if (keyInfo.Key == ConsoleKey.PageDown)
-                view.HighlightedIndex = Math.Min(items.Count - 1, view.HighlightedIndex + view.MaxVisibleItemCount - 1);
+                view.HighlightedIndex = Math.Min(view.Items.Count - 1, view.HighlightedIndex + view.MaxVisibleItemCount - 1);
             else if (keyInfo.Key == ConsoleKey.Home)
                 view.HighlightedIndex = 0;
             else if (keyInfo.Key == ConsoleKey.End)
-                view.HighlightedIndex = items.Count - 1;
+                view.HighlightedIndex = view.Items.Count - 1;
             else
                 return false;
 
@@ -91,7 +91,7 @@ namespace PoshCommander
         {
             if (keyInfo.Key == ConsoleKey.Enter)
             {
-                var highlightedItem = items[view.HighlightedIndex];
+                var highlightedItem = view.Items[view.HighlightedIndex];
                 if (highlightedItem.Kind == FileSystemItemKind.Directory
                     || highlightedItem.Kind == FileSystemItemKind.ParentDirectory)
                 {
@@ -113,13 +113,14 @@ namespace PoshCommander
 
         private void UpdateFilter()
         {
-            view.HighlightedIndex = 0;
+            var highlightedItem = view.Items[view.HighlightedIndex];
 
             if (!string.IsNullOrEmpty(filter))
             {
                 view.Items = items
                     .Where(item => item.Name.IndexOf(filter, StringComparison.CurrentCultureIgnoreCase) >= 0)
                     .ToList();
+
                 view.StatusText = $"Filter: {filter}";
             }
             else
@@ -128,6 +129,11 @@ namespace PoshCommander
                 view.StatusText = FormatStatusText();
             }
 
+            view.HighlightedIndex = view.Items
+                .FirstIndexOf(item => ReferenceEquals(item, highlightedItem))
+                ?? 0;
+
+            ScrollToHighlightedItem();
             view.Redraw();
         }
 

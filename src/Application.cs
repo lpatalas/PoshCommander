@@ -20,7 +20,7 @@ namespace PoshCommander
                     bottom: windowSize.Height - 1);
 
             leftPane = new Pane(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                @"C:\Dev",
                 leftPaneBounds,
                 PaneState.Active,
                 ui);
