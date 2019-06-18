@@ -9,7 +9,10 @@ namespace PoshCommander
         private readonly Pane rightPane;
         private readonly ApplicationView view;
 
-        public Application(PSHostUserInterface ui)
+        public Application(
+            string leftPath,
+            string rightPath,
+            PSHostUserInterface ui)
         {
             var windowSize = ui.RawUI.WindowSize;
 
@@ -20,7 +23,7 @@ namespace PoshCommander
                     bottom: windowSize.Height - 1);
 
             leftPane = new Pane(
-                @"C:\Projects",
+                leftPath,
                 leftPaneBounds,
                 PaneState.Active,
                 ui);
@@ -32,7 +35,7 @@ namespace PoshCommander
                 bottom: windowSize.Height - 1);
 
             rightPane = new Pane(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                rightPath,
                 rightPaneBounds,
                 PaneState.Inactive,
                 ui);

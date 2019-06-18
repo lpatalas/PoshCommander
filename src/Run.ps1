@@ -2,4 +2,4 @@
 
 #1..10 | %{ Write-Host "Line $_" }
 
-Invoke-PoshCommander
+Invoke-PoshCommander .
