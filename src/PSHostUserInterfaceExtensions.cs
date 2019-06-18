@@ -27,7 +27,11 @@ namespace PoshCommander
             var textLength = AnsiEscapeCodes.StripEscapeCodes(text).Length;
 
             if (textLength > blockWidth)
-                text = text.Substring(0, blockWidth - 3) + "...";
+            {
+                var trimCount = textLength - blockWidth + 3;
+                text = text.Substring(0, text.Length - trimCount) + "...";
+                textLength = AnsiEscapeCodes.StripEscapeCodes(text).Length;
+            }
 
             var paddedText = text + new string(' ', blockWidth - textLength);
             ui.WriteAt(paddedText, coordinates, textStyle);
