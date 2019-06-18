@@ -20,7 +20,7 @@ namespace PoshCommander
                     bottom: windowSize.Height - 1);
 
             leftPane = new Pane(
-                @"C:\Dev",
+                @"C:\Projects",
                 leftPaneBounds,
                 PaneState.Active,
                 ui);

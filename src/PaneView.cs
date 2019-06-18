@@ -53,13 +53,7 @@ namespace PoshCommander
                 if (itemIndex < Items.Count)
                 {
                     var item = Items[itemIndex];
-                    var icon
-                        = item.Kind == FileSystemItemKind.Directory ? $"{AnsiEscapeCodes.ForegroundColor(theme.IconFolderForeground)}\uF74A"
-                        : item.Kind == FileSystemItemKind.File ? "\uF723"
-                        : item.Kind == FileSystemItemKind.ParentDirectory ? $"{AnsiEscapeCodes.ForegroundColor(theme.IconFolderForeground)}\uF758"
-                        : item.Kind == FileSystemItemKind.SymbolicLink ? "\uF751"
-                        : throw new InvalidOperationException($"Invalid enum value: {item.Kind}");
-
+                    var icon = theme.GetIcon(item);
                     var text = $"{icon} {AnsiEscapeCodes.ForegroundColor(theme.ItemNormalForeground)}{item.Name}";
 
                     ui.WriteBlockAt(
