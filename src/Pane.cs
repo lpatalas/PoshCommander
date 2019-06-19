@@ -12,9 +12,10 @@ namespace PoshCommander
         private string filter = string.Empty;
         private bool isFilterActive;
         private IReadOnlyList<FileSystemItem> items;
-        private readonly PaneView view;
+        private readonly IPaneView view;
 
         private PaneState stateValue;
+
         public PaneState State
         {
             get => stateValue;
@@ -23,16 +24,12 @@ namespace PoshCommander
 
         public Pane(
             string directoryPath,
-            Rectangle bounds,
             PaneState paneState,
-            PSHostUserInterface ui)
+            IPaneView view)
         {
             this.stateValue = paneState;
-            this.view = new PaneView(bounds, ui)
-            {
-                PaneState = State
-            };
-
+            this.view = view;
+            this.view.PaneState = State;
             ChangeDirectory(directoryPath, redraw: true);
         }
 

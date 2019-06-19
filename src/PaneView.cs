@@ -4,7 +4,7 @@ using System.Management.Automation.Host;
 
 namespace PoshCommander
 {
-    public class PaneView
+    public class PaneView : IPaneView
     {
         private readonly Rectangle bounds;
         private readonly Theme theme = Theme.Default;

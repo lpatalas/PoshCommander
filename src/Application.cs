@@ -22,11 +22,8 @@ namespace PoshCommander
                     right: windowSize.Width / 2 - 1,
                     bottom: windowSize.Height - 1);
 
-            leftPane = new Pane(
-                leftPath,
-                leftPaneBounds,
-                PaneState.Active,
-                ui);
+            var leftPaneView = new PaneView(leftPaneBounds, ui);
+            leftPane = new Pane(leftPath, PaneState.Active, leftPaneView);
 
             var rightPaneBounds = new Rectangle(
                 left: leftPaneBounds.Right + 2,
@@ -34,11 +31,8 @@ namespace PoshCommander
                 right: windowSize.Width - 2,
                 bottom: windowSize.Height - 1);
 
-            rightPane = new Pane(
-                rightPath,
-                rightPaneBounds,
-                PaneState.Inactive,
-                ui);
+            var rightPaneView = new PaneView(rightPaneBounds, ui);
+            rightPane = new Pane(rightPath, PaneState.Inactive, rightPaneView);
 
             view = new ApplicationView(
                 windowSize.Width / 2,
