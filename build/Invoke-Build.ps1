@@ -10,6 +10,9 @@ param(
 $workspaceRoot = Split-Path $PSScriptRoot
 
 function Main {
+    BuildSolution
+    RunTests
+
     $modulePath = PublishProjectToOutputDirectory
     CleanupPublishedFiles $modulePath
     GenerateHelpFiles $modulePath
@@ -18,6 +21,35 @@ function Main {
     Write-Host 'Build succeeded' -ForegroundColor Green
 
     Get-Item $modulePath
+}
+
+
+function BuildSolution {
+    $solutionPath = Join-Path $workspaceRoot "$ProjectName.sln"
+
+    dotnet build `
+        --configuration Release `
+        /p:ModuleVersion="$moduleVersion" `
+        /p:PreserveCompilationContext="false" `
+        "$solutionPath"
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet build exited with error code $LASTEXITCODE"
+    }
+}
+
+function RunTests {
+    $testProjectPath = Join-Path $workspaceRoot 'tests' "$ProjectName.Tests.csproj"
+
+    dotnet test `
+        --configuration Release `
+        --no-build `
+        --no-restore `
+        "$testProjectPath"
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet test exited with error code $LASTEXITCODE"
+    }
 }
 
 function PublishProjectToOutputDirectory {
@@ -36,6 +68,8 @@ function PublishProjectToOutputDirectory {
 
     dotnet publish `
         --configuration Release `
+        --no-build `
+        --no-restore `
         --output "$publishOutputPath" `
         /p:ModuleVersion="$moduleVersion" `
         /p:PreserveCompilationContext="false" `
