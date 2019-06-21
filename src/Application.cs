@@ -14,6 +14,7 @@ namespace PoshCommander
             string rightPath,
             PSHostUserInterface ui)
         {
+            var fileSystem = new FileSystem();
             var windowSize = ui.RawUI.WindowSize;
 
             var leftPaneBounds = new Rectangle(
@@ -23,7 +24,7 @@ namespace PoshCommander
                     bottom: windowSize.Height - 1);
 
             var leftPaneView = new PaneView(leftPaneBounds, ui);
-            leftPane = new Pane(leftPath, PaneState.Active, leftPaneView);
+            leftPane = new Pane(leftPath, fileSystem, PaneState.Active, leftPaneView);
 
             var rightPaneBounds = new Rectangle(
                 left: leftPaneBounds.Right + 2,
@@ -32,7 +33,7 @@ namespace PoshCommander
                 bottom: windowSize.Height - 1);
 
             var rightPaneView = new PaneView(rightPaneBounds, ui);
-            rightPane = new Pane(rightPath, PaneState.Inactive, rightPaneView);
+            rightPane = new Pane(rightPath, fileSystem, PaneState.Inactive, rightPaneView);
 
             view = new ApplicationView(
                 windowSize.Width / 2,

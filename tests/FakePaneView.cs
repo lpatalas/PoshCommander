@@ -8,7 +8,7 @@ namespace PoshCommander.Tests
         public int HighlightedIndex { get; set; }
         public IReadOnlyList<FileSystemItem> Items { get; set; }
 
-        public int MaxVisibleItemCount { get; } = 10;
+        public int MaxVisibleItemCount { get; set; } = 10;
 
         public PaneState PaneState { get; set; }
         public string StatusText { get; set; }

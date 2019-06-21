@@ -9,8 +9,21 @@ namespace PoshCommander
         public FileSystemItemKind Kind { get; }
         public string Name { get; }
 
+        public FileSystemItem(
+            string fullPath,
+            FileSystemItemKind kind,
+            string name)
+        {
+            this.FullPath = fullPath;
+            this.Kind = kind;
+            this.Name = name;
+        }
+
         public static FileSystemItem FromFileSystemInfo(FileSystemInfo fileSystemInfo)
-            => new FileSystemItem(fileSystemInfo, GetKindFromInfo(fileSystemInfo));
+            => new FileSystemItem(
+                fileSystemInfo.FullName,
+                GetKindFromInfo(fileSystemInfo),
+                fileSystemInfo.Name);
 
         public static FileSystemItem CreateParentDirectory(FileSystemInfo directoryInfo)
         {
@@ -18,19 +31,9 @@ namespace PoshCommander
                 throw new ArgumentException("Item must be directory", nameof(directoryInfo));
 
             return new FileSystemItem(
-                directoryInfo,
+                directoryInfo.FullName,
                 FileSystemItemKind.ParentDirectory,
                 "..");
-        }
-
-        private FileSystemItem(
-            FileSystemInfo fileSystemInfo,
-            FileSystemItemKind kind,
-            string nameOverride = null)
-        {
-            this.FullPath = fileSystemInfo.FullName;
-            this.Kind = kind;
-            this.Name = nameOverride ?? fileSystemInfo.Name;
         }
 
         private static FileSystemItemKind GetKindFromInfo(FileSystemInfo fileSystemInfo)

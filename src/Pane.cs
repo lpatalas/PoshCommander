@@ -8,14 +8,15 @@ namespace PoshCommander
 {
     public class Pane
     {
-        private string currentDirectoryPath;
+        private readonly IFileSystem fileSystem;
         private string filter = string.Empty;
         private bool isFilterActive;
         private IReadOnlyList<FileSystemItem> items;
         private readonly IPaneView view;
 
-        private PaneState stateValue;
+        public string CurrentDirectoryPath { get; private set; }
 
+        private PaneState stateValue;
         public PaneState State
         {
             get => stateValue;
@@ -24,9 +25,11 @@ namespace PoshCommander
 
         public Pane(
             string directoryPath,
+            IFileSystem fileSystem,
             PaneState paneState,
             IPaneView view)
         {
+            this.fileSystem = fileSystem;
             this.stateValue = paneState;
             this.view = view;
             this.view.PaneState = State;
@@ -162,12 +165,12 @@ namespace PoshCommander
 
         private void ChangeDirectory(string directoryPath, bool redraw)
         {
-            var previousDirectoryPath = currentDirectoryPath;
+            var previousDirectoryPath = CurrentDirectoryPath;
 
-            currentDirectoryPath = directoryPath;
+            CurrentDirectoryPath = directoryPath;
             filter = string.Empty;
             isFilterActive = false;
-            items = CreateItemList(directoryPath);
+            items = fileSystem.GetChildItems(directoryPath);
 
             view.HighlightedIndex = items
                 .FirstIndexOf(item => string.Equals(item.FullPath, previousDirectoryPath, StringComparison.OrdinalIgnoreCase))
@@ -175,7 +178,7 @@ namespace PoshCommander
 
             view.Items = items;
             view.StatusText = FormatStatusText();
-            view.Title = currentDirectoryPath;
+            view.Title = CurrentDirectoryPath;
 
             ScrollToHighlightedItem();
 
@@ -196,24 +199,6 @@ namespace PoshCommander
             var fileCount = items.Count(item => item.Kind == FileSystemItemKind.File);
             var directoryCount = items.Count(item => item.Kind == FileSystemItemKind.Directory);
             return $"Files: {fileCount}, Directories: {directoryCount}";
-        }
-
-        private static IReadOnlyList<FileSystemItem> CreateItemList(string directoryPath)
-        {
-            var directoryInfo = new DirectoryInfo(directoryPath);
-
-            var parentItems
-                = directoryInfo.Parent != null
-                ? Enumerable.Repeat(FileSystemItem.CreateParentDirectory(directoryInfo.Parent), 1)
-                : Enumerable.Empty<FileSystemItem>();
-
-            var items = directoryInfo.EnumerateDirectories().Cast<FileSystemInfo>()
-                .Concat(directoryInfo.EnumerateFiles().Cast<FileSystemInfo>())
-                .Select(FileSystemItem.FromFileSystemInfo);
-
-            return parentItems
-                .Concat(items)
-                .ToList();
         }
     }
 }
