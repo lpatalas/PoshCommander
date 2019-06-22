@@ -4,7 +4,7 @@ using Xunit;
 
 namespace PoshCommander.Tests
 {
-    public class PaneTests
+    public class PaneInitialStateTests
     {
         [Fact]
         public void When_its_created_it_should_correctly_set_initial_view_state()
