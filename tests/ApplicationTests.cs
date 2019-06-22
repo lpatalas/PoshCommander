@@ -20,6 +20,7 @@ namespace PoshCommander.Tests
             var application = new Application(
                 inputPath,
                 inputPath,
+                new DummyExternalApplicationRunner(),
                 fileSystem,
                 locationProvider,
                 view);
@@ -44,6 +45,7 @@ namespace PoshCommander.Tests
             var application = new Application(
                 leftPath,
                 rightPath,
+                new DummyExternalApplicationRunner(),
                 fileSystem,
                 locationProvider,
                 view);

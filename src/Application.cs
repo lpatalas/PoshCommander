@@ -12,6 +12,7 @@ namespace PoshCommander
         public Application(
             string leftPath,
             string rightPath,
+            IExternalApplicationRunner externalApplicationRunner,
             IFileSystem fileSystem,
             ILocationProvider locationProvider,
             IApplicationView view)
@@ -23,8 +24,6 @@ namespace PoshCommander
             rightPath = rightPath.IsNullOrEmpty()
                 ? locationProvider.CurrentLocation
                 : locationProvider.ResolvePath(rightPath);
-
-            var externalApplicationRunner = new ExternalApplicationRunner();
 
             this.LeftPane = new Pane(
                 leftPath,

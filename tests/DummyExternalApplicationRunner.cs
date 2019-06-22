@@ -2,7 +2,15 @@
 {
     public class DummyExternalApplicationRunner : IExternalApplicationRunner
     {
-        public void Run(string filePath)
+        public void RunAssociatedApplication(string filePath)
+        {
+        }
+
+        public void RunEditor(string filePath)
+        {
+        }
+
+        public void RunViewer(string filePath)
         {
         }
     }

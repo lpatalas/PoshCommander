@@ -2,6 +2,8 @@
 {
     public interface IExternalApplicationRunner
     {
-        void Run(string filePath);
+        void RunAssociatedApplication(string filePath);
+        void RunEditor(string filePath);
+        void RunViewer(string filePath);
     }
 }

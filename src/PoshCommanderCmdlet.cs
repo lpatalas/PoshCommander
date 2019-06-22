@@ -13,10 +13,20 @@ namespace PoshCommander
         [Parameter(Position = 1)]
         public string RightPath { get; set; }
 
+        [Parameter]
+        public string EditorPath { get; set; }
+
+        [Parameter]
+        public string ViewerPath { get; set; }
+
         protected override void BeginProcessing()
         {
             using (new ConsoleBufferSnapshot(Host.UI.RawUI))
             {
+                var externalApplicationRunner = new ExternalApplicationRunner(
+                    EditorPath,
+                    ViewerPath);
+
                 var applicationView = new ApplicationView(
                     Theme.Default,
                     Host.UI);
@@ -24,6 +34,7 @@ namespace PoshCommander
                 var app = new Application(
                     LeftPath,
                     RightPath,
+                    externalApplicationRunner,
                     new FileSystem(),
                     new LocationProvider(SessionState.Path),
                     applicationView);

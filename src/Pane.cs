@@ -107,7 +107,7 @@ namespace PoshCommander
                 }
                 else if (highlightedItem.Kind == FileSystemItemKind.File)
                 {
-                    externalApplicationRunner.Run(highlightedItem.FullPath);
+                    externalApplicationRunner.RunAssociatedApplication(highlightedItem.FullPath);
                     return true;
                 }
             }
@@ -120,6 +120,22 @@ namespace PoshCommander
                 {
                     ChangeDirectory(parentItem.FullPath, true);
                     return true;
+                }
+            }
+            else if (keyInfo.Key == ConsoleKey.F3)
+            {
+                var highlightedItem = view.Items[view.HighlightedIndex];
+                if (highlightedItem.Kind == FileSystemItemKind.File)
+                {
+                    externalApplicationRunner.RunViewer(highlightedItem.FullPath);
+                }
+            }
+            else if (keyInfo.Key == ConsoleKey.F4)
+            {
+                var highlightedItem = view.Items[view.HighlightedIndex];
+                if (highlightedItem.Kind == FileSystemItemKind.File)
+                {
+                    externalApplicationRunner.RunEditor(highlightedItem.FullPath);
                 }
             }
 
