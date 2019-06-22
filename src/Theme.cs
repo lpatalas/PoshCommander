@@ -68,15 +68,19 @@ namespace PoshCommander
             new FileStyle(@"\.html?$", '\uF13B', new RgbColor(255, 192, 192)),
             new FileStyle(@"\.cs$", '\uF81A', new RgbColor(192, 255, 192)),
             new FileStyle(@"\.jsx?$", '\uE74E', new RgbColor(255, 255, 192)),
-            new FileStyle(@"\.tsx?$", '\uFBE4', new RgbColor(192, 192, 255)),
+            new FileStyle(@"\.tsx?$", '\uE628', new RgbColor(192, 192, 255)),
             new FileStyle(@"\.csproj$", '\uE70C', new RgbColor(192, 255, 192)),
-            new FileStyle(@"\.sln$", '\uE70C', new RgbColor(192, 255, 255)),
-            new FileStyle(@"\.json$", '\uE60B', new RgbColor(255, 255, 192)),
+            new FileStyle(@"\.sln$", '\uE70C', new RgbColor(192, 128, 255)),
+            new FileStyle(@"\.(json|yaml)$", '\uE60B', new RgbColor(255, 255, 192)),
+            new FileStyle(@"\.xml$", '\uF121', new RgbColor(255, 128, 192)),
+            new FileStyle(@"\.exe$", '\uF488', new RgbColor(255, 255, 255)),
+            new FileStyle(@"\.(bin|dll|pdb)$", '\uF471', new RgbColor(255, 255, 128)),
+            new FileStyle(@"\.(7z|gz|rar|zip)", '\uF410', new RgbColor(255, 255, 128)),
             new FileStyle(@"\.(cfg|config|ini|settings)$", '\uE615', new RgbColor(255, 255, 192)),
             new FileStyle(@"\.(bmp|gif|jpe?g|png|svg|tiff?)$", '\uE60D', new RgbColor(255, 192, 255)),
             new FileStyle(@"\.(bat|cmd|ps1|psd1|psm1)?$", '\uF120', new RgbColor(192, 128, 255)),
-            new FileStyle(@"\.(md|rst|txt)$", '\uF72D'),
-            new FileStyle(@"^\.git(attributes|config|ignore)$", '\uF1D3', new RgbColor(255, 192, 128)),
+            new FileStyle(@"\.(md|markdown)$", '\uE73E'),
+            new FileStyle(@"^\.git(attributes|config|ignore)?$", '\uE702', new RgbColor(255, 128, 64)),
             new FileStyle(@".", '\uF713')
         };
 
@@ -88,7 +92,10 @@ namespace PoshCommander
 
             public FileStyle(string fileNamePattern, char iconGlyph, RgbColor? color = null)
             {
-                fileNameRegex = new Regex(fileNamePattern, RegexOptions.Singleline);
+                fileNameRegex = new Regex(
+                    fileNamePattern,
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
                 Icon = FormatIcon(iconGlyph, color);
             }
 
