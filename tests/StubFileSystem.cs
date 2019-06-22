@@ -38,7 +38,7 @@ namespace PoshCommander.Tests
             return new StubFileSystem(directories.Concat(files));
         }
 
-        public IReadOnlyList<FileSystemItem> GetChildItems(string directoryPath)
-            => ChildItems;
+        public DirectoryContents GetDirectoryContents(string directoryPath)
+            => new DirectoryContents(directoryPath, ChildItems);
     }
 }

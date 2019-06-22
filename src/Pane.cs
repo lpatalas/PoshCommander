@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace PoshCommander
 {
     public class Pane
     {
+        private DirectoryContents currentDirectory;
         private readonly IFileSystem fileSystem;
-        private IReadOnlyList<FileSystemItem> items;
         private readonly IPaneView view;
 
-        public string CurrentDirectoryPath { get; private set; }
+        public string CurrentDirectoryPath => currentDirectory.Path;
 
         public Option<string> Filter { get; private set; } = Option.None;
 
@@ -106,7 +105,7 @@ namespace PoshCommander
             }
             else if (keyInfo.Key == ConsoleKey.Backspace)
             {
-                var parentItem = items
+                var parentItem = currentDirectory.Items
                     .FirstOrDefault(item => item.Kind == FileSystemItemKind.ParentDirectory);
 
                 if (parentItem != null)
@@ -133,7 +132,7 @@ namespace PoshCommander
 
             if (newFilter.HasValue)
             {
-                var filteredItems = items
+                var filteredItems = currentDirectory.Items
                     .Where(item => item.Name.IndexOf(newFilter.Value, StringComparison.CurrentCultureIgnoreCase) >= 0)
                     .ToList();
 
@@ -147,7 +146,7 @@ namespace PoshCommander
             else
             {
                 Filter = newFilter;
-                view.Items = items;
+                view.Items = currentDirectory.Items;
                 view.StatusText = FormatStatusText();
             }
 
@@ -168,17 +167,23 @@ namespace PoshCommander
 
         private void ChangeDirectory(string directoryPath, bool redraw)
         {
-            var previousDirectoryPath = CurrentDirectoryPath;
+            var previousDirectory = currentDirectory;
 
-            CurrentDirectoryPath = directoryPath;
+            currentDirectory = fileSystem.GetDirectoryContents(directoryPath);
             Filter = new Option<string>();
-            items = fileSystem.GetChildItems(directoryPath);
 
-            view.HighlightedIndex = items
-                .FirstIndexOf(item => string.Equals(item.FullPath, previousDirectoryPath, StringComparison.OrdinalIgnoreCase))
-                .GetValueOrDefault(0);
+            if (previousDirectory != null)
+            {
+                view.HighlightedIndex = currentDirectory.Items
+                    .FirstIndexOf(item => string.Equals(item.FullPath, previousDirectory.Path, StringComparison.OrdinalIgnoreCase))
+                    .GetValueOrDefault(0);
+            }
+            else
+            {
+                view.HighlightedIndex = 0;
+            }
 
-            view.Items = items;
+            view.Items = currentDirectory.Items;
             view.StatusText = FormatStatusText();
             view.Title = CurrentDirectoryPath;
 
@@ -190,9 +195,18 @@ namespace PoshCommander
 
         private string FormatStatusText()
         {
-            var fileCount = items.Count(item => item.Kind == FileSystemItemKind.File);
-            var directoryCount = items.Count(item => item.Kind == FileSystemItemKind.Directory);
-            return $"Files: {fileCount}, Directories: {directoryCount}";
+            if (currentDirectory.IsAccessAllowed)
+            {
+                var fileCount = currentDirectory.Items
+                    .Count(item => item.Kind == FileSystemItemKind.File);
+                var directoryCount = currentDirectory.Items
+                    .Count(item => item.Kind == FileSystemItemKind.Directory);
+                return $"Files: {fileCount}, Directories: {directoryCount}";
+            }
+            else
+            {
+                return "ACCESS DENIED";
+            }
         }
     }
 }

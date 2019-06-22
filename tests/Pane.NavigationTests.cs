@@ -105,22 +105,26 @@ namespace PoshCommander.Tests
             // Arrange
             var view = new FakePaneView();
 
-            var parentDirectory = @"X:\A";
-            var childDirectory = @"X:\A\C";
+            var childDirectoryPath = @"X:\A\C";
+            var parentDirectoryPath = @"X:\A";
 
-            var fileSystem = new FakeFileSystem();
-            fileSystem.Directories.Add(parentDirectory, new[]
+            var parentDirectory = new DirectoryContents(parentDirectoryPath, new[]
             {
                 new FileSystemItem(@"X:", FileSystemItemKind.ParentDirectory, ".."),
                 new FileSystemItem(@"X:\A\B", FileSystemItemKind.Directory, "B"),
-                new FileSystemItem($"{childDirectory}", FileSystemItemKind.Directory, "C"),
+                new FileSystemItem($"{childDirectoryPath}", FileSystemItemKind.Directory, "C"),
                 new FileSystemItem(@"X:\A\D", FileSystemItemKind.Directory, "D"),
             });
-            fileSystem.Directories.Add(childDirectory, new[]
+
+            var childDirectory = new DirectoryContents(childDirectoryPath, new[]
             {
-                new FileSystemItem(parentDirectory, FileSystemItemKind.ParentDirectory, ".."),
+                new FileSystemItem(parentDirectoryPath, FileSystemItemKind.ParentDirectory, ".."),
                 new FileSystemItem(@"X:\A\C\Z", FileSystemItemKind.Directory, "Z"),
             });
+
+            var fileSystem = new FakeFileSystem();
+            fileSystem.Directories.Add(parentDirectory);
+            fileSystem.Directories.Add(childDirectory);
 
             var pane = new Pane(@"X:\A\C", fileSystem, PaneState.Active, view);
 
@@ -128,9 +132,37 @@ namespace PoshCommander.Tests
             pane.ProcessKey(ConsoleKey.Backspace.ToKeyInfo());
 
             // Assert
-            var expectedIndex = fileSystem.Directories[parentDirectory]
-                .FirstIndexOf(item => item.FullPath == childDirectory);
+            var expectedIndex = parentDirectory.Items
+                .FirstIndexOf(item => item.FullPath == childDirectory.Path);
             view.HighlightedIndex.Should().Be(expectedIndex.Value);
+        }
+
+        [Fact]
+        public void When_access_to_current_directory_is_not_allowed_it_should_show_error_message_in_status_bar()
+        {
+            // Arrange
+            var view = new FakePaneView();
+            var fileSystem = new FakeFileSystem();
+
+            fileSystem.Directories.Add(new DirectoryContents(@"X:\A", new[]
+            {
+                new FileSystemItem(@"X:", FileSystemItemKind.ParentDirectory, ".."),
+                new FileSystemItem(@"X:\A\B", FileSystemItemKind.Directory, "B"),
+            }));
+            fileSystem.Directories.Add(DirectoryContents.AccessNotAllowed(@"X:\A\B", new[]
+            {
+                new FileSystemItem(@"X:\A", FileSystemItemKind.ParentDirectory, "..")
+            }));
+
+            var pane = new Pane(@"X:\A", fileSystem, PaneState.Active, view);
+
+            view.HighlightedIndex = 1;
+
+            // Act
+            pane.ProcessKey(ConsoleKey.Enter.ToKeyInfo());
+
+            // Assert
+            view.StatusText.Should().Be("ACCESS DENIED");
         }
     }
 }

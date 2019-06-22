@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace PoshCommander.Tests
 {
     public class FakeFileSystem : IFileSystem
     {
-        public IDictionary<string, IReadOnlyList<FileSystemItem>> Directories { get; }
-            = new Dictionary<string, IReadOnlyList<FileSystemItem>>();
+        public IList<DirectoryContents> Directories { get; }
+            = new List<DirectoryContents>();
 
-        public IReadOnlyList<FileSystemItem> GetChildItems(string directoryPath)
-            => Directories[directoryPath];
+        public DirectoryContents GetDirectoryContents(string directoryPath)
+            => Directories.Single(d => d.Path == directoryPath);
     }
 }

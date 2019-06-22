@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-
-namespace PoshCommander
+﻿namespace PoshCommander
 {
     public interface IFileSystem
     {
-        IReadOnlyList<FileSystemItem> GetChildItems(string directoryPath);
+        DirectoryContents GetDirectoryContents(string directoryPath);
     }
 }

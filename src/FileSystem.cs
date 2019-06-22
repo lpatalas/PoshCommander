@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.IO;
 using System.Linq;
 
@@ -6,7 +6,7 @@ namespace PoshCommander
 {
     public class FileSystem : IFileSystem
     {
-        public IReadOnlyList<FileSystemItem> GetChildItems(string directoryPath)
+        public DirectoryContents GetDirectoryContents(string directoryPath)
         {
             var directoryInfo = new DirectoryInfo(directoryPath);
 
@@ -15,13 +15,24 @@ namespace PoshCommander
                 ? Enumerable.Repeat(FileSystemItem.CreateParentDirectory(directoryInfo.Parent), 1)
                 : Enumerable.Empty<FileSystemItem>();
 
-            var items = directoryInfo.EnumerateDirectories().Cast<FileSystemInfo>()
-                .Concat(directoryInfo.EnumerateFiles().Cast<FileSystemInfo>())
-                .Select(FileSystemItem.FromFileSystemInfo);
+            try
+            {
+                var childItems = directoryInfo.EnumerateDirectories().Cast<FileSystemInfo>()
+                    .Concat(directoryInfo.EnumerateFiles().Cast<FileSystemInfo>())
+                    .Select(FileSystemItem.FromFileSystemInfo);
 
-            return parentItems
-                .Concat(items)
-                .ToList();
+                var items = parentItems
+                    .Concat(childItems)
+                    .ToList();
+
+                return new DirectoryContents(directoryPath, items);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return DirectoryContents.AccessNotAllowed(
+                    directoryPath,
+                    parentItems.ToList());
+            }
         }
     }
 }
