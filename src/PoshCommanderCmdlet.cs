@@ -7,7 +7,7 @@ namespace PoshCommander
     [Cmdlet(VerbsLifecycle.Invoke, "PoshCommander")]
     public class PoshCommanderCmdlet : PSCmdlet
     {
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(Position = 0)]
         public string LeftPath { get; set; }
 
         [Parameter(Position = 1)]
@@ -15,16 +15,19 @@ namespace PoshCommander
 
         protected override void BeginProcessing()
         {
-            string fullLeftPath = ResolveDirectory(LeftPath);
-            string fullRightPath
-                = MyInvocation.BoundParameters.ContainsKey(nameof(RightPath))
-                ? ResolveDirectory(RightPath)
-                : fullLeftPath;
-
             using (new ConsoleBufferSnapshot(Host.UI.RawUI))
             {
-                var applicationView = new ApplicationView(Theme.Default, Host.UI);
-                var app = new Application(fullLeftPath, fullRightPath, applicationView);
+                var applicationView = new ApplicationView(
+                    Theme.Default,
+                    Host.UI);
+
+                var app = new Application(
+                    LeftPath,
+                    RightPath,
+                    new FileSystem(),
+                    new LocationProvider(SessionState.Path),
+                    applicationView);
+
                 app.Run();
             }
         }

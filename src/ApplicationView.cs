@@ -5,7 +5,7 @@ using System.Text;
 
 namespace PoshCommander
 {
-    public class ApplicationView
+    public class ApplicationView : IApplicationView
     {
         private readonly Theme theme;
         private readonly PSHostUserInterface ui;
