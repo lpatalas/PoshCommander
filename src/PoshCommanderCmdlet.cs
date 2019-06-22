@@ -1,6 +1,5 @@
-﻿using System;
-using System.IO;
-using System.Management.Automation;
+﻿using System.Management.Automation;
+using PoshCommander.UI;
 
 namespace PoshCommander
 {
@@ -41,14 +40,6 @@ namespace PoshCommander
 
                 app.Run();
             }
-        }
-
-        private string ResolveDirectory(string directoryPath)
-        {
-            if (!Directory.Exists(directoryPath))
-                throw new ArgumentException($"Directory '{directoryPath}' does not exist");
-
-            return System.IO.Path.GetFullPath(directoryPath);
         }
     }
 }

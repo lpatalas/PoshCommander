@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace PoshCommander
+namespace PoshCommander.UI
 {
     public class Pane
     {

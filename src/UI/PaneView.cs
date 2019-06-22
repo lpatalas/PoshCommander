@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Management.Automation.Host;
 
-namespace PoshCommander
+namespace PoshCommander.UI
 {
     public class PaneView : IPaneView
     {

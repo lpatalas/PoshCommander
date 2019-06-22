@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using FluentAssertions;
+using PoshCommander.UI;
 using Xunit;
 
-namespace PoshCommander.Tests
+namespace PoshCommander.Tests.UI
 {
     public class PaneNavigationTests
     {

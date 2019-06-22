@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace PoshCommander
+namespace PoshCommander.UI
 {
     public class Application
     {

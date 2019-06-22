@@ -1,4 +1,4 @@
-﻿namespace PoshCommander
+﻿namespace PoshCommander.UI
 {
     public enum ApplicationState
     {

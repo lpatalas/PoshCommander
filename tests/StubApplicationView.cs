@@ -1,4 +1,6 @@
-﻿namespace PoshCommander.Tests
+﻿using PoshCommander.UI;
+
+namespace PoshCommander.Tests
 {
     public class StubApplicationView : IApplicationView
     {

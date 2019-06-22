@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Management.Automation.Host;
-using System.Text;
+﻿using System.Management.Automation.Host;
 
-namespace PoshCommander
+namespace PoshCommander.UI
 {
     public class ApplicationView : IApplicationView
     {
