@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Management.Automation.Host;
 
 namespace PoshCommander
 {
     public class Pane
     {
         private readonly IFileSystem fileSystem;
-        private string filter = string.Empty;
-        private bool isFilterActive;
         private IReadOnlyList<FileSystemItem> items;
         private readonly IPaneView view;
 
         public string CurrentDirectoryPath { get; private set; }
+
+        public Option<string> Filter { get; private set; } = Option.None;
 
         private PaneState stateValue;
         public PaneState State
@@ -67,20 +65,24 @@ namespace PoshCommander
         {
             if (keyInfo.Key >= ConsoleKey.A && keyInfo.Key <= ConsoleKey.Z)
             {
-                isFilterActive = true;
-                SetFilter(filter + keyInfo.KeyChar);
+                SetFilter(Filter
+                    .DefaultIfEmpty(string.Empty)
+                    .Map(text => text + keyInfo.KeyChar));
             }
             else if (keyInfo.Key == ConsoleKey.Backspace
-                && isFilterActive)
+                && Filter.HasValue)
             {
-                if (filter.Length > 0)
-                    SetFilter(filter.Substring(0, filter.Length - 1));
+                if (Filter.Value.Length > 0)
+                {
+                    SetFilter(
+                        Filter.Map(text
+                            => text.Substring(0, text.Length - 1)));
+                }
             }
             else if (keyInfo.Key == ConsoleKey.Escape
-                && isFilterActive)
+                && Filter.HasValue)
             {
-                isFilterActive = false;
-                SetFilter(string.Empty);
+                SetFilter(Option.None);
             }
             else
             {
@@ -125,31 +127,32 @@ namespace PoshCommander
                 view.FirstVisibleItemIndex = view.HighlightedIndex - view.MaxVisibleItemCount + 1;
         }
 
-        private void SetFilter(string newFilter)
+        private void SetFilter(Option<string> newFilter)
         {
             var highlightedItem = view.Items[view.HighlightedIndex];
 
-            if (isFilterActive)
+            if (newFilter.HasValue)
             {
                 var filteredItems = items
-                    .Where(item => item.Name.IndexOf(newFilter, StringComparison.CurrentCultureIgnoreCase) >= 0)
+                    .Where(item => item.Name.IndexOf(newFilter.Value, StringComparison.CurrentCultureIgnoreCase) >= 0)
                     .ToList();
 
                 if (filteredItems.Count > 0)
                 {
-                    filter = newFilter;
+                    Filter = newFilter;
                     view.Items = filteredItems;
-                    view.StatusText = $"Filter: {filter}";
+                    view.StatusText = $"Filter: {Filter}";
                 }
             }
             else
             {
+                Filter = newFilter;
                 view.Items = items;
                 view.StatusText = FormatStatusText();
             }
 
             view.HighlightedIndex = view.Items
-                .FirstIndexOf(item => ReferenceEquals(item, highlightedItem))
+                .FirstIndexOf(highlightedItem)
                 ?? 0;
 
             ScrollToHighlightedItem();
@@ -168,8 +171,7 @@ namespace PoshCommander
             var previousDirectoryPath = CurrentDirectoryPath;
 
             CurrentDirectoryPath = directoryPath;
-            filter = string.Empty;
-            isFilterActive = false;
+            Filter = new Option<string>();
             items = fileSystem.GetChildItems(directoryPath);
 
             view.HighlightedIndex = items
@@ -184,14 +186,6 @@ namespace PoshCommander
 
             if (redraw)
                 view.Redraw();
-        }
-
-        private IReadOnlyList<FileSystemItem> GetFilteredItems()
-        {
-            if (!string.IsNullOrEmpty(filter))
-                return items.Where(item => item.Name.Contains(filter)).ToList();
-            else
-                return items;
         }
 
         private string FormatStatusText()

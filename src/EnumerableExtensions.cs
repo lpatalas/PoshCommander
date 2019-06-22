@@ -16,5 +16,13 @@ namespace PoshCommander
                 .Select(tuple => tuple.index)
                 .FirstOrDefault();
         }
+
+        public static int? FirstIndexOf<T>(
+            this IEnumerable<T> collection,
+            T searchedItem)
+        {
+            return collection
+                .FirstIndexOf(item => object.Equals(item, searchedItem));
+        }
     }
 }
