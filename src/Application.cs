@@ -24,8 +24,22 @@ namespace PoshCommander
                 ? locationProvider.CurrentLocation
                 : locationProvider.ResolvePath(rightPath);
 
-            this.LeftPane = new Pane(leftPath, fileSystem, PaneState.Active, view.LeftPane);
-            this.RightPane = new Pane(rightPath, fileSystem, PaneState.Inactive, view.RightPane);
+            var externalApplicationRunner = new ExternalApplicationRunner();
+
+            this.LeftPane = new Pane(
+                leftPath,
+                externalApplicationRunner,
+                fileSystem,
+                PaneState.Active,
+                view.LeftPane);
+
+            this.RightPane = new Pane(
+                rightPath,
+                externalApplicationRunner,
+                fileSystem,
+                PaneState.Inactive,
+                view.RightPane);
+
             this.view = view;
         }
 

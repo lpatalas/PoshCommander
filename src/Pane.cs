@@ -6,6 +6,7 @@ namespace PoshCommander
     public class Pane
     {
         private DirectoryContents currentDirectory;
+        private readonly IExternalApplicationRunner externalApplicationRunner;
         private readonly IFileSystem fileSystem;
         private readonly IPaneView view;
 
@@ -22,10 +23,12 @@ namespace PoshCommander
 
         public Pane(
             string directoryPath,
+            IExternalApplicationRunner externalApplicationRunner,
             IFileSystem fileSystem,
             PaneState paneState,
             IPaneView view)
         {
+            this.externalApplicationRunner = externalApplicationRunner;
             this.fileSystem = fileSystem;
             this.stateValue = paneState;
             this.view = view;
@@ -100,6 +103,11 @@ namespace PoshCommander
                     || highlightedItem.Kind == FileSystemItemKind.ParentDirectory)
                 {
                     ChangeDirectory(highlightedItem.FullPath, true);
+                    return true;
+                }
+                else if (highlightedItem.Kind == FileSystemItemKind.File)
+                {
+                    externalApplicationRunner.Run(highlightedItem.FullPath);
                     return true;
                 }
             }

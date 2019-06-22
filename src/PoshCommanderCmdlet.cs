@@ -20,7 +20,7 @@ namespace PoshCommander
                 var applicationView = new ApplicationView(
                     Theme.Default,
                     Host.UI);
-
+                
                 var app = new Application(
                     LeftPath,
                     RightPath,

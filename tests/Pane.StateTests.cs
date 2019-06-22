@@ -6,6 +6,9 @@ namespace PoshCommander.Tests
 {
     public class PaneStateTests
     {
+        private readonly DummyExternalApplicationRunner externalApplicationRunner
+            = new DummyExternalApplicationRunner();
+
         [Fact]
         public void When_its_created_it_should_correctly_set_initial_view_state()
         {
@@ -19,7 +22,7 @@ namespace PoshCommander.Tests
             var fileSystem = StubFileSystem.FromDirectoryAndFileCount(directoryCount, fileCount);
 
             // Act
-            new Pane(directory, fileSystem, paneState, view);
+            new Pane(directory, externalApplicationRunner, fileSystem, paneState, view);
 
             // Assert
             view.FirstVisibleItemIndex.Should().Be(0);
@@ -42,7 +45,7 @@ namespace PoshCommander.Tests
             var fileSystem = StubFileSystem.FromItemCount(5);
             var view = new FakePaneView();
 
-            var pane = new Pane(directory, fileSystem, originalState, view);
+            var pane = new Pane(directory, externalApplicationRunner, fileSystem, originalState, view);
 
             // Act
             pane.State = newState;

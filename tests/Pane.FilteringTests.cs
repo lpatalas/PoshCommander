@@ -21,7 +21,12 @@ namespace PoshCommander.Tests
         public PaneFilteringTests()
         {
             fileSystem = new StubFileSystem(new[] { abc, bbc, cab, cba });
-            pane = new Pane(@"X:\A", fileSystem, PaneState.Active, view);
+            pane = new Pane(
+                @"X:\A",
+                new DummyExternalApplicationRunner(),
+                fileSystem,
+                PaneState.Active,
+                view);
         }
 
         [Fact]

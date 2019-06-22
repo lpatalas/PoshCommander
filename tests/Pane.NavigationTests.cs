@@ -8,6 +8,9 @@ namespace PoshCommander.Tests
 {
     public class PaneNavigationTests
     {
+        private readonly DummyExternalApplicationRunner externalApplicationRunner
+            = new DummyExternalApplicationRunner();
+
         [Fact]
         public void When_Backspace_is_pressed_it_should_go_to_parent_directory()
         {
@@ -21,7 +24,7 @@ namespace PoshCommander.Tests
                 new FileSystemItem(@"X:\A\B\D.txt", FileSystemItemKind.Directory, "D.txt"),
             });
 
-            var pane = new Pane(@"X:\A\B", fileSystem, PaneState.Active, view);
+            var pane = new Pane(@"X:\A\B", externalApplicationRunner, fileSystem, PaneState.Active, view);
 
             // Act
             pane.ProcessKey(ConsoleKey.Backspace.ToKeyInfo());
@@ -42,7 +45,7 @@ namespace PoshCommander.Tests
                 new FileSystemItem(@"X:\A\B\D.txt", FileSystemItemKind.Directory, "D.txt"),
             });
 
-            var pane = new Pane(@"X:\A\B", fileSystem, PaneState.Active, view);
+            var pane = new Pane(@"X:\A\B", externalApplicationRunner, fileSystem, PaneState.Active, view);
 
             // Act
             pane.ProcessKey(ConsoleKey.Backspace.ToKeyInfo());
@@ -64,7 +67,7 @@ namespace PoshCommander.Tests
                 new FileSystemItem(@"X:\C", FileSystemItemKind.Directory, "C"),
             });
 
-            var pane = new Pane(@"X:", fileSystem, PaneState.Active, view);
+            var pane = new Pane(@"X:", externalApplicationRunner, fileSystem, PaneState.Active, view);
 
             view.HighlightedIndex = 1;
 
@@ -88,7 +91,7 @@ namespace PoshCommander.Tests
                 new FileSystemItem(@"X:\A\B\D.txt", FileSystemItemKind.Directory, "D.txt"),
             });
 
-            var pane = new Pane(@"X:\A\B", fileSystem, PaneState.Active, view);
+            var pane = new Pane(@"X:\A\B", externalApplicationRunner, fileSystem, PaneState.Active, view);
 
             view.HighlightedIndex = 0;
 
@@ -126,7 +129,7 @@ namespace PoshCommander.Tests
             fileSystem.Directories.Add(parentDirectory);
             fileSystem.Directories.Add(childDirectory);
 
-            var pane = new Pane(@"X:\A\C", fileSystem, PaneState.Active, view);
+            var pane = new Pane(@"X:\A\C", externalApplicationRunner, fileSystem, PaneState.Active, view);
 
             // Act
             pane.ProcessKey(ConsoleKey.Backspace.ToKeyInfo());
@@ -154,7 +157,7 @@ namespace PoshCommander.Tests
                 new FileSystemItem(@"X:\A", FileSystemItemKind.ParentDirectory, "..")
             }));
 
-            var pane = new Pane(@"X:\A", fileSystem, PaneState.Active, view);
+            var pane = new Pane(@"X:\A", externalApplicationRunner, fileSystem, PaneState.Active, view);
 
             view.HighlightedIndex = 1;
 
@@ -163,6 +166,31 @@ namespace PoshCommander.Tests
 
             // Assert
             view.StatusText.Should().Be("ACCESS DENIED");
+        }
+
+        [Fact]
+        public void When_Enter_is_pressed_on_highlighted_file_it_should_run_external_application()
+        {
+            // Arrange
+            var spyExternalApplicationRunner = new SpyExternalApplicationRunner();
+            var view = new FakePaneView();
+            var file = new FileSystemItem(@"X:\A.txt", FileSystemItemKind.File, "A.txt");
+            var fileSystem = new StubFileSystem(new[] { file });
+
+            var pane = new Pane(
+                @"X:",
+                spyExternalApplicationRunner,
+                fileSystem,
+                PaneState.Active,
+                view);
+
+            view.HighlightedIndex = 0;
+
+            // Act
+            pane.ProcessKey(ConsoleKey.Enter.ToKeyInfo());
+
+            // Assert
+            spyExternalApplicationRunner.ExecutedFiles.Should().ContainInOrder(file.FullPath);
         }
     }
 }
