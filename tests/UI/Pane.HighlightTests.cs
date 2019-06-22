@@ -1,5 +1,6 @@
 ﻿using System;
 using FluentAssertions;
+using PoshCommander.Tests.TestDoubles;
 using PoshCommander.UI;
 using Xunit;
 
@@ -13,11 +14,15 @@ namespace PoshCommander.Tests.UI
         public PaneHighlightTests()
         {
             view = new FakePaneView();
-            pane = PaneBuilder.CreateWithView(view);
+            pane = new Pane(
+                @"C:\",
+                new DummyExternalApplicationRunner(),
+                StubFileSystem.FromItemCount(view.MaxVisibleItemCount * 2),
+                PaneState.Active,
+                view);
         }
 
         [Fact]
-        //public void Should_highlight_previous_item_when_UpArrow_key_is_pressed()
         public void When_UpArrow_is_pressed_it_should_highlight_previous_item()
         {
             // Arrange

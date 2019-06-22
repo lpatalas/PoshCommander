@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace PoshCommander.Tests
+namespace PoshCommander.Tests.TestDoubles
 {
     public class FakeFileSystem : IFileSystem
     {

@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using PoshCommander.Tests.TestDoubles;
 using PoshCommander.UI;
 using Xunit;
 

@@ -1,6 +1,6 @@
 ﻿using PoshCommander.UI;
 
-namespace PoshCommander.Tests
+namespace PoshCommander.Tests.TestDoubles
 {
     public class StubApplicationView : IApplicationView
     {

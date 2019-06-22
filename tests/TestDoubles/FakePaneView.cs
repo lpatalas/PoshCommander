@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using PoshCommander.UI;
 
-namespace PoshCommander.Tests
+namespace PoshCommander.Tests.TestDoubles
 {
     public class FakePaneView : IPaneView
     {

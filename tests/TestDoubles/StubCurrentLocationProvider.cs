@@ -1,4 +1,4 @@
-﻿namespace PoshCommander.Tests
+﻿namespace PoshCommander.Tests.TestDoubles
 {
     public class StubCurrentLocationProvider : ILocationProvider
     {
