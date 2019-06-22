@@ -9,11 +9,11 @@ namespace PoshCommander.Tests
         public static AndConstraint<GenericCollectionAssertions<T>> BeInStrictOrder<T>(
             this GenericCollectionAssertions<T> assertions,
             params T[] expectation)
-            => assertions.BeEquivalentTo(expectation, opt => opt.WithoutStrictOrdering());
+            => assertions.BeEquivalentTo(expectation, opt => opt.WithStrictOrdering());
 
         public static AndConstraint<GenericCollectionAssertions<T>> BeInStrictOrder<T>(
             this GenericCollectionAssertions<T> assertions,
             IEnumerable<T> expectation)
-            => assertions.BeEquivalentTo(expectation, opt => opt.WithoutStrictOrdering());
+            => assertions.BeEquivalentTo(expectation, opt => opt.WithStrictOrdering());
     }
 }
