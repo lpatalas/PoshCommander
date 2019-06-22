@@ -10,19 +10,34 @@ namespace PoshCommander
         private readonly Theme theme;
         private readonly PSHostUserInterface ui;
 
+        public IPaneView LeftPane { get; }
+        public IPaneView RightPane { get; }
         public int SeparatorPosition { get; set; }
         public Size WindowSize { get; set; }
 
         public ApplicationView(
-            int separatorPosition,
             Theme theme,
-            PSHostUserInterface ui,
-            Size windowSize)
+            PSHostUserInterface ui)
         {
-            this.SeparatorPosition = separatorPosition;
+            this.SeparatorPosition = ui.RawUI.WindowSize.Width / 2;
             this.theme = theme;
             this.ui = ui;
-            this.WindowSize = windowSize;
+            this.WindowSize = ui.RawUI.WindowSize;
+
+            var leftPaneBounds = new Rectangle(
+                    left: 0,
+                    top: 0,
+                    right: WindowSize.Width / 2 - 1,
+                    bottom: WindowSize.Height - 1);
+
+            var rightPaneBounds = new Rectangle(
+                left: leftPaneBounds.Right + 2,
+                top: 0,
+                right: WindowSize.Width - 2,
+                bottom: WindowSize.Height - 1);
+
+            LeftPane = new PaneView(leftPaneBounds, theme, ui);
+            RightPane = new PaneView(rightPaneBounds, theme, ui);
         }
 
         public void Redraw()

@@ -23,7 +23,8 @@ namespace PoshCommander
 
             using (new ConsoleBufferSnapshot(Host.UI.RawUI))
             {
-                var app = new Application(fullLeftPath, fullRightPath, Host.UI);
+                var applicationView = new ApplicationView(Theme.Default, Host.UI);
+                var app = new Application(fullLeftPath, fullRightPath, applicationView);
                 app.Run();
             }
         }

@@ -7,7 +7,7 @@ namespace PoshCommander
     public class PaneView : IPaneView
     {
         private readonly Rectangle bounds;
-        private readonly Theme theme = Theme.Default;
+        private readonly Theme theme;
         private readonly PSHostUserInterface ui;
 
         public int FirstVisibleItemIndex { get; set; }
@@ -18,10 +18,14 @@ namespace PoshCommander
         public string StatusText { get; set; }
         public string Title { get; set; }
 
-        public PaneView(Rectangle bounds, PSHostUserInterface ui)
+        public PaneView(
+            Rectangle bounds,
+            Theme theme,
+            PSHostUserInterface ui)
         {
             this.bounds = bounds;
             this.MaxVisibleItemCount = bounds.GetHeight() - 2;
+            this.theme = theme;
             this.ui = ui;
         }
 
