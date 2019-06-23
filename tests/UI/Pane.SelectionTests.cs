@@ -73,6 +73,7 @@ namespace PoshCommander.Tests.UI
 
             // Assert
             view.SelectedItems.Should().BeEquivalentTo(highlightedItem);
+            view.DrawItemsCallCount.Should().Be(1);
         }
 
         [Theory]
@@ -91,6 +92,7 @@ namespace PoshCommander.Tests.UI
 
             // Assert
             view.SelectedItems.Should().BeEmpty();
+            view.DrawItemsCallCount.Should().Be(1);
         }
 
         [Theory]
@@ -114,6 +116,8 @@ namespace PoshCommander.Tests.UI
                 view.SelectedItems.Should().BeEmpty();
             else
                 view.SelectedItems.Should().BeEquivalentTo(highlightedItem);
+
+            view.DrawItemsCallCount.Should().Be(1);
         }
 
         [Fact]
@@ -128,6 +132,7 @@ namespace PoshCommander.Tests.UI
             // Assert
             var expectedItems = view.Items.Take(view.HighlightedIndex);
             view.SelectedItems.Should().BeEquivalentTo(expectedItems);
+            view.DrawItemsCallCount.Should().Be(1);
         }
 
         [Fact]
@@ -151,6 +156,7 @@ namespace PoshCommander.Tests.UI
                 view.Items[0],
                 view.Items[5],
                 view.Items[6]);
+            view.DrawItemsCallCount.Should().Be(1);
         }
 
         [Fact]
@@ -168,6 +174,7 @@ namespace PoshCommander.Tests.UI
                 .Skip(view.HighlightedIndex + 1)
                 .Take(originalHighlightIndex - view.HighlightedIndex);
             view.SelectedItems.Should().BeEquivalentTo(expectedItems);
+            view.DrawItemsCallCount.Should().Be(1);
         }
 
         [Fact]
@@ -191,6 +198,52 @@ namespace PoshCommander.Tests.UI
                 view.Items[1],
                 view.Items[2],
                 view.Items[7]);
+            view.DrawItemsCallCount.Should().Be(1);
+        }
+
+        [Fact]
+        public void When_CtrlA_is_pressed_it_should_select_all_items()
+        {
+            // Arrange
+            view.SelectedItems.Set(view.Items[1], view.Items[3]);
+
+            // Act
+            pane.ProcessKey(ConsoleKey.A.ToKeyInfo(control: true));
+
+            // Assert
+            view.SelectedItems.Should().BeEquivalentTo(view.Items);
+            view.DrawItemsCallCount.Should().Be(1);
+        }
+
+        [Fact]
+        public void When_CtrlD_is_pressed_it_should_deselect_all_items()
+        {
+            // Arrange
+            view.SelectedItems.Set(view.Items[1], view.Items[3]);
+
+            // Act
+            pane.ProcessKey(ConsoleKey.D.ToKeyInfo(control: true));
+
+            // Assert
+            view.SelectedItems.Should().BeEmpty();
+            view.DrawItemsCallCount.Should().Be(1);
+        }
+
+        [Fact]
+        public void When_CtrlI_is_pressed_it_should_invert_the_selection()
+        {
+            // Arrange
+            var evenItems = view.Items.Where((_, i) => (i % 2) == 0).ToList();
+            var oddItems = view.Items.Where((_, i) => (i % 2) != 0).ToList();
+
+            view.SelectedItems.Set(evenItems);
+
+            // Act
+            pane.ProcessKey(ConsoleKey.I.ToKeyInfo(control: true));
+
+            // Assert
+            view.SelectedItems.Should().BeEquivalentTo(oddItems);
+            view.DrawItemsCallCount.Should().Be(1);
         }
     }
 }

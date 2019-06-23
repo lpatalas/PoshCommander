@@ -111,6 +111,9 @@ namespace PoshCommander.UI
 
         private bool ProcessFilterKey(ConsoleKeyInfo keyInfo)
         {
+            if (keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control))
+                return false;
+
             if (keyInfo.Key >= ConsoleKey.A && keyInfo.Key <= ConsoleKey.Z)
             {
                 SetFilter(Filter
@@ -197,12 +200,33 @@ namespace PoshCommander.UI
                     view.SelectedItems.Remove(highlightedItem);
                 else
                     view.SelectedItems.Add(highlightedItem);
+            }
+            else if (keyInfo.Key == ConsoleKey.A
+                && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control))
+            {
+                view.SelectedItems.Set(view.Items);
+            }
+            else if (keyInfo.Key == ConsoleKey.D
+                && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control))
+            {
+                view.SelectedItems.Clear();
+            }
+            else if (keyInfo.Key == ConsoleKey.I
+                && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control))
+            {
+                var originalSelection = view.SelectedItems.ToList();
+                var newSelection = view.Items
+                    .Where(item => !originalSelection.Contains(item));
 
-                view.DrawItems();
-                return true;
+                view.SelectedItems.Set(newSelection);
+            }
+            else
+            {
+                return false;
             }
 
-            return false;
+            view.DrawItems();
+            return true;
         }
 
         private void ScrollToHighlightedItem()
