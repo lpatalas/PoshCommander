@@ -192,6 +192,8 @@ namespace PoshCommander.UI
                 view.StatusText = FormatStatusText();
             }
 
+            view.SelectedItems.RemoveWhere(item => !view.Items.Contains(item));
+
             view.HighlightedIndex = view.Items
                 .FirstIndexOf(highlightedItem)
                 ?? 0;

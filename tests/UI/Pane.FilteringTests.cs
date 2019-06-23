@@ -142,5 +142,18 @@ namespace PoshCommander.Tests.UI
             var expectedIndex = view.Items.FirstIndexOf(cab).Value;
             view.HighlightedIndex.Should().Be(expectedIndex);
         }
+
+        [Fact]
+        public void When_selected_item_is_filtered_out_it_should_unselect_it()
+        {
+            // Arrange
+            view.SelectedItems.Set(abc, bbc);
+
+            // Act
+            pane.ProcessKey(ConsoleKey.A.ToKeyInfo());
+
+            // Assert
+            view.SelectedItems.Should().BeInStrictOrder(abc);
+        }
     }
 }

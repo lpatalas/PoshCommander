@@ -43,7 +43,7 @@ namespace PoshCommander.Tests.UI
         {
             // Arrange
             view.HighlightedIndex = 2;
-            view.SelectedItems.Reset(new[] { view.GetHighlightedItem() });
+            view.SelectedItems.Set(view.GetHighlightedItem());
 
             // Act
             pane.ProcessKey(ConsoleKey.Spacebar.ToKeyInfo());
