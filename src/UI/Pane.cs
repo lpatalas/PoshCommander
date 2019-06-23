@@ -75,11 +75,35 @@ namespace PoshCommander.UI
 
             if (selectItems)
             {
-                var highlightedItem = view.GetHighlightedItem();
-                if (view.SelectedItems.Contains(highlightedItem))
-                    view.SelectedItems.Remove(highlightedItem);
+                var wasSelected = view.IsItemSelected(view.GetHighlightedItem());
+                var index = view.HighlightedIndex;
+
+                if (desiredIndex < index)
+                {
+                    do
+                    {
+                        var item = view.Items[index];
+                        if (wasSelected)
+                            view.SelectedItems.Remove(item);
+                        else
+                            view.SelectedItems.Add(item);
+
+                        index--;
+                    } while (index > desiredIndex);
+                }
                 else
-                    view.SelectedItems.Add(highlightedItem);
+                {
+                    do
+                    {
+                        var item = view.Items[index];
+                        if (wasSelected)
+                            view.SelectedItems.Remove(item);
+                        else
+                            view.SelectedItems.Add(item);
+
+                        index++;
+                    } while (index < desiredIndex);
+                }
             }
 
             view.HighlightedIndex = desiredIndex;
