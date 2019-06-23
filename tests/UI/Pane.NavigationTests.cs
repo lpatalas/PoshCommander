@@ -94,6 +94,36 @@ namespace PoshCommander.Tests.UI
         }
 
         [Fact]
+        public void When_user_navigates_to_another_folder_it_should_clear_current_selection()
+        {
+            // Arrange
+            var pane = CreatePane();
+            view.SetHighlightedItem(directoryItem);
+            view.SelectedItems.Set(directoryItem, fileItem);
+
+            // Act
+            pane.ProcessKey(ConsoleKey.Enter.ToKeyInfo());
+
+            // Assert
+            view.SelectedItems.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void When_user_navigates_to_parent_folder_it_should_clear_current_selection()
+        {
+            // Arrange
+            var pane = CreatePane();
+            view.SetHighlightedItem(directoryItem);
+            view.SelectedItems.Set(directoryItem, fileItem);
+
+            // Act
+            pane.ProcessKey(ConsoleKey.Backspace.ToKeyInfo());
+
+            // Assert
+            view.SelectedItems.Should().BeEmpty();
+        }
+
+        [Fact]
         public void When_current_directory_is_changed_to_parent_directory_it_should_highlight_previous_directory_on_list()
         {
             // Arrange

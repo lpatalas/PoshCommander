@@ -228,6 +228,7 @@ namespace PoshCommander.UI
             }
 
             view.Items = currentDirectory.Items;
+            view.SelectedItems.Clear();
             view.StatusText = FormatStatusText();
             view.Title = CurrentDirectoryPath;
 
