@@ -44,24 +44,45 @@ namespace PoshCommander.UI
 
         private bool ProcessCursorMovementKey(ConsoleKeyInfo keyInfo)
         {
+            var selectItems = keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift);
+
             if (keyInfo.Key == ConsoleKey.UpArrow)
-                view.HighlightedIndex = Math.Max(0, view.HighlightedIndex - 1);
+                SetHighlightedIndex(view.HighlightedIndex - 1, selectItems);
             else if (keyInfo.Key == ConsoleKey.DownArrow)
-                view.HighlightedIndex = Math.Min(view.Items.Count - 1, view.HighlightedIndex + 1);
+                SetHighlightedIndex(view.HighlightedIndex + 1, selectItems);
             else if (keyInfo.Key == ConsoleKey.PageUp)
-                view.HighlightedIndex = Math.Max(0, view.HighlightedIndex - view.MaxVisibleItemCount + 1);
+                SetHighlightedIndex(view.HighlightedIndex - view.MaxVisibleItemCount + 1, selectItems);
             else if (keyInfo.Key == ConsoleKey.PageDown)
-                view.HighlightedIndex = Math.Min(view.Items.Count - 1, view.HighlightedIndex + view.MaxVisibleItemCount - 1);
+                SetHighlightedIndex(view.HighlightedIndex + view.MaxVisibleItemCount - 1, selectItems);
             else if (keyInfo.Key == ConsoleKey.Home)
-                view.HighlightedIndex = 0;
+                SetHighlightedIndex(0, selectItems);
             else if (keyInfo.Key == ConsoleKey.End)
-                view.HighlightedIndex = view.Items.Count - 1;
+                SetHighlightedIndex(view.Items.Count - 1, selectItems);
             else
                 return false;
 
             ScrollToHighlightedItem();
             view.DrawItems();
             return true;
+        }
+
+        private void SetHighlightedIndex(int desiredIndex, bool selectItems)
+        {
+            if (desiredIndex < 0)
+                desiredIndex = 0;
+            else if (desiredIndex > view.Items.Count - 1)
+                desiredIndex = view.Items.Count - 1;
+
+            if (selectItems)
+            {
+                var highlightedItem = view.GetHighlightedItem();
+                if (view.SelectedItems.Contains(highlightedItem))
+                    view.SelectedItems.Remove(highlightedItem);
+                else
+                    view.SelectedItems.Add(highlightedItem);
+            }
+
+            view.HighlightedIndex = desiredIndex;
         }
 
         private bool ProcessFilterKey(ConsoleKeyInfo keyInfo)

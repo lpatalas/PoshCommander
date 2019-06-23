@@ -52,5 +52,40 @@ namespace PoshCommander.Tests.UI
             view.SelectedItems.Should().BeEmpty();
             view.DrawItemsCallCount.Should().Be(1);
         }
+
+        [Theory]
+        [InlineData(ConsoleKey.UpArrow)]
+        [InlineData(ConsoleKey.DownArrow)]
+        public void When_ShiftUpArrow_or_ShiftDownArrow_is_pressed_it_should_select_highlighted_item(
+            ConsoleKey key)
+        {
+            // Arrange
+            view.HighlightedIndex = 2;
+            var highlightedItem = view.GetHighlightedItem();
+
+            // Act
+            pane.ProcessKey(key.ToKeyInfo(shift: true));
+
+            // Assert
+            view.SelectedItems.Should().BeInStrictOrder(highlightedItem);
+        }
+
+        [Theory]
+        [InlineData(ConsoleKey.UpArrow)]
+        [InlineData(ConsoleKey.DownArrow)]
+        public void When_ShiftUpArrow_or_ShiftDownArrow_is_pressed_and_highlighted_item_is_selected_it_should_deselect_it(
+            ConsoleKey key)
+        {
+            // Arrange
+            view.HighlightedIndex = 2;
+            var highlightedItem = view.GetHighlightedItem();
+            view.SelectedItems.Set(highlightedItem);
+
+            // Act
+            pane.ProcessKey(key.ToKeyInfo(shift: true));
+
+            // Assert
+            view.SelectedItems.Should().BeEmpty();
+        }
     }
 }
