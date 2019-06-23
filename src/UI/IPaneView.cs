@@ -9,6 +9,7 @@ namespace PoshCommander.UI
         IReadOnlyList<FileSystemItem> Items { get; set; }
         int MaxVisibleItemCount { get; }
         PaneState PaneState { get; set; }
+        IList<FileSystemItem> SelectedItems { get; }
         string StatusText { get; set; }
         string Title { get; set; }
 

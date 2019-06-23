@@ -39,7 +39,8 @@ namespace PoshCommander.UI
         public bool ProcessKey(ConsoleKeyInfo keyInfo)
             => ProcessCursorMovementKey(keyInfo)
             || ProcessFilterKey(keyInfo)
-            || ProcessNavigationKey(keyInfo);
+            || ProcessNavigationKey(keyInfo)
+            || ProcessSelectionKey(keyInfo);
 
         private bool ProcessCursorMovementKey(ConsoleKeyInfo keyInfo)
         {
@@ -137,6 +138,23 @@ namespace PoshCommander.UI
                 {
                     externalApplicationRunner.RunEditor(highlightedItem.FullPath);
                 }
+            }
+
+            return false;
+        }
+
+        private bool ProcessSelectionKey(ConsoleKeyInfo keyInfo)
+        {
+            if (keyInfo.Key == ConsoleKey.Spacebar)
+            {
+                var highlightedItem = view.GetHighlightedItem();
+                if (view.IsItemSelected(highlightedItem))
+                    view.SelectedItems.Remove(highlightedItem);
+                else
+                    view.SelectedItems.Add(highlightedItem);
+
+                view.DrawItems();
+                return true;
             }
 
             return false;

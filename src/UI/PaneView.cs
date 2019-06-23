@@ -15,6 +15,7 @@ namespace PoshCommander.UI
         public IReadOnlyList<FileSystemItem> Items { get; set; } = new List<FileSystemItem>();
         public int MaxVisibleItemCount { get; }
         public PaneState PaneState { get; set; }
+        public IList<FileSystemItem> SelectedItems { get; } = new List<FileSystemItem>();
         public string StatusText { get; set; }
         public string Title { get; set; }
 
@@ -58,7 +59,13 @@ namespace PoshCommander.UI
                 {
                     var item = Items[itemIndex];
                     var icon = theme.GetIcon(item);
-                    var text = $"{icon} {AnsiEscapeCodes.ForegroundColor(theme.ItemNormalForeground)}{item.Name}";
+
+                    var foregroundColor
+                        = this.IsItemSelected(item)
+                        ? theme.ItemSelectedForeground
+                        : theme.ItemNormalForeground;
+
+                    var text = $"{icon} {AnsiEscapeCodes.ForegroundColor(foregroundColor)}{item.Name}";
 
                     ui.WriteBlockAt(
                         text,
