@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using System;
 
 namespace PoshCommander.UI
 {
@@ -9,5 +9,14 @@ namespace PoshCommander.UI
 
         public static bool IsItemSelected(this IPaneView view, FileSystemItem item)
             => view.SelectedItems.Contains(item);
+
+        public static void SetHighlightedItem(this IPaneView view, FileSystemItem item)
+        {
+            var itemIndex = view.Items.FirstIndexOf(item);
+            if (itemIndex.HasValue)
+                view.HighlightedIndex = itemIndex.Value;
+            else
+                throw new ArgumentException($"Specified item '{item}' is missing from {nameof(view.Items)} collection");
+        }
     }
 }

@@ -120,7 +120,7 @@ namespace PoshCommander.Tests.UI
         public void When_highlighted_item_is_filtered_out_it_should_move_highlight_to_first_item()
         {
             // Arrange
-            view.HighlightedIndex = view.Items.FirstIndexOf(bbc).Value;
+            view.SetHighlightedItem(bbc);
 
             // Act
             pane.ProcessKey(ConsoleKey.A.ToKeyInfo());
@@ -133,7 +133,7 @@ namespace PoshCommander.Tests.UI
         public void When_highlighted_item_is_matched_by_filter_it_should_keep_highlight_at_the_same_item()
         {
             // Arrange
-            view.HighlightedIndex = view.Items.FirstIndexOf(cab).Value;
+            view.SetHighlightedItem(cab);
 
             // Act
             pane.ProcessKey(ConsoleKey.A.ToKeyInfo());

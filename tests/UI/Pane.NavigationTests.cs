@@ -11,95 +11,86 @@ namespace PoshCommander.Tests.UI
         private readonly DummyExternalApplicationRunner externalApplicationRunner
             = new DummyExternalApplicationRunner();
 
+        private readonly FileSystemItem parentDirectoryItem
+            = new FileSystemItem(@"X:\A", FileSystemItemKind.ParentDirectory, "..");
+
+        private readonly FileSystemItem directoryItem
+            = new FileSystemItem(@"X:\A\B\C", FileSystemItemKind.Directory, "C");
+
+        private readonly FileSystemItem fileItem
+            = new FileSystemItem(@"X:\A\B\D.txt", FileSystemItemKind.File, "D.txt");
+
+        private readonly FakePaneView view = new FakePaneView();
+
+        private Pane CreatePane(bool includeParentDirectory = true)
+        {
+            var items = includeParentDirectory
+                ? new[] { parentDirectoryItem, directoryItem, fileItem }
+                : new[] { directoryItem, fileItem };
+
+            var fileSystem = new StubFileSystem(items);
+
+            return new Pane(
+                @"X:\A\B",
+                externalApplicationRunner,
+                fileSystem,
+                PaneState.Active,
+                view);
+        }
+
         [Fact]
         public void When_Backspace_is_pressed_it_should_go_to_parent_directory()
         {
             // Arrange
-            var view = new FakePaneView();
-
-            var fileSystem = new StubFileSystem(new[]
-            {
-                new FileSystemItem(@"X:\A", FileSystemItemKind.ParentDirectory, ".."),
-                new FileSystemItem(@"X:\A\B\C", FileSystemItemKind.Directory, "C"),
-                new FileSystemItem(@"X:\A\B\D.txt", FileSystemItemKind.Directory, "D.txt"),
-            });
-
-            var pane = new Pane(@"X:\A\B", externalApplicationRunner, fileSystem, PaneState.Active, view);
+            var pane = CreatePane();
 
             // Act
             pane.ProcessKey(ConsoleKey.Backspace.ToKeyInfo());
 
             // Assert
-            pane.CurrentDirectoryPath.Should().Be(@"X:\A");
+            pane.CurrentDirectoryPath.Should().Be(parentDirectoryItem.FullPath);
         }
 
         [Fact]
         public void When_Backspace_is_pressed_and_current_directory_has_no_parent_it_should_stay_in_current_directory()
         {
             // Arrange
-            var view = new FakePaneView();
-
-            var fileSystem = new StubFileSystem(new[]
-            {
-                new FileSystemItem(@"X:\A\B\C", FileSystemItemKind.Directory, "C"),
-                new FileSystemItem(@"X:\A\B\D.txt", FileSystemItemKind.Directory, "D.txt"),
-            });
-
-            var pane = new Pane(@"X:\A\B", externalApplicationRunner, fileSystem, PaneState.Active, view);
+            var pane = CreatePane(includeParentDirectory: false);
+            var originalDirectoryPath = pane.CurrentDirectoryPath;
 
             // Act
             pane.ProcessKey(ConsoleKey.Backspace.ToKeyInfo());
 
             // Assert
-            pane.CurrentDirectoryPath.Should().Be(@"X:\A\B");
+            pane.CurrentDirectoryPath.Should().Be(originalDirectoryPath);
         }
 
         [Fact]
         public void When_Enter_is_pressed_while_directory_is_highlighted_it_should_change_current_directory_to_highlighted_item()
         {
             // Arrange
-            var view = new FakePaneView();
-
-            var fileSystem = new StubFileSystem(new[]
-            {
-                new FileSystemItem(@"X:\A", FileSystemItemKind.Directory, "A"),
-                new FileSystemItem(@"X:\B", FileSystemItemKind.Directory, "B"),
-                new FileSystemItem(@"X:\C", FileSystemItemKind.Directory, "C"),
-            });
-
-            var pane = new Pane(@"X:", externalApplicationRunner, fileSystem, PaneState.Active, view);
-
-            view.HighlightedIndex = 1;
+            var pane = CreatePane();
+            view.SetHighlightedItem(directoryItem);
 
             // Act
             pane.ProcessKey(ConsoleKey.Enter.ToKeyInfo());
 
             // Assert
-            pane.CurrentDirectoryPath.Should().Be(@"X:\B");
+            pane.CurrentDirectoryPath.Should().Be(directoryItem.FullPath);
         }
 
         [Fact]
         public void When_Enter_is_pressed_while_parent_directory_is_highlighted_it_should_change_current_directory_to_parent_directory()
         {
             // Arrange
-            var view = new FakePaneView();
-
-            var fileSystem = new StubFileSystem(new[]
-            {
-                new FileSystemItem(@"X:\A", FileSystemItemKind.ParentDirectory, ".."),
-                new FileSystemItem(@"X:\A\B\C", FileSystemItemKind.Directory, "C"),
-                new FileSystemItem(@"X:\A\B\D.txt", FileSystemItemKind.Directory, "D.txt"),
-            });
-
-            var pane = new Pane(@"X:\A\B", externalApplicationRunner, fileSystem, PaneState.Active, view);
-
-            view.HighlightedIndex = 0;
+            var pane = CreatePane();
+            view.SetHighlightedItem(parentDirectoryItem);
 
             // Act
             pane.ProcessKey(ConsoleKey.Enter.ToKeyInfo());
 
             // Assert
-            pane.CurrentDirectoryPath.Should().Be(@"X:\A");
+            pane.CurrentDirectoryPath.Should().Be(parentDirectoryItem.FullPath);
         }
 
         [Fact]
