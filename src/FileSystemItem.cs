@@ -19,6 +19,19 @@ namespace PoshCommander
             this.Name = name;
         }
 
+        public static FileSystemItem FromDriveInfo(DriveInfo drive)
+        {
+            var driveName = drive.Name.TrimEnd('\\');
+            var name = !string.IsNullOrEmpty(drive.VolumeLabel)
+                ? $"{driveName} ({drive.VolumeLabel})"
+                : driveName;
+
+            return new FileSystemItem(
+                drive.RootDirectory.FullName,
+                FileSystemItemKind.Directory,
+                name);
+        }
+
         public static FileSystemItem FromFileSystemInfo(FileSystemInfo fileSystemInfo)
             => new FileSystemItem(
                 fileSystemInfo.FullName,

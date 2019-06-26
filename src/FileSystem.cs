@@ -6,14 +6,26 @@ namespace PoshCommander
 {
     public class FileSystem : IFileSystem
     {
+        private const string computerDirectoryName = "Computer";
+
         public DirectoryContents GetDirectoryContents(string directoryPath)
         {
+            if (directoryPath.Equals(computerDirectoryName, StringComparison.Ordinal))
+                return GetMyComputerDirectoryContents();
+            else
+                return GetNormalDirectoryContents(directoryPath);
+        }
+
+        private DirectoryContents GetNormalDirectoryContents(string directoryPath)
+        {
+
             var directoryInfo = new DirectoryInfo(directoryPath);
 
-            var parentItems
-                = directoryInfo.Parent != null
-                ? Enumerable.Repeat(FileSystemItem.CreateParentDirectory(directoryInfo.Parent), 1)
-                : Enumerable.Empty<FileSystemItem>();
+            var parentItems = Enumerable.Repeat(
+                directoryInfo.Parent != null
+                    ? FileSystemItem.CreateParentDirectory(directoryInfo.Parent)
+                    : new FileSystemItem(computerDirectoryName, FileSystemItemKind.ParentDirectory, ".."),
+                1);
 
             try
             {
@@ -33,6 +45,15 @@ namespace PoshCommander
                     directoryPath,
                     parentItems.ToList());
             }
+        }
+
+        private DirectoryContents GetMyComputerDirectoryContents()
+        {
+            var drives = DriveInfo.GetDrives();
+            var items = drives
+                .Select(FileSystemItem.FromDriveInfo)
+                .ToList();
+            return new DirectoryContents(computerDirectoryName, items);
         }
     }
 }
