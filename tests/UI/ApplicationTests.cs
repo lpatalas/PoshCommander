@@ -12,7 +12,6 @@ namespace PoshCommander.Tests.UI
 
         private Application CreateApplication(string leftPath, string rightPath)
         {
-            var locationProvider = new StubCurrentLocationProvider();
             return new Application(
                 leftPath,
                 rightPath,
@@ -28,6 +27,9 @@ namespace PoshCommander.Tests.UI
         public void When_empty_path_is_specified_for_any_pane_it_should_use_current_location_instead(
             string inputPath)
         {
+            // Arrange
+            locationProvider.CurrentLocation = @"T:\Test\Dir";
+
             // Act
             var application = CreateApplication(inputPath, inputPath);
 
