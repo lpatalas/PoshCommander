@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Management.Automation.Host;
 using PoshCommander.UI;
 
 namespace PoshCommander.Tests.TestDoubles
 {
     public class FakePaneView : IPaneView
     {
+        public Rectangle Bounds { get; set; }
         public int FirstVisibleItemIndex { get; set; }
         public int HighlightedIndex { get; set; }
         public IReadOnlyList<FileSystemItem> Items { get; set; }

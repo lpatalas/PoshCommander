@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Management.Automation.Host;
 
 namespace PoshCommander.UI
 {
     public interface IPaneView
     {
+        Rectangle Bounds { get; }
         int FirstVisibleItemIndex { get; set; }
         int HighlightedIndex { get; set; }
         IReadOnlyList<FileSystemItem> Items { get; set; }

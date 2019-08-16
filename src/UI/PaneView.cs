@@ -6,10 +6,10 @@ namespace PoshCommander.UI
 {
     public class PaneView : IPaneView
     {
-        private readonly Rectangle bounds;
         private readonly Theme theme;
         private readonly PSHostUserInterface ui;
 
+        public Rectangle Bounds { get; }
         public int FirstVisibleItemIndex { get; set; }
         public int HighlightedIndex { get; set; }
         public IReadOnlyList<FileSystemItem> Items { get; set; } = new List<FileSystemItem>();
@@ -24,7 +24,7 @@ namespace PoshCommander.UI
             Theme theme,
             PSHostUserInterface ui)
         {
-            this.bounds = bounds;
+            this.Bounds = bounds;
             this.MaxVisibleItemCount = bounds.GetHeight() - 2;
             this.theme = theme;
             this.ui = ui;
@@ -41,7 +41,7 @@ namespace PoshCommander.UI
         {
             for (var i = 0; i < MaxVisibleItemCount; i++)
             {
-                var pos = new Coordinates(bounds.Left, bounds.Top + i + 1);
+                var pos = new Coordinates(Bounds.Left, Bounds.Top + i + 1);
                 var itemIndex = i + FirstVisibleItemIndex;
 
                 var backgroundColor
@@ -70,7 +70,7 @@ namespace PoshCommander.UI
                     ui.WriteBlockAt(
                         text,
                         pos,
-                        bounds.GetWidth(),
+                        Bounds.GetWidth(),
                         itemStyle);
                 }
                 else
@@ -78,7 +78,7 @@ namespace PoshCommander.UI
                     ui.WriteBlockAt(
                         string.Empty,
                         pos,
-                        bounds.GetWidth(),
+                        Bounds.GetWidth(),
                         itemStyle);
                 }
             }
@@ -90,15 +90,15 @@ namespace PoshCommander.UI
                 theme.StatusBarBackground,
                 theme.StatusBarForeground);
 
-            ui.WriteBlockAt(StatusText, bounds.GetBottomLeft(), bounds.GetWidth(), statusBarStyle);
+            ui.WriteBlockAt(StatusText, Bounds.GetBottomLeft(), Bounds.GetWidth(), statusBarStyle);
         }
 
         public void DrawTitleBar()
         {
             ui.WriteBlockAt(
                 Title,
-                bounds.GetTopLeft(),
-                bounds.GetWidth(),
+                Bounds.GetTopLeft(),
+                Bounds.GetWidth(),
                 PaneState == PaneState.Active
                     ? new ConsoleTextStyle(theme.TitleBarActiveBackground, theme.TitleBarActiveForeground)
                     : new ConsoleTextStyle(theme.TitleBarInactiveBackground, theme.TitleBarInactiveForeground));

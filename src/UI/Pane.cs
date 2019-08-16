@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Linq;
+using PoshCommander.Commands;
 
 namespace PoshCommander.UI
 {
-    public class Pane
+    public class Pane : IFileSystemPane
     {
         private DirectoryContents currentDirectory;
         private readonly IExternalApplicationRunner externalApplicationRunner;
         private readonly IFileSystem fileSystem;
-        private readonly IPaneView view;
 
         public string CurrentDirectoryPath => currentDirectory.Path;
-
         public Option<string> Filter { get; private set; } = Option.None;
 
         private PaneState stateValue;
@@ -20,6 +19,8 @@ namespace PoshCommander.UI
             get => stateValue;
             set => ChangePaneState(value);
         }
+
+        public IPaneView View { get; }
 
         public Pane(
             string directoryPath,
@@ -31,38 +32,60 @@ namespace PoshCommander.UI
             this.externalApplicationRunner = externalApplicationRunner;
             this.fileSystem = fileSystem;
             this.stateValue = paneState;
-            this.view = view;
-            this.view.PaneState = State;
+            this.View = view;
+            this.View.PaneState = State;
             ChangeDirectory(directoryPath, redraw: true);
+        }
+
+        public void CreateDirectory(string name)
+        {
+            // TODO: CreateDirectory(string name)
         }
 
         public bool ProcessKey(ConsoleKeyInfo keyInfo)
             => ProcessCursorMovementKey(keyInfo)
             || ProcessFilterKey(keyInfo)
             || ProcessNavigationKey(keyInfo)
-            || ProcessSelectionKey(keyInfo);
+            || ProcessSelectionKey(keyInfo)
+            || ProcessCommandKey(keyInfo);
+
+        private bool ProcessCommandKey(ConsoleKeyInfo keyInfo)
+        {
+            if (keyInfo.Key == ConsoleKey.F7)
+            {
+                var command = new CreateDirectoryCommand(
+                    new InputReader());
+                command.Execute(this);
+            }
+            else
+            {
+                return false;
+            }
+
+            return true;
+        }
 
         private bool ProcessCursorMovementKey(ConsoleKeyInfo keyInfo)
         {
             var selectItems = keyInfo.Modifiers.HasFlag(ConsoleModifiers.Shift);
 
             if (keyInfo.Key == ConsoleKey.UpArrow)
-                SetHighlightedIndex(view.HighlightedIndex - 1, selectItems);
+                SetHighlightedIndex(View.HighlightedIndex - 1, selectItems);
             else if (keyInfo.Key == ConsoleKey.DownArrow)
-                SetHighlightedIndex(view.HighlightedIndex + 1, selectItems);
+                SetHighlightedIndex(View.HighlightedIndex + 1, selectItems);
             else if (keyInfo.Key == ConsoleKey.PageUp)
-                SetHighlightedIndex(view.HighlightedIndex - view.MaxVisibleItemCount + 1, selectItems);
+                SetHighlightedIndex(View.HighlightedIndex - View.MaxVisibleItemCount + 1, selectItems);
             else if (keyInfo.Key == ConsoleKey.PageDown)
-                SetHighlightedIndex(view.HighlightedIndex + view.MaxVisibleItemCount - 1, selectItems);
+                SetHighlightedIndex(View.HighlightedIndex + View.MaxVisibleItemCount - 1, selectItems);
             else if (keyInfo.Key == ConsoleKey.Home)
                 SetHighlightedIndex(0, selectItems);
             else if (keyInfo.Key == ConsoleKey.End)
-                SetHighlightedIndex(view.Items.Count - 1, selectItems);
+                SetHighlightedIndex(View.Items.Count - 1, selectItems);
             else
                 return false;
 
             ScrollToHighlightedItem();
-            view.DrawItems();
+            View.DrawItems();
             return true;
         }
 
@@ -70,23 +93,23 @@ namespace PoshCommander.UI
         {
             if (desiredIndex < 0)
                 desiredIndex = 0;
-            else if (desiredIndex > view.Items.Count - 1)
-                desiredIndex = view.Items.Count - 1;
+            else if (desiredIndex > View.Items.Count - 1)
+                desiredIndex = View.Items.Count - 1;
 
             if (selectItems)
             {
-                var wasSelected = view.IsItemSelected(view.GetHighlightedItem());
-                var index = view.HighlightedIndex;
+                var wasSelected = View.IsItemSelected(View.GetHighlightedItem());
+                var index = View.HighlightedIndex;
 
                 if (desiredIndex < index)
                 {
                     do
                     {
-                        var item = view.Items[index];
+                        var item = View.Items[index];
                         if (wasSelected)
-                            view.SelectedItems.Remove(item);
+                            View.SelectedItems.Remove(item);
                         else
-                            view.SelectedItems.Add(item);
+                            View.SelectedItems.Add(item);
 
                         index--;
                     } while (index > desiredIndex);
@@ -95,18 +118,18 @@ namespace PoshCommander.UI
                 {
                     do
                     {
-                        var item = view.Items[index];
+                        var item = View.Items[index];
                         if (wasSelected)
-                            view.SelectedItems.Remove(item);
+                            View.SelectedItems.Remove(item);
                         else
-                            view.SelectedItems.Add(item);
+                            View.SelectedItems.Add(item);
 
                         index++;
                     } while (index < desiredIndex);
                 }
             }
 
-            view.HighlightedIndex = desiredIndex;
+            View.HighlightedIndex = desiredIndex;
         }
 
         private bool ProcessFilterKey(ConsoleKeyInfo keyInfo)
@@ -147,7 +170,7 @@ namespace PoshCommander.UI
         {
             if (keyInfo.Key == ConsoleKey.Enter)
             {
-                var highlightedItem = view.Items[view.HighlightedIndex];
+                var highlightedItem = View.Items[View.HighlightedIndex];
                 if (highlightedItem.Kind == FileSystemItemKind.Directory
                     || highlightedItem.Kind == FileSystemItemKind.ParentDirectory)
                 {
@@ -173,7 +196,7 @@ namespace PoshCommander.UI
             }
             else if (keyInfo.Key == ConsoleKey.F3)
             {
-                var highlightedItem = view.Items[view.HighlightedIndex];
+                var highlightedItem = View.Items[View.HighlightedIndex];
                 if (highlightedItem.Kind == FileSystemItemKind.File)
                 {
                     externalApplicationRunner.RunViewer(highlightedItem.FullPath);
@@ -181,7 +204,7 @@ namespace PoshCommander.UI
             }
             else if (keyInfo.Key == ConsoleKey.F4)
             {
-                var highlightedItem = view.Items[view.HighlightedIndex];
+                var highlightedItem = View.Items[View.HighlightedIndex];
                 if (highlightedItem.Kind == FileSystemItemKind.File)
                 {
                     externalApplicationRunner.RunEditor(highlightedItem.FullPath);
@@ -195,51 +218,51 @@ namespace PoshCommander.UI
         {
             if (keyInfo.Key == ConsoleKey.Spacebar)
             {
-                var highlightedItem = view.GetHighlightedItem();
-                if (view.IsItemSelected(highlightedItem))
-                    view.SelectedItems.Remove(highlightedItem);
+                var highlightedItem = View.GetHighlightedItem();
+                if (View.IsItemSelected(highlightedItem))
+                    View.SelectedItems.Remove(highlightedItem);
                 else
-                    view.SelectedItems.Add(highlightedItem);
+                    View.SelectedItems.Add(highlightedItem);
             }
             else if (keyInfo.Key == ConsoleKey.A
                 && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control))
             {
-                view.SelectedItems.Set(view.Items);
+                View.SelectedItems.Set(View.Items);
             }
             else if (keyInfo.Key == ConsoleKey.D
                 && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control))
             {
-                view.SelectedItems.Clear();
+                View.SelectedItems.Clear();
             }
             else if (keyInfo.Key == ConsoleKey.I
                 && keyInfo.Modifiers.HasFlag(ConsoleModifiers.Control))
             {
-                var originalSelection = view.SelectedItems.ToList();
-                var newSelection = view.Items
+                var originalSelection = View.SelectedItems.ToList();
+                var newSelection = View.Items
                     .Where(item => !originalSelection.Contains(item));
 
-                view.SelectedItems.Set(newSelection);
+                View.SelectedItems.Set(newSelection);
             }
             else
             {
                 return false;
             }
 
-            view.DrawItems();
+            View.DrawItems();
             return true;
         }
 
         private void ScrollToHighlightedItem()
         {
-            if (view.HighlightedIndex < view.FirstVisibleItemIndex)
-                view.FirstVisibleItemIndex = view.HighlightedIndex;
-            else if (view.HighlightedIndex >= view.FirstVisibleItemIndex + view.MaxVisibleItemCount)
-                view.FirstVisibleItemIndex = view.HighlightedIndex - view.MaxVisibleItemCount + 1;
+            if (View.HighlightedIndex < View.FirstVisibleItemIndex)
+                View.FirstVisibleItemIndex = View.HighlightedIndex;
+            else if (View.HighlightedIndex >= View.FirstVisibleItemIndex + View.MaxVisibleItemCount)
+                View.FirstVisibleItemIndex = View.HighlightedIndex - View.MaxVisibleItemCount + 1;
         }
 
         private void SetFilter(Option<string> newFilter)
         {
-            var highlightedItem = view.Items[view.HighlightedIndex];
+            var highlightedItem = View.Items[View.HighlightedIndex];
 
             if (newFilter.HasValue)
             {
@@ -250,32 +273,32 @@ namespace PoshCommander.UI
                 if (filteredItems.Count > 0)
                 {
                     Filter = newFilter;
-                    view.Items = filteredItems;
-                    view.StatusText = $"Filter: {Filter}";
+                    View.Items = filteredItems;
+                    View.StatusText = $"Filter: {Filter}";
                 }
             }
             else
             {
                 Filter = newFilter;
-                view.Items = currentDirectory.Items;
-                view.StatusText = FormatStatusText();
+                View.Items = currentDirectory.Items;
+                View.StatusText = FormatStatusText();
             }
 
-            view.SelectedItems.RemoveWhere(item => !view.Items.Contains(item));
+            View.SelectedItems.RemoveWhere(item => !View.Items.Contains(item));
 
-            view.HighlightedIndex = view.Items
+            View.HighlightedIndex = View.Items
                 .FirstIndexOf(highlightedItem)
                 ?? 0;
 
             ScrollToHighlightedItem();
-            view.Redraw();
+            View.Redraw();
         }
 
         private void ChangePaneState(PaneState newState)
         {
             stateValue = newState;
-            view.PaneState = State;
-            view.Redraw();
+            View.PaneState = State;
+            View.Redraw();
         }
 
         private void ChangeDirectory(string directoryPath, bool redraw)
@@ -287,24 +310,24 @@ namespace PoshCommander.UI
 
             if (previousDirectory != null)
             {
-                view.HighlightedIndex = currentDirectory.Items
+                View.HighlightedIndex = currentDirectory.Items
                     .FirstIndexOf(item => string.Equals(item.FullPath, previousDirectory.Path, StringComparison.OrdinalIgnoreCase))
                     .GetValueOrDefault(0);
             }
             else
             {
-                view.HighlightedIndex = 0;
+                View.HighlightedIndex = 0;
             }
 
-            view.Items = currentDirectory.Items;
-            view.SelectedItems.Clear();
-            view.StatusText = FormatStatusText();
-            view.Title = CurrentDirectoryPath;
+            View.Items = currentDirectory.Items;
+            View.SelectedItems.Clear();
+            View.StatusText = FormatStatusText();
+            View.Title = CurrentDirectoryPath;
 
             ScrollToHighlightedItem();
 
             if (redraw)
-                view.Redraw();
+                View.Redraw();
         }
 
         private string FormatStatusText()
