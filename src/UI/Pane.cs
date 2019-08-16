@@ -54,7 +54,8 @@ namespace PoshCommander.UI
             if (keyInfo.Key == ConsoleKey.F7)
             {
                 var command = new CreateDirectoryCommand(
-                    new InputReader());
+                    new InputReader(
+                        new ConsoleReadKeyWrapper()));
                 command.Execute(this);
             }
             else

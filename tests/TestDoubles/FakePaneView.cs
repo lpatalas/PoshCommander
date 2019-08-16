@@ -13,7 +13,21 @@ namespace PoshCommander.Tests.TestDoubles
         public int MaxVisibleItemCount { get; set; } = 10;
         public PaneState PaneState { get; set; }
         public IList<FileSystemItem> SelectedItems { get; } = new List<FileSystemItem>();
-        public string StatusText { get; set; }
+
+        private string _statusText;
+        public string StatusText
+        {
+            get => _statusText;
+            set
+            {
+                _statusText = value;
+                _statusTextHistory.Add(value);
+            }
+        }
+
+        private readonly List<string> _statusTextHistory = new List<string>();
+        public IReadOnlyList<string> StatusTextHistory => _statusTextHistory;
+
         public string Title { get; set; }
 
         public int DrawItemsCallCount { get; set; }

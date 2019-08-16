@@ -4,6 +4,13 @@ namespace PoshCommander.UI
 {
     public class InputReader : IInputReader
     {
+        private readonly IConsoleReadKeyWrapper readKeyWrapper;
+
+        public InputReader(IConsoleReadKeyWrapper readKeyWrapper)
+        {
+            this.readKeyWrapper = readKeyWrapper;
+        }
+
         public Option<string> ReadInput(
             string prompt,
             IPaneView view,
@@ -17,7 +24,7 @@ namespace PoshCommander.UI
             {
                 DrawTextInput(prompt, inputText, view);
 
-                var keyInfo = Console.ReadKey(intercept: true);
+                var keyInfo = readKeyWrapper.ReadKey();
 
                 if (keyInfo.Key == ConsoleKey.Escape)
                     return Option.None;
@@ -32,10 +39,7 @@ namespace PoshCommander.UI
             view.StatusText = originalStatusText;
             view.DrawStatusBar();
 
-            if (!string.IsNullOrWhiteSpace(inputText))
-                return Option.Some(inputText);
-            else
-                return Option.None;
+            return Option.Some(inputText);
         }
 
         private void DrawTextInput(string prompt, string input, IPaneView view)
