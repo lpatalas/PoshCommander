@@ -41,19 +41,22 @@ let readInput (prompt: string) isCharValid keySequence =
             yield! inputSequence
         }
 
-    let takeUntil predicate inputSeq =
-        inputSeq
-        |> duplicateHead
-        |> Seq.pairwise
-        |> Seq.takeWhile (fst >> predicate >> not)
-        |> Seq.map snd
+    let takeUntil predicate (inputSeq: 'T seq) = seq {
+        use enumerator = inputSeq.GetEnumerator()
+        let mutable isDone = false
 
-    let input =
+        while not isDone && enumerator.MoveNext() do
+            yield enumerator.Current
+            if predicate enumerator.Current then
+                isDone <- true
+    }
+
+    let result =
         keySequence
         |> Seq.scan readNextChar (PartialInput String.Empty)
         |> takeUntil isFinishedInput
         |> Seq.last
 
-    match input with
+    match result with
     | ConfirmedInput inputString -> Some inputString
     | _ -> None
