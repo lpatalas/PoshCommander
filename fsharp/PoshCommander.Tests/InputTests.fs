@@ -24,7 +24,7 @@ let createInputSequence input =
 
 let readTestInput inputString =
     let pressedKeys = createInputSequence inputString
-    Input.readInput (fun _ -> true) pressedKeys
+    Input.readInput (fun _ -> true) ignore pressedKeys
 
 let shouldBeReadAsOption expectedResult inputString =
     let result = readTestInput inputString
@@ -56,6 +56,15 @@ let ``Should erase last character when backspace is pressed``() =
 let ``Should return empty string when all characters are erased``() =
     "Input\b\b\b\b\b" |> shouldBeReadAs ""
 
+[<Test>]
+let ``Should skip all characters for which predicate returns false``() =
+    let predicate c =
+        c = 'A' || c = 'C' || c = 'E'
+
+    let inputSequence = createInputSequence "ABCDEF"
+    let result = Input.readInput predicate ignore inputSequence
+    result |> should equal (Some "ACE")
+
 [<TestCase("|")>]
 [<TestCase("Inp|ut")>]
 let ``Should return None when Escape is pressed`` (input: String) =
@@ -74,7 +83,26 @@ let ``Should stop reading input after Enter or Escape is pressed`` (breakCharact
             yield charToConsoleKeyInfo c
     }
 
-    Input.readInput (fun _ -> true) inputSequence |> ignore
+    Input.readInput (fun _ -> true) ignore inputSequence |> ignore
 
     let head = Seq.head inputSequence
     head.KeyChar |> should equal 'X'
+
+[<Test>]
+let ``Should execute callback after each typed character``() =
+    let mutable inputHistory = []
+    let callback input =
+        inputHistory <- inputHistory @ [input]
+
+    let inputSequence = createInputSequence "Inp\but"
+    Input.readInput (fun _ -> true) callback inputSequence |> ignore
+
+    inputHistory |> should equal [
+        ""
+        "I"
+        "In"
+        "Inp"
+        "In"
+        "Inu"
+        "Inut"
+    ]
