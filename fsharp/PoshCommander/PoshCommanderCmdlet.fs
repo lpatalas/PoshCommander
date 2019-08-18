@@ -49,5 +49,3 @@ type PoshCommanderCmdlet() =
                 this.Host.UI.WriteLine("You entered: " + input)
             | None ->
                 this.Host.UI.WriteLine("You cancelled")
-            
-

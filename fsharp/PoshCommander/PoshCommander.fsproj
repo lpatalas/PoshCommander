@@ -6,6 +6,7 @@
     
     <ItemGroup>
         <None Include="Properties\launchSettings.json" />
+        <Compile Include="SeqEx.fs" />
         <Compile Include="Commands\CreateDirectoryCommand.fs" />
         <Compile Include="UI\Input.fs" />
         <Compile Include="PoshCommanderCmdlet.fs" />

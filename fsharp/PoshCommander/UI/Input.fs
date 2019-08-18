@@ -1,5 +1,6 @@
 ﻿module PoshCommander.UI.Input
 
+open PoshCommander
 open System
 open System.IO
 
@@ -33,16 +34,6 @@ let readInput isCharValid (changeCallback: InputChangeCallback) keySequence =
         | PartialInput _ -> false
         | _ -> true
 
-    let takeUntil predicate (inputSeq: 'T seq) = seq {
-        use enumerator = inputSeq.GetEnumerator()
-        let mutable isDone = false
-
-        while not isDone && enumerator.MoveNext() do
-            yield enumerator.Current
-            if predicate enumerator.Current then
-                isDone <- true
-    }
-
     let peekValue callback =
         Seq.map (fun item ->
             match item with
@@ -54,7 +45,7 @@ let readInput isCharValid (changeCallback: InputChangeCallback) keySequence =
         keySequence
         |> Seq.scan readNextChar (PartialInput String.Empty)
         |> peekValue changeCallback
-        |> takeUntil isFinishedInput
+        |> SeqEx.takeUntil isFinishedInput
         |> Seq.last
 
     match result with

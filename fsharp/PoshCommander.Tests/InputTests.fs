@@ -1,15 +1,10 @@
 ﻿module PoshCommander.Tests.InputTests
 
 open FsUnit
+open PoshCommander
 open PoshCommander.UI
 open System
 open NUnit.Framework
-
-let appendBack element seq =
-    Seq.append seq (Seq.singleton element)
-
-let replacePlaceholder replacement (input: string) =
-    input.Replace("|", replacement)
 
 let charToConsoleKey c =
     enum (int (Char.ToUpperInvariant(c)))
@@ -20,7 +15,7 @@ let charToConsoleKeyInfo c =
 let createInputSequence input =
     input
     |> Seq.map charToConsoleKeyInfo
-    |> appendBack (charToConsoleKeyInfo '\r')
+    |> SeqEx.appendBack (charToConsoleKeyInfo '\r')
 
 let readTestInput inputString =
     let pressedKeys = createInputSequence inputString
@@ -65,10 +60,10 @@ let ``Should skip all characters for which predicate returns false``() =
     let result = Input.readInput predicate ignore inputSequence
     result |> should equal (Some "ACE")
 
-[<TestCase("|")>]
-[<TestCase("Inp|ut")>]
+[<TestCase("\x1b", TestName = "{m}(<ESC>)")>]
+[<TestCase("Inp\x1but", TestName = "{m}(Inp<ESC>ut)")>]
 let ``Should return None when Escape is pressed`` (input: String) =
-    input |> replacePlaceholder "\x1b" |> shouldBeReadAsNone
+    input |> shouldBeReadAsNone
 
 [<TestCase('\r', TestName = "{m}(Enter)")>]
 [<TestCase('\u001b', TestName = "{m}(Escape)")>]
