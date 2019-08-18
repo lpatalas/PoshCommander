@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "PoshCommander": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Program Files\\PowerShell\\6\\pwsh.exe",
+      "commandLineArgs": "-ExecutionPolicy RemoteSigned -NoExit -NoLogo -NoProfile -File \"Run.ps1\""
+    }
+  }
+}

@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>netcoreapp2.2</TargetFramework>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Include="InputTests.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\PoshCommander\PoshCommander.fsproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="1.0.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="FsUnit" Version="3.4.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.1.1" />
+        <PackageReference Include="NUnit3TestAdapter" Version="3.14.0" />
+        <PackageReference Include="PowerShellStandard.Library" Version="5.1.0">
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <DotNetCliToolReference Include="dotnet-reportgenerator-cli" Version="4.2.2" />
+    </ItemGroup>
+
+</Project>
