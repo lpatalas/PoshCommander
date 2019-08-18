@@ -24,7 +24,7 @@ let createInputSequence input =
 
 let readTestInput inputString =
     let pressedKeys = createInputSequence inputString
-    Input.readInput "Test" (fun _ -> true) pressedKeys
+    Input.readInput (fun _ -> true) pressedKeys
 
 let shouldBeReadAsOption expectedResult inputString =
     let result = readTestInput inputString
@@ -74,7 +74,7 @@ let ``Should stop reading input after Enter or Escape is pressed`` (breakCharact
             yield charToConsoleKeyInfo c
     }
 
-    Input.readInput "Test" (fun _ -> true) inputSequence |> ignore
+    Input.readInput (fun _ -> true) inputSequence |> ignore
 
     let head = Seq.head inputSequence
     head.KeyChar |> should equal 'X'

@@ -10,7 +10,7 @@ type private InputState
 let consoleKeySequence =
     Seq.initInfinite (fun _ -> Console.ReadKey(intercept = true))
 
-let readInput (prompt: string) isCharValid keySequence =
+let readInput isCharValid keySequence =
     let readNextChar currentInput (keyInfo: ConsoleKeyInfo) =
         let eraseLastChar (input: string) =
             if input.Length > 0 then
