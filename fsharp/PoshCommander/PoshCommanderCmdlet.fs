@@ -3,6 +3,7 @@
 open System
 open System.Management.Automation
 open PoshCommander.UI.Input
+open PoshCommander.UI
 
 [<Cmdlet(VerbsLifecycle.Invoke, "PoshCommander")>]
 type PoshCommanderCmdlet() =
@@ -21,6 +22,9 @@ type PoshCommanderCmdlet() =
     member val ViewerPath = String.Empty with get, set
 
     override this.BeginProcessing() =
+        FullScreenConsole.enter this.Host.UI.RawUI this.testInput
+
+    member this.testInput() =
         let setCursorX x =
             let mutable cursorPos = this.Host.UI.RawUI.CursorPosition
             cursorPos.X <- x
