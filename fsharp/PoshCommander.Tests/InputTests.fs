@@ -1,7 +1,6 @@
 ﻿module PoshCommander.Tests.InputTests
 
 open FsUnit
-open PoshCommander
 open PoshCommander.UI
 open System
 open NUnit.Framework
@@ -13,9 +12,7 @@ let charToConsoleKeyInfo c =
     new ConsoleKeyInfo(c, charToConsoleKey c, false, false, false)
 
 let createInputSequence input =
-    input
-    |> Seq.map charToConsoleKeyInfo
-    |> SeqEx.appendBack (charToConsoleKeyInfo '\r')
+    input |> Seq.map charToConsoleKeyInfo
 
 let readTestInput inputString =
     let pressedKeys = createInputSequence inputString
@@ -33,11 +30,11 @@ let shouldBeReadAsNone =
 
 [<Test>]
 let ``Should return empty string when only Enter is pressed``() =
-    "" |> shouldBeReadAs ""
+    "\r" |> shouldBeReadAs ""
 
 [<Test>]
 let ``Should concatenate all pressed keys until Enter is pressed``() =
-    "Input" |> shouldBeReadAs "Input"
+    "Input\r" |> shouldBeReadAs "Input"
 
 [<Test>]
 let ``Should stop reading input immediately after Enter is pressed``() =
@@ -45,18 +42,18 @@ let ``Should stop reading input immediately after Enter is pressed``() =
 
 [<Test>]
 let ``Should erase last character when backspace is pressed``() =
-    "In\bpu\bt" |> shouldBeReadAs "Ipt"
+    "In\bpu\bt\r" |> shouldBeReadAs "Ipt"
 
 [<Test>]
 let ``Should return empty string when all characters are erased``() =
-    "Input\b\b\b\b\b" |> shouldBeReadAs ""
+    "Input\b\b\b\b\b\r" |> shouldBeReadAs ""
 
 [<Test>]
 let ``Should skip all characters for which predicate returns false``() =
     let predicate c =
         c = 'A' || c = 'C' || c = 'E'
 
-    let inputSequence = createInputSequence "ABCDEF"
+    let inputSequence = createInputSequence "ABCDEF\r"
     let result = Input.readInput predicate ignore inputSequence
     result |> should equal (Some "ACE")
 
@@ -89,7 +86,7 @@ let ``Should execute callback after each typed character``() =
     let callback input =
         inputHistory <- inputHistory @ [input]
 
-    let inputSequence = createInputSequence "Inp\but"
+    let inputSequence = createInputSequence "Inp\but\r"
     Input.readInput (fun _ -> true) callback inputSequence |> ignore
 
     inputHistory |> should equal [

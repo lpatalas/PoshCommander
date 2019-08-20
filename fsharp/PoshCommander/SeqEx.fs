@@ -1,8 +1,5 @@
 ﻿module PoshCommander.SeqEx
 
-let appendBack element seq =
-    Seq.append seq (Seq.singleton element)
-
 let takeUntil predicate (inputSeq: 'T seq) = seq {
     use enumerator = inputSeq.GetEnumerator()
     let mutable isDone = false
