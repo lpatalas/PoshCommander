@@ -2,8 +2,10 @@
 
 open System
 open System.Management.Automation
-open PoshCommander.UI.Input
 open PoshCommander.UI
+open PoshCommander.UI.Input
+open System.IO
+open System.Management.Automation.Host
 
 [<Cmdlet(VerbsLifecycle.Invoke, "PoshCommander")>]
 type PoshCommanderCmdlet() =
@@ -22,7 +24,19 @@ type PoshCommanderCmdlet() =
     member val ViewerPath = String.Empty with get, set
 
     override this.BeginProcessing() =
-        FullScreenConsole.enter this.Host.UI.RawUI this.testInput
+        FullScreenConsole.enter this.Host.UI.RawUI (fun () ->
+            this.testPane()
+            Console.ReadKey(true) |> ignore
+            )
+
+    member this.testPane() =
+        let pane = DirectoryPane.openDirectory "C:\\Program Files (x86)"
+
+        let ui = this.Host.UI
+        let rawUI = ui.RawUI
+        let bounds = new Rectangle(0, 0, rawUI.WindowSize.Width - 1, rawUI.WindowSize.Height - 1)
+
+        DirectoryPane.draw ui bounds pane
 
     member this.testInput() =
         let setCursorX x =
