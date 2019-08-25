@@ -6,16 +6,22 @@ open PoshCommander.UI
 open PoshCommander.UI.Input
 open System.IO
 open System.Management.Automation.Host
+open PoshCommander.Commands.HighlightingCommands
+
+type UserAction =
+    | Command of (PaneState -> PaneState)
+    | Exit
+    | NoAction
 
 [<Cmdlet(VerbsLifecycle.Invoke, "PoshCommander")>]
 type PoshCommanderCmdlet() =
     inherit PSCmdlet()
     
     [<Parameter(Position = 0)>]
-    member val LeftPath = String.Empty with get, set
+    member val LeftPath = "C:\\Program Files (x86)" with get, set
 
     [<Parameter(Position = 1)>]
-    member val RightPath = String.Empty with get, set
+    member val RightPath = "C:\\Program Files" with get, set
 
     [<Parameter>]
     member val EditorPath = String.Empty with get, set
@@ -24,19 +30,13 @@ type PoshCommanderCmdlet() =
     member val ViewerPath = String.Empty with get, set
 
     override this.BeginProcessing() =
-        FullScreenConsole.enter this.Host.UI.RawUI (fun () ->
-            this.testPane()
-            Console.ReadKey(true) |> ignore
-            )
+        FullScreenConsole.enter this.Host.UI.RawUI this.testPane
 
     member this.testPane() =
-        let pane = DirectoryPane.openDirectory "C:\\Program Files (x86)"
+        let windowSize = this.Host.UI.RawUI.WindowSize
+        let application = Application.create windowSize this.LeftPath this.RightPath
 
-        let ui = this.Host.UI
-        let rawUI = ui.RawUI
-        let bounds = new Rectangle(0, 0, rawUI.WindowSize.Width - 1, rawUI.WindowSize.Height - 1)
-
-        DirectoryPane.draw ui bounds pane
+        application |> Application.run this.Host
 
     member this.testInput() =
         let setCursorX x =

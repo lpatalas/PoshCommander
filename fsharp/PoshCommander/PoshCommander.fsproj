@@ -7,10 +7,15 @@
     <ItemGroup>
         <None Include="Properties\launchSettings.json" />
         <Compile Include="SeqEx.fs" />
-        <Compile Include="Commands\CreateDirectoryCommand.fs" />
-        <Compile Include="UI\DirectoryPane.fs" />
-        <Compile Include="UI\FullScreenConsole.fs" />
-        <Compile Include="UI\Input.fs" />
+        <Compile Include="Colors.fs" />
+        <Compile Include="Theme.fs" />
+        <Compile Include="FullScreenConsole.fs" />
+        <Compile Include="ApplicationModel.fs" />
+        <Compile Include="Input.fs" />
+        <Compile Include="ApplicationCommands.fs" />
+        <Compile Include="HighlightingCommands.fs" />
+        <Compile Include="Pane.fs" />
+        <Compile Include="Application.fs" />
         <Compile Include="PoshCommanderCmdlet.fs" />
     </ItemGroup>
 

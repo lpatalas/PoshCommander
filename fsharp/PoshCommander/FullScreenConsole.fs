@@ -1,4 +1,4 @@
-﻿module PoshCommander.UI.FullScreenConsole
+﻿module PoshCommander.FullScreenConsole
 
 open System
 open System.Management.Automation.Host
