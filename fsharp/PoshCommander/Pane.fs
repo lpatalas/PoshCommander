@@ -62,17 +62,19 @@ let drawItems (ui: PSHostUserInterface) bounds paneState =
         rawUI.CursorPosition <- new Coordinates(bounds.Left, bounds.Top + index)
         ui.Write(bgCode + fgCode + text + padding + ansiResetCode)
     
-    let drawHighlightedRow =
-        drawRow Theme.RowHightlighedBackground Theme.ItemNormalForeground
-    
     let drawNormalRow index =
         let bgColor =
             if index % 2 = 0 then
                 Theme.RowEvenBackground
             else
                 Theme.RowOddBackground
-                
         drawRow bgColor Theme.ItemNormalForeground index
+
+    let drawHighlightedRow =
+        if paneState.IsActive then
+            drawRow Theme.RowHightlighedBackground Theme.ItemNormalForeground
+        else
+            drawNormalRow
     
     paneState.Items
     |> Seq.skip paneState.FirstVisibleIndex
