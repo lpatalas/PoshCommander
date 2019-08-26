@@ -25,8 +25,9 @@ let createPane rowCount itemCount =
         RowCount = rowCount
     }
 
-let singlePagePane = createPane 10 10
-let twoPagePane = createPane 10 20
+let pageSize = 10
+let singlePagePane = createPane pageSize pageSize
+let twoPagePane = createPane pageSize (pageSize * 2)
 
 [<Test>]
 let ``highlightNextItem command should increase highlighted index by one``() =
@@ -114,3 +115,50 @@ let ``highlightLastItem should set first visible so that last item is visible on
     let newState = highlightLastItem initialState
     newState.FirstVisibleIndex |> should equal (newState.Items.Length - newState.RowCount)
 
+[<Test>]
+let ``highlightItemOnePageBefore should set highlighted index to item preceeding current one by row count minus one``() =
+    let initialState =
+        { twoPagePane with
+            FirstVisibleIndex = twoPagePane.RowCount
+            HighlightedIndex = twoPagePane.RowCount + 2 }
+    let newState = highlightItemOnePageBefore initialState
+    newState.HighlightedIndex |> should equal (initialState.HighlightedIndex - initialState.RowCount + 1)
+
+[<Test>]
+let ``highlightItemOnePageBefore should do nothing when first item is highlighted``() =
+    let initialState = { twoPagePane with HighlightedIndex = 0 }
+    let newState = highlightItemOnePageBefore initialState
+    newState |> should equal initialState
+
+[<Test>]
+let ``highlightItemOnePageBefore should set first visible index to index of highlighted item``() =
+    let initialState =
+        { twoPagePane with
+            FirstVisibleIndex = twoPagePane.RowCount
+            HighlightedIndex = twoPagePane.RowCount + 2 }
+    let newState = highlightItemOnePageBefore initialState
+    newState.FirstVisibleIndex |> should equal newState.HighlightedIndex
+
+[<Test>]
+let ``highlightItemOnePageAfter should set highlighted index to item succeeding current one by row count minus one``() =
+    let initialState = { twoPagePane with HighlightedIndex = 2 }
+    let newState = highlightItemOnePageAfter initialState
+    newState.HighlightedIndex |> should equal (initialState.HighlightedIndex + initialState.RowCount - 1)
+    
+[<Test>]
+let ``highlightItemOnePageAfter should do nothing when last item is highlighted``() =
+    let initialState =
+        { twoPagePane with
+            FirstVisibleIndex = twoPagePane.RowCount
+            HighlightedIndex = twoPagePane.Items.Length - 1 }
+    let newState = highlightItemOnePageAfter initialState
+    newState |> should equal initialState
+
+[<Test>]
+let ``highlightItemOnePageAfter should set first visible index so that highlighted item is last visible item``() =
+    let initialState =
+        { twoPagePane with
+            FirstVisibleIndex = 0
+            HighlightedIndex = 3 }
+    let newState = highlightItemOnePageAfter initialState
+    newState.FirstVisibleIndex |> should equal (newState.HighlightedIndex - newState.RowCount + 1)

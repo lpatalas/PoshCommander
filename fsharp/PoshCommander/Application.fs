@@ -41,10 +41,12 @@ let rec run (host: PSHost) applicationState =
         match keyInfo.Key with
         | ConsoleKey.DownArrow -> Some (HighlightingCommands.highlightNextItem |> applyToActivePane)
         | ConsoleKey.End -> Some (HighlightingCommands.highlightLastItem |> applyToActivePane)
-        | ConsoleKey.Home -> Some (HighlightingCommands.highlightFirstItem |> applyToActivePane)
-        | ConsoleKey.UpArrow -> Some (HighlightingCommands.highlightPreviousItem |> applyToActivePane)
         | ConsoleKey.Escape -> Some ApplicationCommands.quitApplication
+        | ConsoleKey.Home -> Some (HighlightingCommands.highlightFirstItem |> applyToActivePane)
+        | ConsoleKey.PageDown -> Some (HighlightingCommands.highlightItemOnePageAfter |> applyToActivePane)
+        | ConsoleKey.PageUp -> Some (HighlightingCommands.highlightItemOnePageBefore |> applyToActivePane)
         | ConsoleKey.Tab -> Some ApplicationCommands.switchActivePane
+        | ConsoleKey.UpArrow -> Some (HighlightingCommands.highlightPreviousItem |> applyToActivePane)
         | _ -> None
 
     let newState =
