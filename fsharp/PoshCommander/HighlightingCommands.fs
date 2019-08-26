@@ -18,9 +18,9 @@ let setHighlightedIndex adjuster (pane: PaneState) =
 
     let newFirstVisibleIndex =
         if newIndex - pane.FirstVisibleIndex >= pane.RowCount then
-            pane.FirstVisibleIndex + 1
+            newIndex - pane.RowCount + 1
         else if newIndex < pane.FirstVisibleIndex then
-            pane.FirstVisibleIndex - 1
+            newIndex
         else
             pane.FirstVisibleIndex
 

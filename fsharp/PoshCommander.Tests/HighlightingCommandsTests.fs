@@ -69,3 +69,48 @@ let ``highlightPreviousItem command should decrease first visible index when new
             FirstVisibleIndex = 3 }
     let newState = highlightPreviousItem initialState
     newState.FirstVisibleIndex |> should equal (initialState.FirstVisibleIndex - 1)
+
+[<Test>]
+let ``highlightFirstItem should set highlighted index to zero``() =
+    let initialState = { singlePagePane with HighlightedIndex = 3 }
+    let newState = highlightFirstItem initialState
+    newState.HighlightedIndex |> should equal 0
+
+[<Test>]
+let ``highlightFirstItem should do nothing when first item is already highlighted``() =
+    let initialState = { singlePagePane with HighlightedIndex = 0 }
+    let newState = highlightFirstItem initialState
+    newState|> should equal initialState
+
+[<Test>]
+let ``highlightFirstItem should set first visible index to zero if first item is not visible``() =
+    let initialState =
+        { twoPagePane with
+            FirstVisibleIndex = 3
+            HighlightedIndex = 3 }
+    let newState = highlightFirstItem initialState
+    newState.FirstVisibleIndex |> should equal 0
+
+[<Test>]
+let ``highlightLastItem should set highlighted index to index of last item``() =
+    let initialState = { singlePagePane with HighlightedIndex = 3 }
+    let newState = highlightLastItem initialState
+    newState.HighlightedIndex |> should equal (initialState.Items.Length - 1)
+
+[<Test>]
+let ``highlightLastItem should do nothing when last item is already highlighted``() =
+    let initialState =
+        { singlePagePane with
+            HighlightedIndex = singlePagePane.Items.Length - 1 }
+    let newState = highlightLastItem initialState
+    newState|> should equal initialState
+
+[<Test>]
+let ``highlightLastItem should set first visible so that last item is visible on screen``() =
+    let initialState =
+        { twoPagePane with
+            FirstVisibleIndex = 3
+            HighlightedIndex = 3 }
+    let newState = highlightLastItem initialState
+    newState.FirstVisibleIndex |> should equal (newState.Items.Length - newState.RowCount)
+
