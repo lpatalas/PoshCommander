@@ -1,7 +1,11 @@
 ﻿namespace PoshCommander
 
-open System.IO
-open System.Management.Automation.Host
+type Rectangle = {
+    Left: int
+    Top: int
+    Width: int
+    Height: int
+    }
 
 type DirectoryItemType = DirectoryItem | FileItem
 
@@ -12,12 +16,12 @@ type DirectoryItem = {
     }
 
 type PaneState = {
-    Bounds: Rectangle
-    DirectoryInfo: DirectoryInfo
+    DirectoryPath: string
     FirstVisibleIndex: int
     HighlightedIndex: int
     IsActive: bool
     Items: DirectoryItem[]
+    RowCount: int
     }
 
 type ApplicationState = {

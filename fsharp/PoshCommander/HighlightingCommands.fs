@@ -10,13 +10,23 @@ let clamp min max value =
     else
         value
 
-let setHighlightedIndex adjuster (paneState: PaneState) =
+let setHighlightedIndex adjuster (pane: PaneState) =
     let newIndex =
-        paneState
+        pane
         |> adjuster
-        |> clamp 0 (paneState.Items.Length - 1)
+        |> clamp 0 (pane.Items.Length - 1)
 
-    { paneState with HighlightedIndex = newIndex }
+    let newFirstVisibleIndex =
+        if newIndex - pane.FirstVisibleIndex >= pane.RowCount then
+            pane.FirstVisibleIndex + 1
+        else if newIndex < pane.FirstVisibleIndex then
+            pane.FirstVisibleIndex - 1
+        else
+            pane.FirstVisibleIndex
+
+    { pane with
+        FirstVisibleIndex = newFirstVisibleIndex
+        HighlightedIndex = newIndex }
 
 let highlightFirstItem = setHighlightedIndex (fun _ -> 0)
 let highlightLastItem = setHighlightedIndex (fun pane -> pane.Items.Length - 1)

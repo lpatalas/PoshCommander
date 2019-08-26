@@ -5,7 +5,7 @@ open PoshCommander.Colors
 open System.IO
 open System.Management.Automation.Host
 
-let create bounds isActive path =
+let create rowCount isActive path =
     let getItemType (fileSystemInfo: FileSystemInfo) =
         if fileSystemInfo.Attributes.HasFlag(FileAttributes.Directory) then
             DirectoryItem
@@ -26,15 +26,15 @@ let create bounds isActive path =
         |> Seq.toArray
 
     {
-        Bounds = bounds
-        DirectoryInfo = directoryInfo
+        DirectoryPath = directoryInfo.FullName
         FirstVisibleIndex = 0
         HighlightedIndex = 0
         IsActive = isActive
         Items = items
+        RowCount = rowCount
     }
     
-let drawHeader (ui: PSHostUserInterface) (bounds: Rectangle) paneState =
+let drawHeader (ui: PSHostUserInterface) bounds paneState =
     let rawUI = ui.RawUI
     rawUI.CursorPosition <- new Coordinates(bounds.Left, bounds.Top)
     
@@ -46,15 +46,14 @@ let drawHeader (ui: PSHostUserInterface) (bounds: Rectangle) paneState =
     let ansiBgColor = bgColor |> toAnsiBgColorCode
     let ansiFgColor = fgColor |> toAnsiFgColorCode
     
-    let caption = paneState.DirectoryInfo.FullName
-    let padding = new string(' ', bounds.Right - bounds.Left + 1 - caption.Length)
+    let caption = paneState.DirectoryPath
+    let padding = new string(' ', bounds.Width - caption.Length)
     let styledText = ansiBgColor + ansiFgColor + caption + padding + ansiResetCode
     ui.Write(styledText)
     
-let drawItems (ui: PSHostUserInterface) (bounds: Rectangle) paneState =
+let drawItems (ui: PSHostUserInterface) bounds paneState =
     let rawUI = ui.RawUI
-    let maxVisibleItems = bounds.Bottom - bounds.Top + 1
-    let totalWidth = bounds.Right - bounds.Left + 1
+    let totalWidth = bounds.Width
     
     let drawRow bgColor fgColor index (text: string) =
         let bgCode = bgColor |> toAnsiBgColorCode
@@ -77,25 +76,24 @@ let drawItems (ui: PSHostUserInterface) (bounds: Rectangle) paneState =
     
     paneState.Items
     |> Seq.skip paneState.FirstVisibleIndex
-    |> Seq.truncate maxVisibleItems
+    |> Seq.truncate paneState.RowCount
     |> Seq.iteri (fun index item ->
         let icon =
             match item.ItemType with
             | DirectoryItem -> "D"
             | FileItem -> "F"
-    
+
+        let itemIndex = index + paneState.FirstVisibleIndex
         let text = icon + " " + item.Name
-        if index = paneState.HighlightedIndex then
+        if itemIndex = paneState.HighlightedIndex then
             drawHighlightedRow index text
         else
             drawNormalRow index text
     )
     
-let draw (ui: PSHostUserInterface) paneState =
-    let bounds = paneState.Bounds
-    
-    let headerBounds = new Rectangle(bounds.Left, bounds.Top, bounds.Right, bounds.Top)
+let draw (ui: PSHostUserInterface) bounds paneState =    
+    let headerBounds = { bounds with Height = 1 }
     drawHeader ui headerBounds paneState
     
-    let itemsBounds = new Rectangle(bounds.Left, bounds.Top + 1, bounds.Right, bounds.Bottom)
+    let itemsBounds = { bounds with Top = 1; Height = bounds.Height - 1 }
     drawItems ui itemsBounds paneState
