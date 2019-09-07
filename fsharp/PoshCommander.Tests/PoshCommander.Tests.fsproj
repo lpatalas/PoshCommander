@@ -5,9 +5,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="ThemeTests.fs" />
-        <Compile Include="HighlightingCommandsTests.fs" />
-        <Compile Include="InputTests.fs" />
+        <Compile Include="Theme.fs" />
+        <Compile Include="HighlightingCommands.fs" />
+        <Compile Include="Input.fs" />
     </ItemGroup>
 
     <ItemGroup>
