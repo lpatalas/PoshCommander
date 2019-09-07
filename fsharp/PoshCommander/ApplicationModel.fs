@@ -7,11 +7,11 @@ type Rectangle = {
     Height: int
     }
 
-type DirectoryItemType = DirectoryItem | FileItem
+type FileSystemItemType = DirectoryItem | FileItem
 
-type DirectoryItem = {
+type FileSystemItem = {
     FullPath: string
-    ItemType: DirectoryItemType
+    ItemType: FileSystemItemType
     Name: string
     }
 
@@ -20,7 +20,7 @@ type PaneState = {
     FirstVisibleIndex: int
     HighlightedIndex: int
     IsActive: bool
-    Items: DirectoryItem[]
+    Items: FileSystemItem[]
     RowCount: int
     }
 
