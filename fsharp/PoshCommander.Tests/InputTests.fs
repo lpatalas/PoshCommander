@@ -1,9 +1,9 @@
 ﻿module PoshCommander.Tests.InputTests
 
-open FsUnit
 open PoshCommander.UI
 open System
 open NUnit.Framework
+open Swensen.Unquote
 
 let charToConsoleKey c =
     enum (int (Char.ToUpperInvariant(c)))
@@ -20,7 +20,7 @@ let readTestInput inputString =
 
 let shouldBeReadAsOption expectedResult inputString =
     let result = readTestInput inputString
-    result |> should equal expectedResult
+    test <@ result = expectedResult @>
 
 let shouldBeReadAs expectedResult =
     shouldBeReadAsOption (Some expectedResult)
@@ -55,7 +55,7 @@ let ``Should skip all characters for which predicate returns false``() =
 
     let inputSequence = createInputSequence "ABCDEF\r"
     let result = Input.readInput predicate ignore inputSequence
-    result |> should equal (Some "ACE")
+    test <@ result = Some "ACE" @>
 
 [<TestCase("\x1b", TestName = "{m}(<ESC>)")>]
 [<TestCase("Inp\x1but", TestName = "{m}(Inp<ESC>ut)")>]
@@ -77,8 +77,8 @@ let ``Should stop reading input after Enter or Escape is pressed`` (breakCharact
 
     Input.readInput (fun _ -> true) ignore inputSequence |> ignore
 
-    let head = Seq.head inputSequence
-    head.KeyChar |> should equal 'X'
+    let nextChar = (Seq.head inputSequence).KeyChar
+    test <@ nextChar = 'X' @>
 
 [<Test>]
 let ``Should execute callback after each typed character``() =
@@ -89,7 +89,7 @@ let ``Should execute callback after each typed character``() =
     let inputSequence = createInputSequence "Inp\but\r"
     Input.readInput (fun _ -> true) callback inputSequence |> ignore
 
-    inputHistory |> should equal [
+    let expectedHistory = [
         ""
         "I"
         "In"
@@ -98,3 +98,5 @@ let ``Should execute callback after each typed character``() =
         "Inu"
         "Inut"
     ]
+
+    test <@ inputHistory = expectedHistory @>
