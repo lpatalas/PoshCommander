@@ -55,12 +55,14 @@ let drawItems (ui: PSHostUserInterface) bounds paneState =
     let rawUI = ui.RawUI
     let totalWidth = bounds.Width
     
-    let drawRow bgColor fgColor index (text: string) =
+    let drawRow bgColor fgColor index (icon: Theme.Icon) (itemName: string) =
         let bgCode = bgColor |> toAnsiBgColorCode
         let fgCode = fgColor |> toAnsiFgColorCode
-        let padding = new string(' ', totalWidth - text.Length)
+        let padding = new string(' ', totalWidth - itemName.Length - 2)
         rawUI.CursorPosition <- new Coordinates(bounds.Left, bounds.Top + index)
-        ui.Write(bgCode + fgCode + text + padding + ansiResetCode)
+
+        let iconFgCode = toAnsiFgColorCode icon.Color
+        ui.Write(bgCode + iconFgCode + (string icon.Glyph) + fgCode + itemName + padding + ansiResetCode)
     
     let drawNormalRow index =
         let bgColor =
@@ -75,6 +77,9 @@ let drawItems (ui: PSHostUserInterface) bounds paneState =
             drawRow Theme.RowHightlighedBackground Theme.ItemNormalForeground
         else
             drawNormalRow
+
+    let getFileIcon =
+        Theme.getFileIcon Theme.defaultFileIcon Theme.defaultFilePatterns
     
     paneState.Items
     |> Seq.skip paneState.FirstVisibleIndex
@@ -82,15 +87,14 @@ let drawItems (ui: PSHostUserInterface) bounds paneState =
     |> Seq.iteri (fun index item ->
         let icon =
             match item.ItemType with
-            | DirectoryItem -> "D"
-            | FileItem -> "F"
+            | DirectoryItem -> Theme.directoryIcon
+            | FileItem -> getFileIcon item.Name
 
         let itemIndex = index + paneState.FirstVisibleIndex
-        let text = icon + " " + item.Name
         if itemIndex = paneState.HighlightedIndex then
-            drawHighlightedRow index text
+            drawHighlightedRow index icon item.Name
         else
-            drawNormalRow index text
+            drawNormalRow index icon item.Name
     )
     
 let draw (ui: PSHostUserInterface) bounds paneState =    

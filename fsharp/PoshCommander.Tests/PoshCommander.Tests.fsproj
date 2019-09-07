@@ -5,6 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Compile Include="ThemeTests.fs" />
         <Compile Include="HighlightingCommandsTests.fs" />
         <Compile Include="InputTests.fs" />
     </ItemGroup>
