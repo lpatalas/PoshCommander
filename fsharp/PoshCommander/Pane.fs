@@ -36,7 +36,7 @@ let create rowCount isActive path =
     
 let drawHeader (ui: PSHostUserInterface) bounds paneState =
     let rawUI = ui.RawUI
-    rawUI.CursorPosition <- new Coordinates(bounds.Left, bounds.Top)
+    rawUI.CursorPosition <- new Coordinates(bounds.Left, 1000 - ui.RawUI.WindowSize.Height +  bounds.Top)
     
     let (bgColor, fgColor) =
         match paneState.IsActive with
@@ -59,10 +59,12 @@ let drawItems (ui: PSHostUserInterface) bounds paneState =
         let bgCode = bgColor |> toAnsiBgColorCode
         let fgCode = fgColor |> toAnsiFgColorCode
         let padding = new string(' ', totalWidth - itemName.Length - 2)
-        rawUI.CursorPosition <- new Coordinates(bounds.Left, bounds.Top + index)
+        rawUI.CursorPosition <- new Coordinates(bounds.Left, 1000 - ui.RawUI.WindowSize.Height + bounds.Top + index)
 
         let iconFgCode = toAnsiFgColorCode icon.Color
-        ui.Write(bgCode + iconFgCode + (string icon.Glyph) + fgCode + itemName + padding + ansiResetCode)
+        let coloredIcon = sprintf "%s%c " iconFgCode icon.Glyph
+        let coloredName = fgCode + itemName
+        ui.Write(bgCode + coloredIcon + coloredName + padding + ansiResetCode)
     
     let drawNormalRow index =
         let bgColor =
