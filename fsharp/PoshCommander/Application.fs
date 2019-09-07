@@ -6,7 +6,6 @@ open System
 open PoshCommander.Commands
 
 let create (windowSize: Size) leftPanePath rightPanePath =
-    let middle = windowSize.Width / 2
     let paneRowCount = windowSize.Height - 1
     let leftPane = Pane.create paneRowCount true leftPanePath 
     let rightPane = Pane.create paneRowCount false rightPanePath 
