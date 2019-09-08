@@ -11,7 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\PoshCommander\PoshCommander.fsproj" />
+        <ProjectReference Include="..\src\PoshCommander.fsproj" />
     </ItemGroup>
 
     <ItemGroup>

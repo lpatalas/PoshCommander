@@ -1,5 +1,3 @@
 ﻿Import-Module "$PSScriptRoot\PoshCommander.dll"
 
-#1..10 | %{ Write-Host "Line $_" }
-
-Invoke-PoshCommander .
+Invoke-PoshCommander "C:\Program Files (x86)" "C:\Program Files"
