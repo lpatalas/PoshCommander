@@ -8,6 +8,8 @@ param(
 )
 
 $workspaceRoot = Split-Path $PSScriptRoot
+$projectPath = Join-Path $workspaceRoot 'src' "$ProjectName.fsproj"
+$testProjectPath = Join-Path $workspaceRoot 'tests' "$ProjectName.Tests.fsproj"
 
 function Main {
     BuildSolution
@@ -39,8 +41,6 @@ function BuildSolution {
 }
 
 function RunTests {
-    $testProjectPath = Join-Path $workspaceRoot 'tests' "$ProjectName.Tests.csproj"
-
     dotnet test `
         --configuration Release `
         --no-build `
@@ -53,8 +53,7 @@ function RunTests {
 }
 
 function PublishProjectToOutputDirectory {
-    $projectPath = Join-Path $workspaceRoot 'src' "$ProjectName.csproj"
-    $publishOutputPath = Join-Path $workspaceRoot 'build' 'output' $ProjectName
+    $publishOutputPath = Join-Path $workspaceRoot 'artifacts' $ProjectName
     $sourceManifestPath = Join-Path $workspaceRoot 'src' "$ProjectName.psd1"
     $manifest = Import-PowerShellDataFile -Path $sourceManifestPath
 
