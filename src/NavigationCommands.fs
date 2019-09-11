@@ -6,10 +6,11 @@ let getHighlightedItem pane =
     pane.Items.[pane.HighlightedIndex]
 
 let invokeHighlightedItem invokeDirectory invokeFile pane =
+    let highlightedItem = getHighlightedItem pane
     pane
-    |> match getHighlightedItem pane with
-        | { ItemType = DirectoryItem } -> invokeDirectory
-        | { ItemType = FileItem } -> invokeFile
+    |> match highlightedItem with
+        | { ItemType = DirectoryItem } -> invokeDirectory highlightedItem
+        | { ItemType = FileItem } -> invokeFile highlightedItem
 
 let createDirectoryItem itemType (directoryInfo: FileSystemInfo) =
     {

@@ -35,24 +35,32 @@ let findIndexByFullPath path items =
     items
     |> Seq.findIndex (fun item -> item.FullPath = path)
 
+let id2 _ x = x
+
 module invokeHighlightedItem =
     [<Test>]
     let ``Should invoke directory callback when highlighted item is a directory``() =
         let directoryIndex = findIndexOfItemType DirectoryItem defaultPaneState.Items
         let paneState = { defaultPaneState with HighlightedIndex = directoryIndex }
-        let directoryCallback state =
-            { state with DirectoryPath = "DIRECTORY" }
-        let result = paneState |> invokeHighlightedItem directoryCallback id
-        test <@ result.DirectoryPath = "DIRECTORY" @>
+        let mutable invokedDirectory = None
+        let directoryCallback item state =
+            invokedDirectory <- Some item
+            state
+
+        paneState |> invokeHighlightedItem directoryCallback id2 |> ignore
+        test <@ invokedDirectory = Some paneState.Items.[directoryIndex] @>
 
     [<Test>]
     let ``Should invoke file callback when highlighted item is a file``() =
         let fileIndex = findIndexOfItemType FileItem defaultPaneState.Items
         let paneState = { defaultPaneState with HighlightedIndex = fileIndex }
-        let fileCallback state =
-            { state with DirectoryPath = "FILE" }
-        let result = paneState |> invokeHighlightedItem id fileCallback
-        test <@ result.DirectoryPath = "FILE" @>
+        let mutable invokedFile = None
+        let fileCallback item state =
+            invokedFile <- Some item
+            state
+
+        paneState |> invokeHighlightedItem id2 fileCallback |> ignore
+        test <@ invokedFile = Some paneState.Items.[fileIndex] @>
 
 module navigateToDirectory =
     [<Test>]
@@ -77,13 +85,11 @@ module navigateToDirectory =
         let targetPath = @"T:\Test"
         let originalPath = Path.Combine(targetPath, "SubDir")
         let paneState = { defaultPaneState with DirectoryPath = originalPath }
-        let enumerate _ =
-            [|
-                { FullPath = Path.Combine(targetPath, "A"); ItemType = DirectoryItem; Name = "A" }
-                { FullPath = Path.Combine(targetPath, "B"); ItemType = DirectoryItem; Name = "B" }
-                { FullPath = originalPath; ItemType = DirectoryItem; Name = Path.GetFileName(originalPath) }
-                { FullPath = Path.Combine(targetPath, "C"); ItemType = DirectoryItem; Name = "C" }
-            |]
+        let enumerate path =
+            generateItems 2 0 path
+            |> Array.append ([| { FullPath = originalPath; ItemType = DirectoryItem; Name = Path.GetFileName(originalPath) } |])
+            |> Array.append (generateItems 2 0 path)
+
         let result = paneState |> navigateToDirectory enumerate targetPath
         let originalDirectoryIndex = result.Items |> findIndexByFullPath originalPath
         test <@ result.HighlightedIndex = originalDirectoryIndex @>
