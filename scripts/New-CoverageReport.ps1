@@ -12,8 +12,6 @@ $testResultsDir = Join-Path $workspaceRoot 'artifacts' 'TestResults'
 $reportOutputDir = Join-Path $testResultsDir 'CoverageReport'
 
 function Main {
-    Set-Location $projectDir
-
     $coverageResultsFile = GenerateCoverageResults
 
     Write-Host "Generating coverage report from file '$coverageResultsFile'" -ForegroundColor Cyan
@@ -46,16 +44,17 @@ function GenerateCoverageResults {
 
     Write-Host 'Running tests' -ForegroundColor Cyan
     dotnet test `
+        --configuration Debug `
         --results-directory:"$testResultsDir" `
         --settings:"$runsettingsPath" `
-        "$testProjectPath" `
+        $testProjectPath `
         | Out-Host
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test exited with error code $LASTEXITCODE"
     }
 
-    $coverageResultsFileName = 'coverage.opencover.xml'
+    $coverageResultsFileName = 'coverage.cobertura.xml'
     $coverageResultsFile = Get-ChildItem `
         -Include $coverageResultsFileName `
         -LiteralPath $testResultsDir `
@@ -76,10 +75,4 @@ function GenerateCoverageResults {
     }
 }
 
-$originalLocation = Get-Location
-try {
-    Main
-}
-finally {
-    Set-Location $originalLocation
-}
+Main
