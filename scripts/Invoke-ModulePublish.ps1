@@ -75,25 +75,7 @@ function GenerateHelpFiles($publishDirectory) {
 }
 
 function RunPSScriptAnalyzer($publishDirectory) {
-    Write-Verbose 'Running PSScriptAnalyzer on published project'
-
-    $allResults = @()
-
-    Get-ChildItem -Path $publishDirectory -Filter '*.ps*1' `
-        | ForEach-Object {
-            Write-Verbose "Analyzing $($_.FullName)"
-            $results = Invoke-ScriptAnalyzer `
-                -Path $_ `
-                -Severity Warning `
-                -Settings PSGallery
-
-            $allResults += @($results)
-        }
-
-    if ($allResults.Count -gt 0) {
-        $allResults | Out-Host
-        throw 'PSScriptAnalyzer returned some errors'
-    }
+    & "$PSScriptRoot\Test-ScriptsInDirectory.ps1" -Path $publishDirectory
 }
 
 Main

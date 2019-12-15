@@ -13,7 +13,7 @@ $artifactsDir = Join-Path $workspaceRoot 'artifacts'
 
 function Main {
     RunStep "Build script analysis" {
-        & "$PSScriptRoot\Invoke-ScriptSelfAnalysis.ps1"
+        & "$PSScriptRoot\Test-ScriptsInDirectory.ps1" -Path $PSScriptRoot
     }
 
     RemoveExistingArtifacts
