@@ -1,15 +1,15 @@
 [CmdletBinding()]
 param(
+    [Parameter(Mandatory)]
     [ValidateSet('Debug', 'Release')]
-    [String] $Configuration = 'Release'
+    [String] $Configuration
 )
 
 $ErrorActionPreference = 'Stop'
-Set-StrictMode -Version Latest
 
-$workspaceRoot = Split-Path $PSScriptRoot
-$artifactsDir = Join-Path $workspaceRoot 'artifacts'
-$tempArtifactsDir = Join-Path $artifactsDir 'temp'
+$workspaceRoot = & "$PSScriptRoot\Get-WorkspaceRoot.ps1"
+$artifactsRoot = Join-Path $workspaceRoot 'artifacts'
+$tempArtifactsRoot = Join-Path $artifactsRoot 'temp'
 $solutionRoot = Join-Path $workspaceRoot 'src'
 $projectDir = Join-Path $solutionRoot 'PoshCommander.Tests'
 $runsettingsPath = Join-Path $projectDir 'coverlet.runsettings'
@@ -19,26 +19,15 @@ $reportOutputDir = Join-Path $testResultsDir 'CoverageReport'
 
 function Main {
     $coverageResultsFile = GenerateCoverageResults
+    $coverageReportFile = GenerateReport $coverageResultsFile
 
-    Write-Host "Generating coverage report from file '$coverageResultsFile'" -ForegroundColor Cyan
-    dotnet reportgenerator `
-        "-reports:$coverageResultsFile" `
-        "-targetdir:$reportOutputDir" `
-        "-assemblyfilters:+PoshCommander*" `
-        | Out-Host
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "dotnet reportgenerator exited with error code $LASTEXITCODE"
-    }
-
-    $reportIndexPath = Join-Path $reportOutputDir 'index.htm'
-    return Get-Item `
-        -LiteralPath $reportIndexPath
+    $coverageResultsFile
+    $coverageReportFile
 }
 
 function GenerateCoverageResults {
     $runsettingsPath = Join-Path (Split-Path $testProjectPath) 'coverlet.runsettings'
-    $testResultsDir = Join-Path $tempArtifactsDir 'TestResults'
+    $testResultsDir = Join-Path $tempArtifactsRoot 'TestResults'
 
     if (Test-Path $testResultsDir) {
         Write-Host "Clearing results directory '$testResultsDir'" -ForegroundColor Cyan
@@ -57,7 +46,8 @@ function GenerateCoverageResults {
         --no-restore `
         --results-directory:"$testResultsDir" `
         --settings:"$runsettingsPath" `
-        $testProjectPath
+        $testProjectPath `
+        | Out-Host
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test exited with error code $LASTEXITCODE"
@@ -69,8 +59,8 @@ function GenerateCoverageResults {
         -LiteralPath $testResultsDir `
         -Recurse
 
-    if ($coverageResultsFile.Count -eq 1) {
-        Copy-Item $coverageResultsFile $artifactsRoot
+    if (@($coverageResultsFile).Count -eq 1) {
+        Copy-Item $coverageResultsFile $artifactsRoot -PassThru
     }
     elseif (-not $coverageResultsFile) {
         throw "Can't find any '$coverageResultsFileName' in directory '$testResultsDir'"
@@ -82,6 +72,24 @@ function GenerateCoverageResults {
 
         throw "Found more than one '$coverageResultsFileName' files: $allFiles"
     }
+}
+
+function GenerateReport($coverageResultsFile) {
+    Write-Verbose "Generating coverage report from file '$coverageResultsFile'"
+    dotnet reportgenerator `
+        "-reports:$coverageResultsFile" `
+        "-targetdir:$reportOutputDir" `
+        "-assemblyfilters:+PoshCommander*" `
+        | ForEach-Object {
+            Write-Verbose $_
+        }
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet reportgenerator exited with error code $LASTEXITCODE"
+    }
+
+    $reportIndexPath = Join-Path $reportOutputDir 'index.htm'
+    Get-Item -LiteralPath $reportIndexPath
 }
 
 Main
