@@ -14,6 +14,9 @@ param(
     [String] $ApiKey
 )
 
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
+
 Write-Host "Publishing module '$ModulePath' to repository '$RepositoryName'" -ForegroundColor Cyan
 
 $originalModulePath = $env:PSModulePath

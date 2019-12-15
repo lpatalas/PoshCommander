@@ -1,4 +1,5 @@
 @echo off
+
 pwsh.exe -Version 2>NUL >NUL || (
     echo "pwsh.exe not found. Install PowerShell Core from https://github.com/PowerShell/PowerShell"
     exit /B

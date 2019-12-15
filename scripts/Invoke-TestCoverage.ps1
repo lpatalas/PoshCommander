@@ -1,3 +1,4 @@
+#Requires -PSEdition Core
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]

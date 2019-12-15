@@ -1,4 +1,4 @@
-#Requires -PSEdition Core -Module PSScriptAnalyzer
+#Requires -PSEdition Core
 [CmdletBinding()]
 param(
     [ValidateSet('Debug', 'Release')]
@@ -10,9 +10,12 @@ Set-StrictMode -Version Latest
 
 $workspaceRoot = & "$PSScriptRoot\Get-WorkspaceRoot.ps1"
 $artifactsDir = Join-Path $workspaceRoot 'artifacts'
-$solutionPath = Join-Path 'src' "PoshCommander.sln"
 
 function Main {
+    RunStep "Build script analysis" {
+        & "$PSScriptRoot\Invoke-ScriptSelfAnalysis.ps1"
+    }
+
     RemoveExistingArtifacts
 
     RunStep "Compilation" {
@@ -25,7 +28,7 @@ function Main {
     }
 
     $modulePath = RunStep "Publish module to artifacts directory" {
-        & "$PSScriptRoot\Publish-Module.ps1" `
+        & "$PSScriptRoot\Invoke-ModulePublish.ps1" `
             -Configuration $Configuration
     }
 
@@ -61,6 +64,8 @@ function RemoveTemporaryArtifacts {
 }
 
 function BuildSolution {
+    $solutionPath = Join-Path 'src' "PoshCommander.sln"
+
     dotnet build `
         --configuration $Configuration `
         --verbosity (& "$PSScriptRoot\Get-MSBuildVerbosity.ps1") `

@@ -1,3 +1,4 @@
+#Requires -PSEdition Core -Module platyPS, PSScriptAnalyzer
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)]
@@ -75,11 +76,6 @@ function GenerateHelpFiles($publishDirectory) {
 
 function RunPSScriptAnalyzer($publishDirectory) {
     Write-Verbose 'Running PSScriptAnalyzer on published project'
-
-    if (-not (Get-Module PSScriptAnalyzer -ErrorAction SilentlyContinue)) {
-        Write-Verbose 'Importing PSScriptAnalyzer module'
-        Import-Module PSScriptAnalyzer -ErrorAction Stop
-    }
 
     $allResults = @()
 
