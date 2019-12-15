@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\src\PoshCommander.fsproj" />
+        <ProjectReference Include="..\PoshCommander\PoshCommander.fsproj" />
     </ItemGroup>
 
     <ItemGroup>

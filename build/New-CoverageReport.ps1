@@ -4,7 +4,8 @@ param()
 $ErrorActionPreference = 'Stop'
 
 $workspaceRoot = Split-Path $PSScriptRoot
-$projectDir = Join-Path $workspaceRoot 'tests'
+$solutionRoot = Join-Path $workspaceRoot 'src'
+$projectDir = Join-Path $solutionRoot 'PoshCommander.Tests'
 $runsettingsPath = Join-Path $projectDir 'coverlet.runsettings'
 $testProjectPath = Join-Path $projectDir 'PoshCommander.Tests.fsproj'
 $testResultsDir = Join-Path $workspaceRoot 'artifacts' 'TestResults'

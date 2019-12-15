@@ -8,8 +8,10 @@ param(
 )
 
 $workspaceRoot = Split-Path $PSScriptRoot
-$projectPath = Join-Path $workspaceRoot 'src' "$ProjectName.fsproj"
-$testProjectPath = Join-Path $workspaceRoot 'tests' "$ProjectName.Tests.fsproj"
+$solutionRoot = Join-Path $workspaceRoot 'src'
+$solutionPath = Join-Path $solutionRoot "$ProjectName.sln"
+$projectPath = Join-Path $solutionRoot $ProjectName "$ProjectName.fsproj"
+$testProjectPath = Join-Path $solutionRoot "$ProjectName.Tests" "$ProjectName.Tests.fsproj"
 
 function Main {
     BuildSolution
@@ -27,13 +29,11 @@ function Main {
 
 
 function BuildSolution {
-    $solutionPath = Join-Path $workspaceRoot "$ProjectName.sln"
-
     dotnet build `
         --configuration Release `
         /p:ModuleVersion="$moduleVersion" `
         /p:PreserveCompilationContext="false" `
-        "$solutionPath"
+        $solutionPath
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet build exited with error code $LASTEXITCODE"
@@ -45,7 +45,7 @@ function RunTests {
         --configuration Release `
         --no-build `
         --no-restore `
-        "$testProjectPath"
+        $testProjectPath
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test exited with error code $LASTEXITCODE"
