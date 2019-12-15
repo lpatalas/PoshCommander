@@ -4,16 +4,21 @@ param(
     [ValidateRange('Positive')]
     [Nullable[Int32]] $PreReleaseNumber,
 
-    [String] $ProjectName = 'PoshCommander'
+    [ValidateSet('Debug', 'Release')]
+    [String] $Configuration = 'Release'
 )
 
+$projectName = 'PoshCommander'
 $workspaceRoot = Split-Path $PSScriptRoot
+$artifactsRoot = Join-Path $workspaceRoot 'artifacts'
+$tempArtifactsRoot = Join-Path $artifactsRoot 'temp'
 $solutionRoot = Join-Path $workspaceRoot 'src'
-$solutionPath = Join-Path $solutionRoot "$ProjectName.sln"
-$projectPath = Join-Path $solutionRoot $ProjectName "$ProjectName.fsproj"
-$testProjectPath = Join-Path $solutionRoot "$ProjectName.Tests" "$ProjectName.Tests.fsproj"
+$solutionPath = Join-Path $solutionRoot "$projectName.sln"
+$projectPath = Join-Path $solutionRoot $projectName "$projectName.fsproj"
+$testProjectPath = Join-Path $solutionRoot "$projectName.Tests" "$projectName.Tests.fsproj"
 
 function Main {
+    CleanTempArtifacts
     BuildSolution
     RunTests
 
@@ -22,15 +27,25 @@ function Main {
     GenerateHelpFiles $modulePath
     UpdatePreReleaseVersion $modulePath
     RunPSScriptAnalyzer $modulePath
+
     Write-Host 'Build succeeded' -ForegroundColor Green
 
     Get-Item $modulePath
 }
 
+function CleanTempArtifacts {
+    if (Test-Path $tempArtifactsRoot) {
+        Write-Verbose "Removing temporary artifacts directory: $tempArtifactsRoot"
+        Remove-Item `
+            -LiteralPath $tempArtifactsRoot `
+            -Force `
+            -Recurse
+    }
+}
 
 function BuildSolution {
     dotnet build `
-        --configuration Release `
+        --configuration $Configuration `
         /p:ModuleVersion="$moduleVersion" `
         /p:PreserveCompilationContext="false" `
         $solutionPath
@@ -41,20 +56,56 @@ function BuildSolution {
 }
 
 function RunTests {
+    $runsettingsPath = Join-Path (Split-Path $testProjectPath) 'coverlet.runsettings'
+    $testResultsDir = Join-Path $tempArtifactsRoot 'TestResults'
+
+    if (Test-Path $testResultsDir) {
+        Write-Host "Clearing results directory '$testResultsDir'" -ForegroundColor Cyan
+        Remove-Item `
+            -Force `
+            -Path "$testResultsDir\*" `
+            -Recurse
+    }
+    else {
+        Write-Host "Creating results directory '$testResultsDir'"
+    }
+
     dotnet test `
-        --configuration Release `
+        --configuration $Configuration `
         --no-build `
         --no-restore `
+        --results-directory:"$testResultsDir" `
+        --settings:"$runsettingsPath" `
         $testProjectPath
 
     if ($LASTEXITCODE -ne 0) {
         throw "dotnet test exited with error code $LASTEXITCODE"
     }
+
+    $coverageResultsFileName = 'coverage.cobertura.xml'
+    $coverageResultsFile = Get-ChildItem `
+        -Include $coverageResultsFileName `
+        -LiteralPath $testResultsDir `
+        -Recurse
+
+    if ($coverageResultsFile.Count -eq 1) {
+        Copy-Item $coverageResultsFile $artifactsRoot
+    }
+    elseif (-not $coverageResultsFile) {
+        throw "Can't find any '$coverageResultsFileName' in directory '$testResultsDir'"
+    }
+    elseif ($coverageResultsFile.Count -gt 1) {
+        $allFiles = $coverageResultsFile `
+            | ForEach-Object { "'$($_.FullName)'" } `
+            -join ';'
+
+        throw "Found more than one '$coverageResultsFileName' files: $allFiles"
+    }
 }
 
 function PublishProjectToOutputDirectory {
-    $publishOutputPath = Join-Path $workspaceRoot 'artifacts' $ProjectName
-    $sourceManifestPath = Join-Path $workspaceRoot 'src' "$ProjectName.psd1"
+    $publishOutputPath = Join-Path $workspaceRoot 'artifacts' $projectName
+    $sourceManifestPath = Join-Path $solutionRoot $projectName "$projectName.psd1"
     $manifest = Import-PowerShellDataFile -Path $sourceManifestPath
 
     Write-Host "Publishing solution '$projectPath' to '$publishOutputPath'" -ForegroundColor Cyan
@@ -107,7 +158,7 @@ function UpdatePreReleaseVersion($publishDirectory) {
         $preReleaseVersion = 'pre{0:000}' -f $PreReleaseNumber
         Write-Host "Setting pre-release version to: $preReleaseVersion" -ForegroundColor Cyan
 
-        $manifestPath = Join-Path $publishDirectory "$ProjectName.psd1"
+        $manifestPath = Join-Path $publishDirectory "$projectName.psd1"
         Update-ModuleManifest `
             -Path $manifestPath `
             -Prerelease $preReleaseVersion
