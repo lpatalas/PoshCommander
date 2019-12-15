@@ -14,16 +14,23 @@ $solutionPath = Join-Path 'src' "PoshCommander.sln"
 
 function Main {
     RemoveExistingArtifacts
-    BuildSolution
 
-    $coverageResults, $coverageReport = & "$PSScriptRoot\Invoke-TestCoverage.ps1" `
-        -Configuration $Configuration
+    RunStep "Compilation" {
+        BuildSolution
+    }
 
-    $modulePath = & "$PSScriptRoot\Publish-Module.ps1" `
-        -Configuration $Configuration
+    $coverageResults, $coverageReport = RunStep "Tests and code coverage" {
+        & "$PSScriptRoot\Invoke-TestCoverage.ps1" `
+            -Configuration $Configuration
+    }
+
+    $modulePath = RunStep "Publish module to artifacts directory" {
+        & "$PSScriptRoot\Publish-Module.ps1" `
+            -Configuration $Configuration
+    }
 
     RemoveTemporaryArtifacts
-    Write-Host 'Build succeeded' -ForegroundColor Green
+    ShowStepSummary
 
     [PSCustomObject]@{
         PublishedModule = $modulePath
@@ -63,4 +70,42 @@ function BuildSolution {
     }
 }
 
+function WriteHeader($text) {
+    Write-Host ('-' * ($text.Length + 8)) -ForegroundColor Cyan
+    Write-Host "--- $text ---" -ForegroundColor Cyan
+    Write-Host ('-' * ($text.Length + 8)) -ForegroundColor Cyan
+}
+
+$executedSteps = New-Object System.Collections.ArrayList
+$totalTimeStopwatch = New-Object System.Diagnostics.Stopwatch
+
+function RunStep {
+    param(
+        [String] $Name,
+        [scriptblock] $Action
+    )
+
+    $sw = New-Object System.Diagnostics.Stopwatch
+    $sw.Start()
+
+    WriteHeader $Name
+    Invoke-Command -ScriptBlock $Action
+    Write-Host
+
+    $elapsedTime = $sw.Elapsed
+    $executedSteps.Add([PSCustomObject]@{
+        Duration = $elapsedTime
+        Name = $Name
+    }) | Out-Null
+}
+
+function ShowStepSummary {
+    WriteHeader 'Summary'
+    $executedSteps `
+        | Format-Table -Property Name, Duration -HideTableHeaders
+
+    Write-Host "Total time: $($totalTimeStopwatch.Elapsed)"
+}
+
+$totalTimeStopwatch.Start()
 Main
