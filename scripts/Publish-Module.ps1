@@ -39,8 +39,8 @@ function PublishProjectToOutputDirectory {
         --configuration $Configuration `
         --no-build `
         --no-restore `
-        --nologo `
         --output "$publishOutputPath" `
+        --verbosity (& "$PSScriptRoot\Get-MSBuildVerbosity.ps1") `
         /p:ModuleVersion="$($manifest.ModuleVersion)" `
         /p:PreserveCompilationContext="false" `
         "$projectPath" `

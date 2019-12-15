@@ -30,7 +30,7 @@ function Main {
     }
 
     RemoveTemporaryArtifacts
-    ShowStepSummary
+    ShowSummary
 
     [PSCustomObject]@{
         PublishedModule = $modulePath
@@ -63,6 +63,7 @@ function RemoveTemporaryArtifacts {
 function BuildSolution {
     dotnet build `
         --configuration $Configuration `
+        --verbosity (& "$PSScriptRoot\Get-MSBuildVerbosity.ps1") `
         $solutionPath
 
     if ($LASTEXITCODE -ne 0) {
@@ -99,12 +100,12 @@ function RunStep {
     }) | Out-Null
 }
 
-function ShowStepSummary {
+function ShowSummary {
     WriteHeader 'Summary'
     $executedSteps `
         | Format-Table -Property Name, Duration -HideTableHeaders
 
-    Write-Host "Total time: $($totalTimeStopwatch.Elapsed)"
+    Write-Host "Total time: $($totalTimeStopwatch.Elapsed)" -ForegroundColor Green
 }
 
 $totalTimeStopwatch.Start()

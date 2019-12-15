@@ -30,14 +30,14 @@ function GenerateCoverageResults {
     $testResultsDir = Join-Path $tempArtifactsRoot 'TestResults'
 
     if (Test-Path $testResultsDir) {
-        Write-Host "Clearing results directory '$testResultsDir'" -ForegroundColor Cyan
+        Write-Verbose "Clearing results directory '$testResultsDir'" -ForegroundColor Cyan
         Remove-Item `
             -Force `
             -Path "$testResultsDir\*" `
             -Recurse
     }
     else {
-        Write-Host "Creating results directory '$testResultsDir'"
+        Write-Verbose "Creating results directory '$testResultsDir'"
     }
 
     dotnet test `
@@ -46,6 +46,7 @@ function GenerateCoverageResults {
         --no-restore `
         --results-directory:"$testResultsDir" `
         --settings:"$runsettingsPath" `
+        --verbosity (& "$PSScriptRoot\Get-MSBuildVerbosity.ps1") `
         $testProjectPath `
         | Out-Host
 
