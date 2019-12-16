@@ -11,8 +11,11 @@ indent_size = 4
 [*.json]
 indent_size = 2
 
-[*.csproj]
-indent_size = 2
+[*.{csproj,fsproj}]
+indent_size = 4
+
+[*.{fs,fsi,fsx}]
+indent_size = 4
 
 [*.cs]
 indent_size = 4

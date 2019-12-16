@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
     </PropertyGroup>
-    
+
     <ItemGroup>
         <None Include="Properties\launchSettings.json" />
         <Compile Include="SeqEx.fs" />
