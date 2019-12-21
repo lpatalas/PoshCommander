@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$workspaceRoot = & "$PSScriptRoot\Get-WorkspaceRoot.ps1"
+$workspaceRoot = & "$PSScriptRoot\GetWorkspaceRoot.ps1"
 $artifactsRoot = Join-Path $workspaceRoot 'artifacts'
 $tempArtifactsRoot = Join-Path $artifactsRoot 'temp'
 $solutionRoot = Join-Path $workspaceRoot 'src'
@@ -47,7 +47,7 @@ function GenerateCoverageResults {
         --no-restore `
         --results-directory:"$testResultsDir" `
         --settings:"$runsettingsPath" `
-        --verbosity (& "$PSScriptRoot\Get-MSBuildVerbosity.ps1") `
+        --verbosity (& "$PSScriptRoot\GetMSBuildVerbosity.ps1") `
         $testProjectPath `
         | Out-Host
 

@@ -8,71 +8,38 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$workspaceRoot = & "$PSScriptRoot\Get-WorkspaceRoot.ps1"
-$artifactsDir = Join-Path $workspaceRoot 'artifacts'
+$helpersDir = Join-Path $PSScriptRoot 'helpers'
 
 function Main {
     RunStep "Build script analysis" {
-        & "$PSScriptRoot\Test-ScriptsInDirectory.ps1" -Path $PSScriptRoot
+        & "$helpersDir\RunScriptAnalysis.ps1" -Path $PSScriptRoot
     }
 
-    RemoveExistingArtifacts
+    & "$helpersDir\ClearArtifacts.ps1"
 
     RunStep "Compilation" {
-        BuildSolution
+        & "$helpersDir\BuildSolution.ps1" `
+            -Configuration $Configuration
     }
 
     $coverageResults, $coverageReport = RunStep "Tests and code coverage" {
-        & "$PSScriptRoot\Invoke-TestCoverage.ps1" `
+        & "$helpersDir\RunTests.ps1" `
             -Configuration $Configuration
     }
 
     $modulePath = RunStep "Publish module to artifacts directory" {
-        & "$PSScriptRoot\Invoke-ModulePublish.ps1" `
+        & "$helpersDir\PublishModule.ps1" `
             -Configuration $Configuration
     }
 
-    RemoveTemporaryArtifacts
+    & "$helpersDir\ClearArtifacts.ps1" -OnlyTemporary
+
     ShowSummary
 
     [PSCustomObject]@{
         PublishedModule = $modulePath
         TestCoverageReport = $coverageReport
         TestCoverageResults = $coverageResults
-    }
-}
-
-function RemoveExistingArtifacts {
-    if (Test-Path $artifactsDir) {
-        Write-Verbose "Removing artifacts directory: $artifactsDir"
-        Remove-Item `
-            -LiteralPath $artifactsDir `
-            -Force `
-            -Recurse
-    }
-}
-
-function RemoveTemporaryArtifacts {
-    $tempArtifactsDir = Join-Path $artifactsDir 'temp'
-    if (Test-Path $tempArtifactsDir) {
-        Write-Verbose "Removing temporary artifacts directory: $tempArtifactsDir"
-        Remove-Item `
-            -LiteralPath $tempArtifactsDir `
-            -Force `
-            -Recurse
-    }
-}
-
-function BuildSolution {
-    $solutionPath = Join-Path 'src' "PoshCommander.sln"
-
-    dotnet build `
-        --configuration $Configuration `
-        --verbosity (& "$PSScriptRoot\Get-MSBuildVerbosity.ps1") `
-        $solutionPath
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "dotnet build exited with error code $LASTEXITCODE"
     }
 }
 

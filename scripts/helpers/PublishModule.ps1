@@ -9,7 +9,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-$workspaceRoot = & "$PSScriptRoot\Get-WorkspaceRoot.ps1"
+$workspaceRoot = & "$PSScriptRoot\GetWorkspaceRoot.ps1"
 $artifactsDir = Join-Path $workspaceRoot 'artifacts'
 $solutionDir = Join-Path $workspaceRoot 'src'
 
@@ -41,7 +41,7 @@ function PublishProjectToOutputDirectory {
         --no-build `
         --no-restore `
         --output "$publishOutputPath" `
-        --verbosity (& "$PSScriptRoot\Get-MSBuildVerbosity.ps1") `
+        --verbosity (& "$PSScriptRoot\GetMSBuildVerbosity.ps1") `
         /p:ModuleVersion="$($manifest.ModuleVersion)" `
         /p:PreserveCompilationContext="false" `
         "$projectPath" `
@@ -75,7 +75,7 @@ function GenerateHelpFiles($publishDirectory) {
 }
 
 function RunPSScriptAnalyzer($publishDirectory) {
-    & "$PSScriptRoot\Test-ScriptsInDirectory.ps1" -Path $publishDirectory
+    & "$PSScriptRoot\RunScriptAnalysis.ps1" -Path $publishDirectory
 }
 
 Main
