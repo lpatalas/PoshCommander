@@ -86,14 +86,17 @@ module navigateToDirectory =
         let originalPath = Path.Combine(targetPath, "SubDir")
         let paneState = { defaultPaneState with DirectoryPath = originalPath }
         let enumerate path =
-            generateItems 2 0 path
-            |> Array.append ([| { FullPath = originalPath; ItemType = DirectoryItem; Name = Path.GetFileName(originalPath) } |])
-            |> Array.append (generateItems 2 0 path)
+            [|
+                generateItems 2 0 path
+                [| { FullPath = originalPath; ItemType = DirectoryItem; Name = Path.GetFileName(originalPath) } |]
+                generateItems 2 0 path
+            |]
+            |> Array.concat
 
         let result = paneState |> navigateToDirectory enumerate targetPath
         let originalDirectoryIndex = result.Items |> findIndexByFullPath originalPath
         test <@ result.HighlightedIndex = originalDirectoryIndex @>
-        
+
     [<Test>]
     let ``Should highlight first item if new directory does not contain original one``() =
         let originalPath = @"T:\Test\Original"
