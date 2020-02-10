@@ -10,7 +10,7 @@ let clamp min max value =
     else
         value
 
-let setHighlightedIndex adjuster (pane: PaneState) =
+let setHighlightedIndex adjuster (pane: Pane) =
     let newIndex =
         pane
         |> adjuster

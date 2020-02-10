@@ -2,7 +2,7 @@
 
 open PoshCommander
 
-let switchActivePane (application: ApplicationState) =
+let switchActivePane (application: Application) =
     let leftPane = application.LeftPane
     let rightPane = application.RightPane
 
@@ -10,5 +10,5 @@ let switchActivePane (application: ApplicationState) =
         LeftPane = { leftPane with IsActive = not leftPane.IsActive }
         RightPane = { rightPane with IsActive = not rightPane.IsActive } }
 
-let quitApplication (application: ApplicationState) =
+let quitApplication (application: Application) =
     { application with IsRunning = false }

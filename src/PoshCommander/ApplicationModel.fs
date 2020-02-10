@@ -14,20 +14,3 @@ type FileSystemItem = {
     ItemType: FileSystemItemType
     Name: string
     }
-
-type PaneState = {
-    DirectoryPath: string
-    FirstVisibleIndex: int
-    HighlightedIndex: int
-    IsActive: bool
-    Items: FileSystemItem[]
-    RowCount: int
-    }
-
-type ApplicationState = {
-    IsRunning: bool
-    LeftPane: PaneState
-    RightPane: PaneState
-    }
-
-type ApplicationCommand = ApplicationState -> ApplicationState

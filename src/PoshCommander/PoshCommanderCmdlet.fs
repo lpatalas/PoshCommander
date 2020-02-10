@@ -2,21 +2,21 @@
 
 open System
 open System.Management.Automation
+open PoshCommander.Commands
 open PoshCommander.UI
 open PoshCommander.UI.Input
 open System.IO
 open System.Management.Automation.Host
-open PoshCommander.Commands.HighlightingCommands
 
 type UserAction =
-    | Command of (PaneState -> PaneState)
+    | Command of (Pane -> Pane)
     | Exit
     | NoAction
 
 [<Cmdlet(VerbsLifecycle.Invoke, "PoshCommander")>]
 type PoshCommanderCmdlet() =
     inherit PSCmdlet()
-    
+
     [<Parameter(Position = 0)>]
     member val LeftPath = "C:\\Program Files (x86)" with get, set
 
@@ -36,7 +36,25 @@ type PoshCommanderCmdlet() =
         let windowSize = this.Host.UI.RawUI.WindowSize
         let application = Application.create windowSize this.LeftPath this.RightPath
 
-        application |> Application.run this.Host
+        let mapCommand (keyInfo: ConsoleKeyInfo) =
+            let applyToActivePane paneCommand application =
+                if application.LeftPane.IsActive then
+                    { application with LeftPane = application.LeftPane |> paneCommand }
+                else
+                    { application with RightPane = application.RightPane |> paneCommand }
+
+            match keyInfo.Key with
+            | ConsoleKey.DownArrow -> Some (HighlightingCommands.highlightNextItem |> applyToActivePane)
+            | ConsoleKey.End -> Some (HighlightingCommands.highlightLastItem |> applyToActivePane)
+            | ConsoleKey.Escape -> Some ApplicationCommands.quitApplication
+            | ConsoleKey.Home -> Some (HighlightingCommands.highlightFirstItem |> applyToActivePane)
+            | ConsoleKey.PageDown -> Some (HighlightingCommands.highlightItemOnePageAfter |> applyToActivePane)
+            | ConsoleKey.PageUp -> Some (HighlightingCommands.highlightItemOnePageBefore |> applyToActivePane)
+            | ConsoleKey.Tab -> Some ApplicationCommands.switchActivePane
+            | ConsoleKey.UpArrow -> Some (HighlightingCommands.highlightPreviousItem |> applyToActivePane)
+            | _ -> None
+
+        application |> Application.run this.Host mapCommand
 
     member this.testInput() =
         let setCursorX x =
