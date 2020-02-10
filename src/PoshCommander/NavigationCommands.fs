@@ -20,7 +20,7 @@ let createDirectoryItem itemType (directoryInfo: FileSystemInfo) =
     }
 
 let enumerateDirectory path =
-    let directoryInfo = new DirectoryInfo(path)
+    let directoryInfo = DirectoryInfo(path)
     let directories =
         directoryInfo.EnumerateDirectories()
         |> Seq.map (createDirectoryItem DirectoryItem)

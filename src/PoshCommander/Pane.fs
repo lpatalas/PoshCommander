@@ -29,7 +29,7 @@ module Pane =
                 Name = fileSystemInfo.Name
             }
 
-        let directoryInfo = new DirectoryInfo(path)
+        let directoryInfo = DirectoryInfo(path)
         let items =
             directoryInfo.EnumerateFileSystemInfos()
             |> Seq.map createEntry
@@ -46,7 +46,7 @@ module Pane =
 
     let drawHeader (ui: PSHostUserInterface) bounds paneState =
         let rawUI = ui.RawUI
-        rawUI.CursorPosition <- new Coordinates(bounds.Left, 1000 - ui.RawUI.WindowSize.Height +  bounds.Top)
+        rawUI.CursorPosition <- Coordinates(bounds.Left, 1000 - ui.RawUI.WindowSize.Height +  bounds.Top)
 
         let (bgColor, fgColor) =
             match paneState.IsActive with
@@ -69,7 +69,7 @@ module Pane =
             let bgCode = bgColor |> toAnsiBgColorCode
             let fgCode = fgColor |> toAnsiFgColorCode
             let padding = new string(' ', totalWidth - itemName.Length - 2)
-            rawUI.CursorPosition <- new Coordinates(bounds.Left, 1000 - ui.RawUI.WindowSize.Height + bounds.Top + index)
+            rawUI.CursorPosition <- Coordinates(bounds.Left, 1000 - ui.RawUI.WindowSize.Height + bounds.Top + index)
 
             let iconFgCode = toAnsiFgColorCode icon.Color
             let coloredIcon = sprintf "%s%c " iconFgCode icon.Glyph

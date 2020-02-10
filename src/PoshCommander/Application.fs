@@ -30,7 +30,7 @@ module Application =
         applicationState.LeftPane |> Pane.draw host.UI leftPaneBounds
         applicationState.RightPane |> Pane.draw host.UI rightPaneBounds
 
-    let rec run (host: PSHost) mapCommand applicationState =
+    let rec run host mapCommand applicationState =
         drawPanes host applicationState
 
         let keyInfo = Console.ReadKey(intercept = true)

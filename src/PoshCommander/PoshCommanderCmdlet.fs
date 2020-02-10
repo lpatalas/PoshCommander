@@ -30,9 +30,9 @@ type PoshCommanderCmdlet() =
     member val ViewerPath = String.Empty with get, set
 
     override this.BeginProcessing() =
-        FullScreenConsole.enter this.Host.UI.RawUI this.testPane
+        FullScreenConsole.enter this.Host.UI.RawUI this.TestPane
 
-    member this.testPane() =
+    member this.TestPane() =
         let windowSize = this.Host.UI.RawUI.WindowSize
         let application = Application.create windowSize this.LeftPath this.RightPath
 
@@ -56,7 +56,7 @@ type PoshCommanderCmdlet() =
 
         application |> Application.run this.Host mapCommand
 
-    member this.testInput() =
+    member this.TestInput() =
         let setCursorX x =
             let mutable cursorPos = this.Host.UI.RawUI.CursorPosition
             cursorPos.X <- x
