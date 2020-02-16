@@ -23,10 +23,10 @@ module Application =
         }
 
     let drawPanes (host: PSHost) applicationState =
-        let windowSize = host.UI.RawUI.WindowSize
-        let middle = windowSize.Width / 2
-        let leftPaneBounds = { Left = 0; Top = 0; Width = middle; Height = windowSize.Height }
-        let rightPaneBounds = { Left = middle + 1; Top = 0; Width = windowSize.Width - middle - 2; Height = windowSize.Height }
+        let (leftPaneBounds, rightPaneBounds) =
+            Rect.fromSize host.UI.RawUI.WindowSize
+            |> Rect.splitHorizontally
+
         applicationState.LeftPane |> Pane.draw host.UI leftPaneBounds
         applicationState.RightPane |> Pane.draw host.UI rightPaneBounds
 

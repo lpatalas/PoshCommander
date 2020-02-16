@@ -8,7 +8,7 @@
     <Compile Include="Colors.fs" />
     <Compile Include="Theme.fs" />
     <Compile Include="FullScreenConsole.fs" />
-    <Compile Include="ApplicationModel.fs" />
+    <Compile Include="Rect.fs" />
     <Compile Include="FileSystem.fs" />
     <Compile Include="Input.fs" />
     <Compile Include="Pane.fs" />
