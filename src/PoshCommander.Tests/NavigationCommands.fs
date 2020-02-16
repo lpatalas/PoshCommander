@@ -2,9 +2,15 @@
 
 open NUnit.Framework
 open PoshCommander
-open PoshCommander.NavigationCommands
 open Swensen.Unquote
 open System.IO
+
+let makeDir path =
+    {
+        FullPath = path
+        ItemType = DirectoryItem
+        Name = Path.GetFileName(path)
+    }
 
 let generateItems directoryCount fileCount targetPath =
     let generateNextItem itemType index =
@@ -17,18 +23,28 @@ let generateItems directoryCount fileCount targetPath =
     |> Seq.toArray
 
 let defaultPaneState =
-    let path = @"T:\Test"
     {
-        DirectoryPath = path
+        CurrentDirectory =
+            {
+                FullPath = @"T:\Test"
+                Items = generateItems 3 3 @"T:\Test"
+                Name = "Test"
+            }
         FirstVisibleIndex = 0
-        HighlightedIndex = 1
+        HighlightedIndex = 0
         IsActive = true
-        Items = generateItems 2 3 path
         RowCount = 10
     }
 
-let findIndexOfItemType itemType allItems =
-    allItems
+let emptyDirectory fullPath =
+    {
+        FullPath = fullPath
+        Items = Array.empty
+        Name = Path.GetFileName(fullPath)
+    }
+
+let findIndexOfItemType itemType pane =
+    pane.CurrentDirectory.Items
     |> Seq.findIndex (fun item -> item.ItemType = itemType)
 
 let findIndexByFullPath path items =
@@ -40,68 +56,76 @@ let id2 _ x = x
 module invokeHighlightedItem =
     [<Test>]
     let ``Should invoke directory callback when highlighted item is a directory``() =
-        let directoryIndex = findIndexOfItemType DirectoryItem defaultPaneState.Items
+        let directoryIndex = findIndexOfItemType DirectoryItem defaultPaneState
         let paneState = { defaultPaneState with HighlightedIndex = directoryIndex }
         let mutable invokedDirectory = None
         let directoryCallback item state =
             invokedDirectory <- Some item
             state
 
-        paneState |> invokeHighlightedItem directoryCallback id2 |> ignore
-        test <@ invokedDirectory = Some paneState.Items.[directoryIndex] @>
+        paneState |> Pane.invokeHighlightedItem directoryCallback id2 |> ignore
+        test <@ invokedDirectory = Pane.tryGetItem directoryIndex paneState @>
 
     [<Test>]
     let ``Should invoke file callback when highlighted item is a file``() =
-        let fileIndex = findIndexOfItemType FileItem defaultPaneState.Items
+        let fileIndex = findIndexOfItemType FileItem defaultPaneState
         let paneState = { defaultPaneState with HighlightedIndex = fileIndex }
         let mutable invokedFile = None
         let fileCallback item state =
             invokedFile <- Some item
             state
 
-        paneState |> invokeHighlightedItem id2 fileCallback |> ignore
-        test <@ invokedFile = Some paneState.Items.[fileIndex] @>
+        paneState |> Pane.invokeHighlightedItem id2 fileCallback |> ignore
+        test <@ invokedFile = Pane.tryGetItem fileIndex paneState @>
 
 module navigateToDirectory =
-    [<Test>]
-    let ``Should set directory path to path of target directory``() =
-        let paneState = defaultPaneState
-        let targetPath = Path.Combine(paneState.DirectoryPath, "SubDir")
-        let enumerate _ = Array.empty
-        let result = navigateToDirectory enumerate targetPath paneState
-        test <@ result.DirectoryPath = targetPath @>
+    let emptySubDirectory pane directoryName =
+        emptyDirectory (Path.Combine(pane.CurrentDirectory.FullPath, directoryName))
+
+    let fakeDirectoryContent() =
+        let path = @"T:\Test"
+        {
+            (emptyDirectory path) with
+                Items = generateItems 3 3 path
+        }
 
     [<Test>]
-    let ``Should fill pane items with contents of target directory``() =
-        let paneState = defaultPaneState
-        let targetPath = Path.Combine(paneState.DirectoryPath, "SubDir")
-        let enumerate = generateItems 2 2
-        let expectedItems = enumerate targetPath
-        let result = paneState |> navigateToDirectory enumerate targetPath
-        test <@ result.Items = expectedItems @>
+    let ``Should set current directory to target directory``() =
+        let pane = defaultPaneState
+        let targetDirectory = fakeDirectoryContent()
+        let result = Pane.navigateToDirectory targetDirectory pane
+        test <@ result.CurrentDirectory = targetDirectory @>
 
     [<Test>]
     let ``Should highlight original directory if new one contains it``() =
-        let targetPath = @"T:\Test"
-        let originalPath = Path.Combine(targetPath, "SubDir")
-        let paneState = { defaultPaneState with DirectoryPath = originalPath }
-        let enumerate path =
-            [|
-                generateItems 2 0 path
-                [| { FullPath = originalPath; ItemType = DirectoryItem; Name = Path.GetFileName(originalPath) } |]
-                generateItems 2 0 path
-            |]
-            |> Array.concat
+        // Arrange
+        let originalDirectory = emptyDirectory @"T:\Test\OriginalDir"
+        let targetDirectory =
+            {
+                emptyDirectory @"T:\Test" with
+                    Items =
+                        [|
+                            makeDir @"T:\Test\FirstDir"
+                            makeDir originalDirectory.FullPath
+                            makeDir @"T:\Test\ThirdDir"
+                        |]
+            }
 
-        let result = paneState |> navigateToDirectory enumerate targetPath
-        let originalDirectoryIndex = result.Items |> findIndexByFullPath originalPath
+        let pane = { defaultPaneState with CurrentDirectory = originalDirectory }
+        let result = Pane.navigateToDirectory targetDirectory pane
+
+        let originalDirectoryIndex =
+            result.CurrentDirectory.Items
+            |> Seq.findIndex (fun item -> item.FullPath = originalDirectory.FullPath)
+
         test <@ result.HighlightedIndex = originalDirectoryIndex @>
 
     [<Test>]
     let ``Should highlight first item if new directory does not contain original one``() =
-        let originalPath = @"T:\Test\Original"
-        let targetPath = @"T:\Test\Target"
-        let paneState = { defaultPaneState with DirectoryPath = originalPath }
-        let enumerate = generateItems 3 0
-        let result = paneState |> navigateToDirectory enumerate targetPath
+        let originalDirectory = emptyDirectory @"T:\Test\SubDir"
+        let targetDirectory = emptyDirectory @"T:\Test\OtherDir"
+
+        let pane = { defaultPaneState with CurrentDirectory = originalDirectory }
+        let result = Pane.navigateToDirectory targetDirectory pane
+
         test <@ result.HighlightedIndex = 0 @>

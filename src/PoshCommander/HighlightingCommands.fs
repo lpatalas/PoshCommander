@@ -14,7 +14,7 @@ let setHighlightedIndex adjuster (pane: Pane) =
     let newIndex =
         pane
         |> adjuster
-        |> clamp 0 (pane.Items.Length - 1)
+        |> clamp 0 (pane.CurrentDirectory.Items.Count - 1)
 
     let newFirstVisibleIndex =
         if newIndex - pane.FirstVisibleIndex >= pane.RowCount then
@@ -29,7 +29,7 @@ let setHighlightedIndex adjuster (pane: Pane) =
         HighlightedIndex = newIndex }
 
 let highlightFirstItem = setHighlightedIndex (fun _ -> 0)
-let highlightLastItem = setHighlightedIndex (fun pane -> pane.Items.Length - 1)
+let highlightLastItem = setHighlightedIndex (fun pane -> pane.CurrentDirectory.Items.Count - 1)
 let highlightNextItem = setHighlightedIndex (fun pane -> pane.HighlightedIndex + 1)
 let highlightPreviousItem = setHighlightedIndex (fun pane -> pane.HighlightedIndex - 1)
 let highlightItemOnePageBefore = setHighlightedIndex (fun pane -> pane.HighlightedIndex - pane.RowCount + 1)

@@ -16,11 +16,15 @@ let generateItems count =
 
 let createPane rowCount itemCount =
     {
-        DirectoryPath = @"T:\Test"
+        CurrentDirectory =
+            {
+                FullPath = @"T:\Test"
+                Items = generateItems itemCount
+                Name = "Test"
+            }
         FirstVisibleIndex = 0
         HighlightedIndex = 0
         IsActive = true
-        Items = generateItems itemCount
         RowCount = rowCount
     }
 
@@ -37,7 +41,9 @@ module highlightNextItem =
 
     [<Test>]
     let ``Should do nothing when last item is highlighted``() =
-        let initialState = { singlePagePane with HighlightedIndex = singlePagePane.Items.Length - 1 }
+        let initialState =
+            { singlePagePane with
+                HighlightedIndex = Pane.getLastItemIndex singlePagePane }
         let newState = highlightNextItem initialState
         test <@ newState = initialState @>
 
@@ -56,7 +62,7 @@ module highlightPreviousItem =
         let initialState = { singlePagePane with HighlightedIndex = 3 }
         let newState = highlightPreviousItem initialState
         test <@ newState.HighlightedIndex = initialState.HighlightedIndex - 1 @>
-    
+
     [<Test>]
     let ``Should do nothing when first item is highlighted``() =
         let initialState = { singlePagePane with HighlightedIndex = 0 }
@@ -99,13 +105,13 @@ module highlightLastItem =
     let ``Should set highlighted index to index of last item``() =
         let initialState = { singlePagePane with HighlightedIndex = 3 }
         let newState = highlightLastItem initialState
-        test <@ newState.HighlightedIndex = initialState.Items.Length - 1 @>
+        test <@ newState.HighlightedIndex = Pane.getLastItemIndex initialState @>
 
     [<Test>]
     let ``Should do nothing when last item is already highlighted``() =
         let initialState =
             { singlePagePane with
-                HighlightedIndex = singlePagePane.Items.Length - 1 }
+                HighlightedIndex = Pane.getLastItemIndex singlePagePane }
         let newState = highlightLastItem initialState
         test <@ newState = initialState @>
 
@@ -116,7 +122,7 @@ module highlightLastItem =
                 FirstVisibleIndex = 3
                 HighlightedIndex = 3 }
         let newState = highlightLastItem initialState
-        test <@ newState.FirstVisibleIndex = newState.Items.Length - newState.RowCount @>
+        test <@ newState.FirstVisibleIndex = Pane.getItemCount newState - newState.RowCount @>
 
 module highlightItemOnePageBefore =
     [<Test>]
@@ -149,13 +155,13 @@ module highlightItemOnePageAfter =
         let initialState = { twoPagePane with HighlightedIndex = 2 }
         let newState = highlightItemOnePageAfter initialState
         test <@ newState.HighlightedIndex = initialState.HighlightedIndex + initialState.RowCount - 1 @>
-    
+
     [<Test>]
     let ``Should do nothing when last item is highlighted``() =
         let initialState =
             { twoPagePane with
                 FirstVisibleIndex = twoPagePane.RowCount
-                HighlightedIndex = twoPagePane.Items.Length - 1 }
+                HighlightedIndex = Pane.getLastItemIndex twoPagePane }
         let newState = highlightItemOnePageAfter initialState
         test <@ newState = initialState @>
 

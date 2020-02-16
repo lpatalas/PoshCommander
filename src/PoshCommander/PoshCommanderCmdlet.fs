@@ -46,11 +46,11 @@ type PoshCommanderCmdlet() =
             match keyInfo.Key with
             | ConsoleKey.DownArrow -> Some (HighlightingCommands.highlightNextItem |> applyToActivePane)
             | ConsoleKey.End -> Some (HighlightingCommands.highlightLastItem |> applyToActivePane)
-            | ConsoleKey.Escape -> Some ApplicationCommands.quitApplication
+            | ConsoleKey.Escape -> Some Application.quit
             | ConsoleKey.Home -> Some (HighlightingCommands.highlightFirstItem |> applyToActivePane)
             | ConsoleKey.PageDown -> Some (HighlightingCommands.highlightItemOnePageAfter |> applyToActivePane)
             | ConsoleKey.PageUp -> Some (HighlightingCommands.highlightItemOnePageBefore |> applyToActivePane)
-            | ConsoleKey.Tab -> Some ApplicationCommands.switchActivePane
+            | ConsoleKey.Tab -> Some Application.switchActivePane
             | ConsoleKey.UpArrow -> Some (HighlightingCommands.highlightPreviousItem |> applyToActivePane)
             | _ -> None
 

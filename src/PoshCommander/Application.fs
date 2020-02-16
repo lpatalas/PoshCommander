@@ -43,3 +43,14 @@ module Application =
 
         if newState.IsRunning then
             run host mapCommand newState
+
+    let switchActivePane application =
+        let leftPane = application.LeftPane
+        let rightPane = application.RightPane
+
+        { application with
+            LeftPane = { leftPane with IsActive = not leftPane.IsActive }
+            RightPane = { rightPane with IsActive = not rightPane.IsActive } }
+
+    let quit application =
+        { application with IsRunning = false }

@@ -2,47 +2,43 @@
 
 open PoshCommander
 open PoshCommander.Colors
-open System.IO
 open System.Management.Automation.Host
 
 type Pane = {
-    DirectoryPath: string
+    CurrentDirectory: DirectoryContent
     FirstVisibleIndex: int
     HighlightedIndex: int
     IsActive: bool
-    Items: FileSystemItem[]
     RowCount: int
     }
 
 module Pane =
     let create rowCount isActive path =
-        let getItemType (fileSystemInfo: FileSystemInfo) =
-            if fileSystemInfo.Attributes.HasFlag(FileAttributes.Directory) then
-                DirectoryItem
-            else
-                FileItem
-
-        let createEntry (fileSystemInfo: FileSystemInfo) =
-            {
-                FullPath = fileSystemInfo.FullName
-                ItemType = getItemType fileSystemInfo
-                Name = fileSystemInfo.Name
-            }
-
-        let directoryInfo = DirectoryInfo(path)
-        let items =
-            directoryInfo.EnumerateFileSystemInfos()
-            |> Seq.map createEntry
-            |> Seq.toArray
-
         {
-            DirectoryPath = directoryInfo.FullName
+            CurrentDirectory = FileSystem.readDirectory path
             FirstVisibleIndex = 0
             HighlightedIndex = 0
             IsActive = isActive
-            Items = items
             RowCount = rowCount
         }
+
+    let getHighlightedItem pane =
+        pane.CurrentDirectory.Items.[pane.HighlightedIndex]
+
+    let tryGetItem index pane =
+        if index >= 0 && index < pane.CurrentDirectory.Items.Count then
+            Some pane.CurrentDirectory.Items.[index]
+        else
+            None
+
+    let getItemCount pane =
+        pane.CurrentDirectory.Items.Count
+
+    let getLastItemIndex pane =
+        if pane.CurrentDirectory.Items.Count > 0 then
+            pane.CurrentDirectory.Items.Count - 1
+        else
+            invalidOp "Can't get last item index because directory is empty"
 
     let drawHeader (ui: PSHostUserInterface) bounds paneState =
         let rawUI = ui.RawUI
@@ -56,7 +52,7 @@ module Pane =
         let ansiBgColor = bgColor |> toAnsiBgColorCode
         let ansiFgColor = fgColor |> toAnsiFgColorCode
 
-        let caption = paneState.DirectoryPath
+        let caption = paneState.CurrentDirectory.FullPath
         let padding = new string(' ', bounds.Width - caption.Length)
         let styledText = ansiBgColor + ansiFgColor + caption + padding + ansiResetCode
         ui.Write(styledText)
@@ -93,7 +89,7 @@ module Pane =
         let getFileIcon =
             Theme.getFileIcon Theme.defaultFileIcon Theme.defaultFilePatterns
 
-        paneState.Items
+        paneState.CurrentDirectory.Items
         |> Seq.skip paneState.FirstVisibleIndex
         |> Seq.truncate paneState.RowCount
         |> Seq.iteri (fun index item ->
@@ -115,3 +111,23 @@ module Pane =
 
         let itemsBounds = { bounds with Top = 1; Height = bounds.Height - 1 }
         drawItems ui itemsBounds paneState
+
+    let navigateToDirectory directoryContent pane =
+        let highlightedIndex =
+                let originalDirectoryIndex =
+                    directoryContent.Items
+                    |> Seq.tryFindIndex (fun item -> item.FullPath = pane.CurrentDirectory.FullPath)
+                match originalDirectoryIndex with
+                | Some index -> index
+                | None -> 0
+
+        { pane with
+            CurrentDirectory = directoryContent
+            HighlightedIndex = highlightedIndex }
+
+    let invokeHighlightedItem invokeDirectory invokeFile pane =
+        let highlightedItem = getHighlightedItem pane
+        pane
+        |> match highlightedItem with
+            | { ItemType = DirectoryItem } -> invokeDirectory highlightedItem
+            | { ItemType = FileItem } -> invokeFile highlightedItem
