@@ -2,11 +2,7 @@
 
 open System
 open System.Management.Automation
-open PoshCommander.Commands
-open PoshCommander.UI
 open PoshCommander.UI.Input
-open System.IO
-open System.Management.Automation.Host
 
 type UserAction =
     | Command of (Pane -> Pane)
@@ -44,14 +40,14 @@ type PoshCommanderCmdlet() =
                     { application with RightPane = application.RightPane |> paneCommand }
 
             match keyInfo.Key with
-            | ConsoleKey.DownArrow -> Some (HighlightingCommands.highlightNextItem |> applyToActivePane)
-            | ConsoleKey.End -> Some (HighlightingCommands.highlightLastItem |> applyToActivePane)
+            | ConsoleKey.DownArrow -> Some (Pane.highlightNextItem |> applyToActivePane)
+            | ConsoleKey.End -> Some (Pane.highlightLastItem |> applyToActivePane)
             | ConsoleKey.Escape -> Some Application.quit
-            | ConsoleKey.Home -> Some (HighlightingCommands.highlightFirstItem |> applyToActivePane)
-            | ConsoleKey.PageDown -> Some (HighlightingCommands.highlightItemOnePageAfter |> applyToActivePane)
-            | ConsoleKey.PageUp -> Some (HighlightingCommands.highlightItemOnePageBefore |> applyToActivePane)
+            | ConsoleKey.Home -> Some (Pane.highlightFirstItem |> applyToActivePane)
+            | ConsoleKey.PageDown -> Some (Pane.highlightItemOnePageAfter |> applyToActivePane)
+            | ConsoleKey.PageUp -> Some (Pane.highlightItemOnePageBefore |> applyToActivePane)
             | ConsoleKey.Tab -> Some Application.switchActivePane
-            | ConsoleKey.UpArrow -> Some (HighlightingCommands.highlightPreviousItem |> applyToActivePane)
+            | ConsoleKey.UpArrow -> Some (Pane.highlightPreviousItem |> applyToActivePane)
             | _ -> None
 
         application |> Application.run this.Host mapCommand

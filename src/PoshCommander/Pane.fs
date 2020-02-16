@@ -112,6 +112,34 @@ module Pane =
         let itemsBounds = { bounds with Top = 1; Height = bounds.Height - 1 }
         drawItems ui itemsBounds paneState
 
+    let setHighlightedIndex index (pane: Pane) =
+        let newIndex =
+            if index < 0 then 0
+            else if index > getLastItemIndex pane then getLastItemIndex pane
+            else index
+
+        if newIndex <> pane.HighlightedIndex then
+            let newFirstVisibleIndex =
+                if newIndex - pane.FirstVisibleIndex >= pane.RowCount then
+                    newIndex - pane.RowCount + 1
+                else if newIndex < pane.FirstVisibleIndex then
+                    newIndex
+                else
+                    pane.FirstVisibleIndex
+
+            { pane with
+                FirstVisibleIndex = newFirstVisibleIndex
+                HighlightedIndex = newIndex }
+        else
+            pane
+
+    let highlightFirstItem pane = setHighlightedIndex 0 pane
+    let highlightLastItem pane = setHighlightedIndex (getLastItemIndex pane) pane
+    let highlightNextItem pane = setHighlightedIndex (pane.HighlightedIndex + 1) pane
+    let highlightPreviousItem pane = setHighlightedIndex (pane.HighlightedIndex - 1) pane
+    let highlightItemOnePageBefore pane = setHighlightedIndex (pane.HighlightedIndex - pane.RowCount + 1) pane
+    let highlightItemOnePageAfter pane = setHighlightedIndex (pane.HighlightedIndex + pane.RowCount - 1) pane
+
     let navigateToDirectory directoryContent pane =
         let highlightedIndex =
                 let originalDirectoryIndex =
