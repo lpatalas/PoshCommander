@@ -155,7 +155,6 @@ module Pane =
 
     let invokeHighlightedItem invokeDirectory invokeFile pane =
         let highlightedItem = getHighlightedItem pane
-        pane
-        |> match highlightedItem with
-            | { ItemType = DirectoryItem } -> invokeDirectory highlightedItem
-            | { ItemType = FileItem } -> invokeFile highlightedItem
+        match highlightedItem with
+        | { ItemType = DirectoryItem } -> invokeDirectory highlightedItem pane
+        | { ItemType = FileItem } -> invokeFile highlightedItem pane

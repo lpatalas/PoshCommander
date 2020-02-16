@@ -32,6 +32,16 @@ type PoshCommanderCmdlet() =
         let windowSize = this.Host.UI.RawUI.WindowSize
         let application = Application.create windowSize this.LeftPath this.RightPath
 
+        let navigateToItem (item: Item) pane =
+            let content = FileSystem.readDirectory item.FullPath
+            Pane.navigateToDirectory content pane
+
+        let invokeFile item pane =
+            pane
+
+        let invokeHighlightedItem =
+            Pane.invokeHighlightedItem navigateToItem invokeFile
+
         let mapCommand (keyInfo: ConsoleKeyInfo) =
             let applyToActivePane paneCommand application =
                 if application.LeftPane.IsActive then
@@ -42,6 +52,7 @@ type PoshCommanderCmdlet() =
             match keyInfo.Key with
             | ConsoleKey.DownArrow -> Some (Pane.highlightNextItem |> applyToActivePane)
             | ConsoleKey.End -> Some (Pane.highlightLastItem |> applyToActivePane)
+            | ConsoleKey.Enter -> Some (invokeHighlightedItem |> applyToActivePane)
             | ConsoleKey.Escape -> Some Application.quit
             | ConsoleKey.Home -> Some (Pane.highlightFirstItem |> applyToActivePane)
             | ConsoleKey.PageDown -> Some (Pane.highlightItemOnePageAfter |> applyToActivePane)
