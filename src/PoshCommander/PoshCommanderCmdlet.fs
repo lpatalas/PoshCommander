@@ -2,7 +2,7 @@
 
 open System
 open System.Management.Automation
-open PoshCommander.UI.Input
+open PoshCommander.Input
 
 type UserAction =
     | Command of (Pane -> Pane)
@@ -42,6 +42,8 @@ type PoshCommanderCmdlet() =
         let invokeHighlightedItem =
             Pane.invokeHighlightedItem navigateToItem invokeFile
 
+        let draw = UI.drawApplication this.Host
+
         let mapCommand (keyInfo: ConsoleKeyInfo) =
             let applyToActivePane paneCommand application =
                 if application.LeftPane.IsActive then
@@ -61,7 +63,7 @@ type PoshCommanderCmdlet() =
             | ConsoleKey.UpArrow -> Some (Pane.highlightPreviousItem |> applyToActivePane)
             | _ -> None
 
-        application |> Application.run this.Host mapCommand
+        application |> Application.run draw mapCommand
 
     member this.TestInput() =
         let setCursorX x =

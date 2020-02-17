@@ -22,16 +22,8 @@ module Application =
             RightPane = rightPane
         }
 
-    let drawPanes (host: PSHost) applicationState =
-        let (leftPaneBounds, rightPaneBounds) =
-            Rect.fromSize host.UI.RawUI.WindowSize
-            |> Rect.splitHorizontally
-
-        applicationState.LeftPane |> Pane.draw host.UI leftPaneBounds
-        applicationState.RightPane |> Pane.draw host.UI rightPaneBounds
-
-    let rec run host mapCommand applicationState =
-        drawPanes host applicationState
+    let rec run draw mapCommand applicationState =
+        draw applicationState
 
         let keyInfo = Console.ReadKey(intercept = true)
         let maybeCommand = mapCommand keyInfo
@@ -42,7 +34,7 @@ module Application =
             | None -> applicationState
 
         if newState.IsRunning then
-            run host mapCommand newState
+            run draw mapCommand newState
 
     let switchActivePane application =
         let leftPane = application.LeftPane

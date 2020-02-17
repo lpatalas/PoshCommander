@@ -1,4 +1,4 @@
-﻿module PoshCommander.UI.Input
+﻿module PoshCommander.Input
 
 open PoshCommander
 open System

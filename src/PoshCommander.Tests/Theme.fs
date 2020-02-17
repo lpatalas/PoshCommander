@@ -1,8 +1,8 @@
 ﻿module PoshCommander.Tests.Theme
 
 open NUnit.Framework
+open PoshCommander
 open PoshCommander.Theme
-open PoshCommander.Colors
 open System.Text.RegularExpressions
 open Swensen.Unquote
 
@@ -34,7 +34,7 @@ module getFileIcon =
         let patterns = createPatterns [ @"\.tx"; @"\.txt" ]
         let result = getFileIcon defaultIcon patterns "file.txt"
         test <@ result = patterns.[0].Icon @>
-    
+
     [<Test>]
     let ``Should skip patterns which does not match file name``() =
         let patterns = createPatterns [ @"\.bmp"; @"\.png"; @"\.txt" ]

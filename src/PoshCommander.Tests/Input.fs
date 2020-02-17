@@ -1,9 +1,9 @@
 ﻿module PoshCommander.Tests.Input
 
-open PoshCommander.UI
-open System
 open NUnit.Framework
+open PoshCommander
 open Swensen.Unquote
+open System
 
 let charToConsoleKey c =
     enum (int (Char.ToUpperInvariant(c)))
