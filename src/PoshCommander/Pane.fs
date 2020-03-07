@@ -57,12 +57,23 @@ module Pane =
         else
             pane
 
-    let highlightFirstItem pane = setHighlightedIndex 0 pane
-    let highlightLastItem pane = setHighlightedIndex (getLastItemIndex pane) pane
-    let highlightNextItem pane = setHighlightedIndex (pane.HighlightedIndex + 1) pane
-    let highlightPreviousItem pane = setHighlightedIndex (pane.HighlightedIndex - 1) pane
-    let highlightItemOnePageBefore pane = setHighlightedIndex (pane.HighlightedIndex - pane.RowCount + 1) pane
-    let highlightItemOnePageAfter pane = setHighlightedIndex (pane.HighlightedIndex + pane.RowCount - 1) pane
+    let highlightFirstItem pane =
+        setHighlightedIndex 0 pane
+
+    let highlightLastItem pane =
+        setHighlightedIndex (getLastItemIndex pane) pane
+
+    let highlightNextItem pane =
+        setHighlightedIndex (pane.HighlightedIndex + 1) pane
+
+    let highlightPreviousItem pane =
+        setHighlightedIndex (pane.HighlightedIndex - 1) pane
+
+    let highlightItemOnePageBefore pane =
+        setHighlightedIndex (pane.HighlightedIndex - pane.RowCount + 1) pane
+
+    let highlightItemOnePageAfter pane =
+        setHighlightedIndex (pane.HighlightedIndex + pane.RowCount - 1) pane
 
     let navigateToDirectory directoryContent pane =
         let highlightedIndex =
