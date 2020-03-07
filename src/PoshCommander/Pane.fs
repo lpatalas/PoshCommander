@@ -75,7 +75,7 @@ module Pane =
     let highlightItemOnePageAfter pane =
         setHighlightedIndex (pane.HighlightedIndex + pane.RowCount - 1) pane
 
-    let navigateToDirectory directoryContent pane =
+    let setCurrentDirectory directoryContent pane =
         let highlightedIndex =
                 let originalDirectoryIndex =
                     directoryContent.Items

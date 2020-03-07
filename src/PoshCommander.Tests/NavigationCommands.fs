@@ -78,7 +78,7 @@ module invokeHighlightedItem =
         paneState |> Pane.invokeHighlightedItem id2 fileCallback |> ignore
         test <@ invokedFile = Pane.tryGetItem fileIndex paneState @>
 
-module navigateToDirectory =
+module setCurrentDirectory =
     let emptySubDirectory pane directoryName =
         emptyDirectory (Path.Combine(pane.CurrentDirectory.FullPath, directoryName))
 
@@ -93,7 +93,7 @@ module navigateToDirectory =
     let ``Should set current directory to target directory``() =
         let pane = defaultPaneState
         let targetDirectory = fakeDirectoryContent()
-        let result = Pane.navigateToDirectory targetDirectory pane
+        let result = Pane.setCurrentDirectory targetDirectory pane
         test <@ result.CurrentDirectory = targetDirectory @>
 
     [<Test>]
@@ -112,7 +112,7 @@ module navigateToDirectory =
             }
 
         let pane = { defaultPaneState with CurrentDirectory = originalDirectory }
-        let result = Pane.navigateToDirectory targetDirectory pane
+        let result = Pane.setCurrentDirectory targetDirectory pane
 
         let originalDirectoryIndex =
             result.CurrentDirectory.Items
@@ -121,11 +121,11 @@ module navigateToDirectory =
         test <@ result.HighlightedIndex = originalDirectoryIndex @>
 
     [<Test>]
-    let ``Should highlight first item if new directory does not contain original one``() =
+    let ``Should highlight first item if new directory does not contain previous one``() =
         let originalDirectory = emptyDirectory @"T:\Test\SubDir"
         let targetDirectory = emptyDirectory @"T:\Test\OtherDir"
 
         let pane = { defaultPaneState with CurrentDirectory = originalDirectory }
-        let result = Pane.navigateToDirectory targetDirectory pane
+        let result = Pane.setCurrentDirectory targetDirectory pane
 
         test <@ result.HighlightedIndex = 0 @>

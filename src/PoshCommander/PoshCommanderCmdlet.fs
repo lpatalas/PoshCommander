@@ -34,7 +34,7 @@ type PoshCommanderCmdlet() =
 
         let navigateToItem (item: Item) pane =
             let content = FileSystem.readDirectory item.FullPath
-            Pane.navigateToDirectory content pane
+            Pane.setCurrentDirectory content pane
 
         let invokeFile item pane =
             pane
