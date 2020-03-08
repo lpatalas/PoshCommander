@@ -66,9 +66,9 @@ module UI =
         |> Seq.truncate paneState.RowCount
         |> Seq.iteri (fun index item ->
             let icon =
-                match item.ItemType with
-                | DirectoryItem -> Theme.directoryIcon
-                | FileItem -> getFileIcon item.Name
+                match item with
+                | DirectoryItem _ -> Theme.directoryIcon
+                | FileItem file -> getFileIcon file.FileName
 
             let itemIndex = index + paneState.FirstVisibleIndex
             if itemIndex = paneState.HighlightedIndex then

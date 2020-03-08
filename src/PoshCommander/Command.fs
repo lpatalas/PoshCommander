@@ -35,8 +35,8 @@ module Command =
             else
                 { application with RightPane = application.RightPane |> paneCommand }
 
-        let navigateToItem (item: Item) pane =
-            let content = FileSystem.readDirectory item.FullPath
+        let navigateToItem directory pane =
+            let content = FileSystem.readDirectory directory
             Pane.setCurrentDirectory content pane
 
         let invokeFile _ pane =

@@ -7,11 +7,10 @@ open Swensen.Unquote
 let generateItems count =
     Array.init count (fun index ->
         let name = sprintf "Dir%i" index
-        {
-            FullPath = sprintf @"T:\Test\%s" name
-            ItemType = DirectoryItem
-            Name = name
-        })
+        DirectoryItem ({
+            DirectoryPath = sprintf @"T:\Test\%s" name
+            DirectoryName = name
+        }))
 
 let createPane rowCount itemCount =
     {

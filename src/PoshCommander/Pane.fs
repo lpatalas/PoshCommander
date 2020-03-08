@@ -10,8 +10,9 @@ type Pane = {
 
 module Pane =
     let create rowCount isActive path =
+        let initialDirectory = DirectoryItem.fromPath path
         {
-            CurrentDirectory = FileSystem.readDirectory path
+            CurrentDirectory = FileSystem.readDirectory initialDirectory
             FirstVisibleIndex = 0
             HighlightedIndex = 0
             IsActive = isActive
@@ -79,7 +80,7 @@ module Pane =
         let highlightedIndex =
                 let originalDirectoryIndex =
                     directoryContent.Items
-                    |> Seq.tryFindIndex (fun item -> item.FullPath = pane.CurrentDirectory.FullPath)
+                    |> Seq.tryFindIndex (fun item -> item.Path = pane.CurrentDirectory.FullPath)
                 match originalDirectoryIndex with
                 | Some index -> index
                 | None -> 0
@@ -88,8 +89,12 @@ module Pane =
             CurrentDirectory = directoryContent
             HighlightedIndex = highlightedIndex }
 
+    let navigateToHighlightedDirectory directory pane =
+        let newContent = FileSystem.readDirectory directory
+        setCurrentDirectory newContent pane
+
     let invokeHighlightedItem invokeDirectory invokeFile pane =
         let highlightedItem = getHighlightedItem pane
         match highlightedItem with
-        | { ItemType = DirectoryItem } -> invokeDirectory highlightedItem pane
-        | { ItemType = FileItem } -> invokeFile highlightedItem pane
+        | DirectoryItem dirItem -> invokeDirectory dirItem pane
+        | FileItem fileItem -> invokeFile fileItem pane

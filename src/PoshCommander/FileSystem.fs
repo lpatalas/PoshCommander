@@ -7,12 +7,69 @@ type ItemType =
     | DirectoryItem
     | FileItem
 
-type Item =
+type DirectoryItem =
     {
-        FullPath: string
-        ItemType: ItemType
-        Name: string
+        DirectoryPath: string
+        DirectoryName: string
     }
+
+module DirectoryItem =
+    let fromDirectoryInfo (info: DirectoryInfo) =
+        {
+            DirectoryName = info.Name
+            DirectoryPath = info.FullName
+        }
+
+    let fromPath path =
+        {
+            DirectoryName = Path.GetFileName(path)
+            DirectoryPath = path
+        }
+
+
+type FileItem =
+    {
+        FilePath: string
+        FileName: string
+    }
+
+type Item =
+    | DirectoryItem of DirectoryItem
+    | FileItem of FileItem
+    with
+        member x.Path =
+            match x with
+            | DirectoryItem info -> info.DirectoryPath
+            | FileItem info -> info.FilePath
+        member x.Name =
+            match x with
+            | DirectoryItem info -> info.DirectoryName
+            | FileItem info -> info.FileName
+
+module Item =
+    let createDirectory name path =
+        {
+            DirectoryName = name
+            DirectoryPath = path
+        }
+        |> DirectoryItem
+
+    let createFile name path =
+        {
+            FileName = name
+            FilePath = path
+        }
+        |> FileItem
+
+    let isDirectory item =
+        match item with
+        | DirectoryItem _ -> true
+        | _ -> false
+
+    let isFile item =
+        match item with
+        | FileItem _ -> true
+        | _ -> false
 
 type DirectoryContent =
     {
@@ -22,29 +79,32 @@ type DirectoryContent =
     }
 
 module FileSystem =
-    let tryGetParentDirectoryPath path =
-        let directoryInfo = DirectoryInfo(path)
+    let tryGetParentDirectoryPath directory =
+        let directoryInfo = DirectoryInfo(directory.DirectoryPath)
         if not (isNull directoryInfo.Parent) then
-            Some directoryInfo.Parent.FullName
+            Some (DirectoryItem.fromDirectoryInfo directoryInfo.Parent)
         else
             None
 
-    let readDirectory path =
+    let readDirectory directory =
         let mapToItem (info: FileSystemInfo) =
-            {
-                FullPath = info.FullName
-                ItemType =
-                    if info.Attributes.HasFlag(FileAttributes.Directory) then DirectoryItem
-                    else FileItem
-                Name = info.Name
-            }
+            if info.Attributes.HasFlag(FileAttributes.Directory) then
+                DirectoryItem { DirectoryName = info.Name; DirectoryPath = info.FullName }
+            else
+                FileItem { FileName = info.Name; FilePath = info.FullName }
 
-        let directoryInfo = DirectoryInfo(path)
-        let directories = directoryInfo.EnumerateDirectories() :?> IEnumerable<FileSystemInfo>
-        let files = directoryInfo.EnumerateFiles() :?> IEnumerable<FileSystemInfo>
+        let directoryInfo = DirectoryInfo(directory.DirectoryPath)
+
+        let childDirectories =
+            directoryInfo.EnumerateDirectories()
+            :?> IEnumerable<FileSystemInfo>
+
+        let files =
+            directoryInfo.EnumerateFiles()
+            :?> IEnumerable<FileSystemInfo>
 
         let allItems =
-            directories
+            childDirectories
             |> Seq.append files
             |> Seq.map mapToItem
             |> Seq.toArray

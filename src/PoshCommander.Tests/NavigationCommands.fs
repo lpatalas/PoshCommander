@@ -6,20 +6,19 @@ open Swensen.Unquote
 open System.IO
 
 let makeDir path =
-    {
-        FullPath = path
-        ItemType = DirectoryItem
-        Name = Path.GetFileName(path)
-    }
+    DirectoryItem ({
+        DirectoryPath = path
+        DirectoryName = Path.GetFileName(path)
+    })
 
 let generateItems directoryCount fileCount targetPath =
-    let generateNextItem itemType index =
-        let name = sprintf "%O%i" itemType index
-        { FullPath = Path.Combine(targetPath, name); ItemType = itemType; Name = "A" }
+    let generateNextItem constructor namePrefix index =
+        let name = sprintf "%O%i" namePrefix index
+        constructor name (Path.Combine(targetPath, name))
 
-    Seq.init directoryCount (generateNextItem DirectoryItem)
+    Seq.init directoryCount (generateNextItem Item.createDirectory "Dir")
     |> Seq.append
-    <| Seq.init fileCount (generateNextItem FileItem)
+    <| Seq.init fileCount (generateNextItem Item.createFile "File")
     |> Seq.toArray
 
 let defaultPaneState =
@@ -43,9 +42,9 @@ let emptyDirectory fullPath =
         Name = Path.GetFileName(fullPath)
     }
 
-let findIndexOfItemType itemType pane =
+let findIndexOfItemType predicate pane =
     pane.CurrentDirectory.Items
-    |> Seq.findIndex (fun item -> item.ItemType = itemType)
+    |> Seq.findIndex predicate
 
 let findIndexByFullPath path items =
     items
@@ -56,23 +55,24 @@ let id2 _ x = x
 module invokeHighlightedItem =
     [<Test>]
     let ``Should invoke directory callback when highlighted item is a directory``() =
-        let directoryIndex = findIndexOfItemType DirectoryItem defaultPaneState
+        let directoryIndex = findIndexOfItemType Item.isDirectory defaultPaneState
         let paneState = { defaultPaneState with HighlightedIndex = directoryIndex }
         let mutable invokedDirectory = None
         let directoryCallback item state =
-            invokedDirectory <- Some item
+            invokedDirectory <- Some (DirectoryItem item)
             state
 
         paneState |> Pane.invokeHighlightedItem directoryCallback id2 |> ignore
+
         test <@ invokedDirectory = Pane.tryGetItem directoryIndex paneState @>
 
     [<Test>]
     let ``Should invoke file callback when highlighted item is a file``() =
-        let fileIndex = findIndexOfItemType FileItem defaultPaneState
+        let fileIndex = findIndexOfItemType Item.isFile defaultPaneState
         let paneState = { defaultPaneState with HighlightedIndex = fileIndex }
         let mutable invokedFile = None
         let fileCallback item state =
-            invokedFile <- Some item
+            invokedFile <- Some (FileItem item)
             state
 
         paneState |> Pane.invokeHighlightedItem id2 fileCallback |> ignore
@@ -116,7 +116,10 @@ module setCurrentDirectory =
 
         let originalDirectoryIndex =
             result.CurrentDirectory.Items
-            |> Seq.findIndex (fun item -> item.FullPath = originalDirectory.FullPath)
+            |> Seq.findIndex (fun item ->
+                match item with
+                | DirectoryItem dir -> dir.DirectoryPath = originalDirectory.FullPath
+                | _ -> false)
 
         test <@ result.HighlightedIndex = originalDirectoryIndex @>
 
