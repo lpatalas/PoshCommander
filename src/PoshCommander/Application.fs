@@ -26,12 +26,8 @@ module Application =
         draw applicationState
 
         let keyInfo = Console.ReadKey(intercept = true)
-        let maybeCommand = mapCommand keyInfo
-
-        let newState =
-            match maybeCommand with
-            | Some command -> applicationState |> command
-            | None -> applicationState
+        let commandAction = mapCommand keyInfo.Key
+        let newState = applicationState |> commandAction
 
         if newState.IsRunning then
             run draw mapCommand newState

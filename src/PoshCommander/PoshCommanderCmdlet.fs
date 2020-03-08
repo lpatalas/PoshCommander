@@ -26,46 +26,16 @@ type PoshCommanderCmdlet() =
     member val ViewerPath = String.Empty with get, set
 
     override this.BeginProcessing() =
-        FullScreenConsole.enter this.Host.UI.RawUI this.TestPane
+        FullScreenConsole.enter this.Host.UI.RawUI this.RunApplication
 
-    member this.TestPane() =
+    member private this.RunApplication() =
         let windowSize = this.Host.UI.RawUI.WindowSize
         let application = Application.create windowSize this.LeftPath this.RightPath
-
-        let navigateToItem (item: Item) pane =
-            let content = FileSystem.readDirectory item.FullPath
-            Pane.setCurrentDirectory content pane
-
-        let invokeFile item pane =
-            pane
-
-        let invokeHighlightedItem =
-            Pane.invokeHighlightedItem navigateToItem invokeFile
-
         let draw = UI.drawApplication this.Host
+        let mapCommand = Command.mapKeyToCommand Command.defaultKeyMap
+        Application.run draw mapCommand application
 
-        let mapCommand (keyInfo: ConsoleKeyInfo) =
-            let applyToActivePane paneCommand application =
-                if application.LeftPane.IsActive then
-                    { application with LeftPane = application.LeftPane |> paneCommand }
-                else
-                    { application with RightPane = application.RightPane |> paneCommand }
-
-            match keyInfo.Key with
-            | ConsoleKey.DownArrow -> Some (Pane.highlightNextItem |> applyToActivePane)
-            | ConsoleKey.End -> Some (Pane.highlightLastItem |> applyToActivePane)
-            | ConsoleKey.Enter -> Some (invokeHighlightedItem |> applyToActivePane)
-            | ConsoleKey.Escape -> Some Application.quit
-            | ConsoleKey.Home -> Some (Pane.highlightFirstItem |> applyToActivePane)
-            | ConsoleKey.PageDown -> Some (Pane.highlightItemOnePageAfter |> applyToActivePane)
-            | ConsoleKey.PageUp -> Some (Pane.highlightItemOnePageBefore |> applyToActivePane)
-            | ConsoleKey.Tab -> Some Application.switchActivePane
-            | ConsoleKey.UpArrow -> Some (Pane.highlightPreviousItem |> applyToActivePane)
-            | _ -> None
-
-        application |> Application.run draw mapCommand
-
-    member this.TestInput() =
+    member private this.TestInput() =
         let setCursorX x =
             let mutable cursorPos = this.Host.UI.RawUI.CursorPosition
             cursorPos.X <- x

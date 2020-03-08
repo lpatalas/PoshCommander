@@ -12,6 +12,7 @@
     <Compile Include="Input.fs" />
     <Compile Include="Pane.fs" />
     <Compile Include="Application.fs" />
+    <Compile Include="Command.fs" />
     <Compile Include="UI.fs" />
     <Compile Include="PoshCommanderCmdlet.fs" />
     <None Include="PoshCommander.psm1">

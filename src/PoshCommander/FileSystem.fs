@@ -22,6 +22,13 @@ type DirectoryContent =
     }
 
 module FileSystem =
+    let tryGetParentDirectoryPath path =
+        let directoryInfo = DirectoryInfo(path)
+        if not (isNull directoryInfo.Parent) then
+            Some directoryInfo.Parent.FullName
+        else
+            None
+
     let readDirectory path =
         let mapToItem (info: FileSystemInfo) =
             {
