@@ -58,13 +58,10 @@ module UI =
             else
                 drawNormalRow
 
-        let getFileIcon =
-            Theme.getFileIcon Theme.defaultFileIcon Theme.defaultFilePatterns
+        let drawItem index item =
+            let getFileIcon =
+                Theme.getFileIcon Theme.defaultFileIcon Theme.defaultFilePatterns
 
-        paneState.CurrentDirectory.Items
-        |> Seq.skip paneState.FirstVisibleIndex
-        |> Seq.truncate paneState.RowCount
-        |> Seq.iteri (fun index item ->
             let icon =
                 match item with
                 | DirectoryItem _ -> Theme.directoryIcon
@@ -72,10 +69,14 @@ module UI =
 
             let itemIndex = index + paneState.FirstVisibleIndex
             if itemIndex = paneState.HighlightedIndex then
-                drawHighlightedRow index icon item.Name
+                drawHighlightedRow index icon (Item.getName item)
             else
-                drawNormalRow index icon item.Name
-        )
+                drawNormalRow index icon (Item.getName item)
+
+        paneState.CurrentDirectory.Items
+        |> Seq.skip paneState.FirstVisibleIndex
+        |> Seq.truncate paneState.RowCount
+        |> Seq.iteri drawItem
 
     let drawPane (ui: PSHostUserInterface) bounds paneState =
         let headerBounds = { bounds with Height = 1 }

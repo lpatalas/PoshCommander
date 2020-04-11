@@ -36,15 +36,6 @@ type FileItem =
 type Item =
     | DirectoryItem of DirectoryItem
     | FileItem of FileItem
-    with
-        member x.Path =
-            match x with
-            | DirectoryItem info -> info.DirectoryPath
-            | FileItem info -> info.FilePath
-        member x.Name =
-            match x with
-            | DirectoryItem info -> info.DirectoryName
-            | FileItem info -> info.FileName
 
 module Item =
     let createDirectory name path =
@@ -60,6 +51,16 @@ module Item =
             FilePath = path
         }
         |> FileItem
+
+    let getName item =
+        match item with
+        | DirectoryItem d -> d.DirectoryName
+        | FileItem f -> f.FileName
+
+    let getPath item =
+        match item with
+        | DirectoryItem d -> d.DirectoryPath
+        | FileItem f -> f.FilePath
 
     let isDirectory item =
         match item with

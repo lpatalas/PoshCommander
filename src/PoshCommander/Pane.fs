@@ -80,7 +80,7 @@ module Pane =
         let highlightedIndex =
                 let originalDirectoryIndex =
                     directoryContent.Items
-                    |> Seq.tryFindIndex (fun item -> item.Path = pane.CurrentDirectory.FullPath)
+                    |> Seq.tryFindIndex (fun item -> Item.getPath item = pane.CurrentDirectory.FullPath)
                 match originalDirectoryIndex with
                 | Some index -> index
                 | None -> 0
