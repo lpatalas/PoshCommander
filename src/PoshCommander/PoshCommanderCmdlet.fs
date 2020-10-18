@@ -25,7 +25,7 @@ type PoshCommanderCmdlet() =
     [<Parameter>]
     member val ViewerPath = String.Empty with get, set
 
-    override this.BeginProcessing() =
+    override this.EndProcessing() =
         FullScreenConsole.enter this.Host.UI.RawUI this.RunApplication
 
     member private this.RunApplication() =
