@@ -30,53 +30,59 @@ module UI =
         ui.Write(styledText)
 
     let drawItems (ui: PSHostUserInterface) bounds paneState =
-        let rawUI = ui.RawUI
-        let totalWidth = bounds.Width
+        let getBgColor rowIndex =
+            if rowIndex + paneState.FirstVisibleIndex = paneState.HighlightedIndex then
+                Theme.RowHightlighedBackground
+            else if rowIndex % 2 = 0 then
+                Theme.RowEvenBackground
+            else
+                Theme.RowOddBackground
 
-        let drawRow bgColor fgColor index (icon: Theme.Icon) (itemName: string) =
+        let getFgColor rowIndex =
+            if rowIndex = paneState.HighlightedIndex then
+                Theme.ItemSelectedForeground
+            else
+                Theme.ItemNormalForeground
+
+        let tryGetItem rowIndex =
+            let itemIndex = rowIndex + paneState.FirstVisibleIndex
+            if itemIndex < paneState.CurrentDirectory.Items.Count then
+                Some paneState.CurrentDirectory.Items.[itemIndex]
+            else
+                None
+
+        let drawItemRow bgColor fgColor item =
             let bgCode = bgColor |> toAnsiBgColorCode
             let fgCode = fgColor |> toAnsiFgColorCode
-            let padding = new string(' ', totalWidth - itemName.Length - 2)
-            rawUI.CursorPosition <- Coordinates(bounds.Left, 1000 - ui.RawUI.WindowSize.Height + bounds.Top + index)
-
-            let iconFgCode = toAnsiFgColorCode icon.Color
-            let coloredIcon = sprintf "%s%c " iconFgCode icon.Glyph
-            let coloredName = fgCode + itemName
-            ui.Write(bgCode + coloredIcon + coloredName + padding + ansiResetCode)
-
-        let drawNormalRow index =
-            let bgColor =
-                if index % 2 = 0 then
-                    Theme.RowEvenBackground
-                else
-                    Theme.RowOddBackground
-            drawRow bgColor Theme.ItemNormalForeground index
-
-        let drawHighlightedRow =
-            if paneState.IsActive then
-                drawRow Theme.RowHightlighedBackground Theme.ItemNormalForeground
-            else
-                drawNormalRow
-
-        let drawItem index item =
-            let getFileIcon =
-                Theme.getFileIcon Theme.defaultFileIcon Theme.defaultFilePatterns
-
             let icon =
                 match item with
                 | DirectoryItem _ -> Theme.directoryIcon
-                | FileItem file -> getFileIcon file.FileName
+                | FileItem file -> Theme.getFileIcon Theme.defaultFileIcon Theme.defaultFilePatterns file.FileName
 
-            let itemIndex = index + paneState.FirstVisibleIndex
-            if itemIndex = paneState.HighlightedIndex then
-                drawHighlightedRow index icon (Item.getName item)
-            else
-                drawNormalRow index icon (Item.getName item)
+            let itemName = Item.getName item
+            let iconFgCode = toAnsiFgColorCode icon.Color
+            let coloredIcon = sprintf "%s%c " iconFgCode icon.Glyph
+            let coloredName = fgCode + itemName
+            let padding = new string(' ', bounds.Width - itemName.Length - 2)
+            ui.Write(bgCode + coloredIcon + coloredName + padding + ansiResetCode)
 
-        paneState.CurrentDirectory.Items
-        |> Seq.skip paneState.FirstVisibleIndex
-        |> Seq.truncate paneState.RowCount
-        |> Seq.iteri drawItem
+        let drawEmptyRow bgColor =
+            let bgCode = bgColor |> toAnsiBgColorCode
+            let padding = new string(' ', bounds.Width)
+            ui.Write(bgCode + padding + ansiResetCode)
+
+        let drawRow rowIndex =
+            ui.RawUI.CursorPosition <- Coordinates(bounds.Left, 1000 - ui.RawUI.WindowSize.Height + bounds.Top + rowIndex)
+
+            let bgColor = getBgColor rowIndex
+            let fgColor = getFgColor rowIndex
+
+            match tryGetItem rowIndex with
+            | Some item -> drawItemRow bgColor fgColor item
+            | None -> drawEmptyRow bgColor
+
+        for rowIndex in 0..(bounds.Height - 1) do
+            drawRow rowIndex
 
     let drawPane (ui: PSHostUserInterface) bounds paneState =
         let headerBounds = { bounds with Height = 1 }
