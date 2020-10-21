@@ -3,25 +3,32 @@
     // for the documentation about the tasks.json format
     "version": "2.0.0",
     "tasks": [
-        {
-            "label": "Build (Debug)",
-            "command": "pwsh",
-            "type": "shell",
-            "args": [
-              "-ExecutionPolicy",
-              "RemoteSigned",
-              "-NoLogo",
-              "-NoProfile",
-              "-File",
-              "${workspaceFolder}/scripts/helpers/BuildSolution.ps1",
-              "-Configuration",
-              "Debug"
-            ],
-            "group": "build",
-            "presentation": {
-                "reveal": "silent"
-            },
-            "problemMatcher": "$msCompile"
-        }
+      {
+        "label": "build",
+        "command": "dotnet",
+        "type": "shell",
+        "windows": {
+            "options": {
+                "shell": {
+                    "executable": "cmd.exe",
+                    "args": [ "/c" ]
+                }
+            }
+        },
+        "args": [
+            "build",
+            "--nologo",
+            // Ask dotnet build to generate full paths for file names.
+            "/property:GenerateFullPaths=true",
+            // Do not generate summary otherwise it leads to duplicate errors in Problems panel
+            "/consoleloggerparameters:NoSummary",
+            "${workspaceFolder}/src/PoshCommander.sln"
+        ],
+        "presentation": {
+            "clear": true,
+            "reveal": "always",
+        },
+        "problemMatcher": "$msCompile"
+    }
     ]
 }

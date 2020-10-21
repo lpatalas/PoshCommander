@@ -2,15 +2,18 @@
 
 open PoshCommander
 open NUnit.Framework
+open System.IO
 open Swensen.Unquote
 
+let dir (path: string) =
+    {
+        ItemType = DirectoryItem
+        Name = Path.GetFileName(path)
+        Path = path
+    }
+
 let generateItems count =
-    Array.init count (fun index ->
-        let name = sprintf "Dir%i" index
-        DirectoryItem ({
-            DirectoryPath = sprintf @"T:\Test\%s" name
-            DirectoryName = name
-        }))
+    Array.init count (dir << sprintf @"T:\Test\Dir%i")
 
 let createPane rowCount itemCount =
     {

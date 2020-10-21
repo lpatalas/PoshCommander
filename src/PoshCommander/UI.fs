@@ -55,11 +55,11 @@ module UI =
             let bgCode = bgColor |> toAnsiBgColorCode
             let fgCode = fgColor |> toAnsiFgColorCode
             let icon =
-                match item with
-                | DirectoryItem _ -> Theme.directoryIcon
-                | FileItem file -> Theme.getFileIcon Theme.defaultFileIcon Theme.defaultFilePatterns file.FileName
+                match item.ItemType with
+                | DirectoryItem -> Theme.directoryIcon
+                | FileItem -> Theme.getFileIcon Theme.defaultFileIcon Theme.defaultFilePatterns item.Name
 
-            let itemName = Item.getName item
+            let itemName = item.Name
             let iconFgCode = toAnsiFgColorCode icon.Color
             let coloredIcon = sprintf "%s%c " iconFgCode icon.Glyph
             let coloredName = fgCode + itemName
