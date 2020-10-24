@@ -10,12 +10,14 @@ type Command =
     | HighlightNextItem
     | HighlightPreviousItem
     | InvokeHighlightedItem
+    | NavigateToParentDirectory
     | SwitchActivePane
     | QuitApplication
 
 module Command =
     let defaultKeyMap =
         [|
+            ConsoleKey.Backspace, NavigateToParentDirectory
             ConsoleKey.DownArrow, HighlightNextItem
             ConsoleKey.End, HighlightLastItem
             ConsoleKey.Enter, InvokeHighlightedItem
@@ -61,6 +63,8 @@ module Command =
                 Pane.highlightPreviousItem |> applyToActivePane
             | InvokeHighlightedItem ->
                 invokeHighlightedItem |> applyToActivePane
+            | NavigateToParentDirectory ->
+                Pane.navigateToParentDirectory FileSystem.readDirectory |> applyToActivePane
             | SwitchActivePane ->
                 Application.switchActivePane
             | QuitApplication ->

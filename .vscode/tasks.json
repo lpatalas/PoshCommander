@@ -26,7 +26,7 @@
             ],
             "presentation": {
                 "clear": true,
-                "reveal": "silent"
+                "reveal": "always"
             },
             "problemMatcher": "$msCompile",
             "group": {

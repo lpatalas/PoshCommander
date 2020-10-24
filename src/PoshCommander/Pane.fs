@@ -96,6 +96,14 @@ module Pane =
         let newContent = FileSystem.readDirectory directory
         setCurrentDirectory newContent pane
 
+    let navigateToParentDirectory readDirectory pane =
+        match FileSystem.tryGetParentDirectoryPath pane.CurrentDirectory.FullPath with
+        | Some parentPath ->
+            let parentContent = readDirectory parentPath
+            setCurrentDirectory parentContent pane
+        | None ->
+            pane
+
     let invokeHighlightedItem invokeDirectory invokeFile pane =
         let highlightedItem = getHighlightedItem pane
         match highlightedItem.ItemType with

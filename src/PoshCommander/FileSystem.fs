@@ -1,5 +1,6 @@
 namespace PoshCommander
 
+open System
 open System.Collections.Generic
 open System.IO
 
@@ -107,7 +108,11 @@ type DirectoryContent =
 
 module FileSystem =
     let tryGetParentDirectoryPath path =
-        None
+        let parentPath = Path.GetDirectoryName(path)
+        if String.IsNullOrEmpty(parentPath) then
+            None
+        else
+            Some parentPath
 
     let readDirectory path =
         let directoryInfo = DirectoryInfo(path)

@@ -137,3 +137,37 @@ module setCurrentDirectory =
         let result = Pane.setCurrentDirectory targetDirectory pane
 
         test <@ result.HighlightedIndex = 0 @>
+
+module navigateToParentDirectory =
+    let stubDirectory path =
+        {
+            FullPath = path
+            Items = [||]
+            Name = Path.GetFileName(path)
+        }
+
+    [<Test>]
+    let ``Should set current directory to parent directory``() =
+        let originalDirectory = stubDirectory @"T:\Parent\Child"
+        let parentDirectory = stubDirectory @"T:\Parent"
+        let readDirectoryStub path =
+            stubDirectory path
+
+        let updatedPane =
+            { defaultPaneState with CurrentDirectory = originalDirectory }
+            |> Pane.navigateToParentDirectory readDirectoryStub
+
+        test <@ updatedPane.CurrentDirectory = parentDirectory @>
+
+    [<Test>]
+    let ``Should do nothing when parent directory does not exist``() =
+        let readDirectoryStub path =
+            stubDirectory path
+
+        let originalPane =
+            { defaultPaneState with CurrentDirectory = stubDirectory @"T:\" }
+
+        let updatedPane =
+            Pane.navigateToParentDirectory readDirectoryStub originalPane
+
+        test <@ updatedPane = originalPane @>
