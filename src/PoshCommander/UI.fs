@@ -38,12 +38,6 @@ module UI =
             else
                 Theme.RowOddBackground
 
-        let getFgColor rowIndex =
-            if rowIndex = paneState.HighlightedIndex then
-                Theme.ItemSelectedForeground
-            else
-                Theme.ItemNormalForeground
-
         let tryGetItem rowIndex =
             let itemIndex = rowIndex + paneState.FirstVisibleIndex
             if itemIndex < paneState.CurrentDirectory.Items.Count then
@@ -75,7 +69,7 @@ module UI =
             ui.RawUI.CursorPosition <- Coordinates(bounds.Left, 1000 - ui.RawUI.WindowSize.Height + bounds.Top + rowIndex)
 
             let bgColor = getBgColor rowIndex
-            let fgColor = getFgColor rowIndex
+            let fgColor = Theme.ItemNormalForeground
 
             match tryGetItem rowIndex with
             | Some item -> drawItemRow bgColor fgColor item
