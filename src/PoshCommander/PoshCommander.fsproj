@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
@@ -10,10 +11,11 @@
     <Compile Include="Rect.fs" />
     <Compile Include="FileSystem.fs" />
     <Compile Include="Input.fs" />
-    <Compile Include="Pane.fs" />
-    <Compile Include="Application.fs" />
-    <Compile Include="Command.fs" />
+    <!-- <Compile Include="Pane.fs" />
+    <Compile Include="Application.fs" /> -->
+    <!-- <Compile Include="Command.fs" /> -->
     <Compile Include="UI.fs" />
+    <Compile Include="ListView.fs" />
     <Compile Include="PoshCommanderCmdlet.fs" />
     <None Include="PoshCommander.psm1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
