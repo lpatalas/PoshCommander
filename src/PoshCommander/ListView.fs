@@ -10,25 +10,47 @@ type Model<'TItem> =
         HighlightedIndex: int
         ItemPresenter: ItemPresenter<'TItem>
         Items: 'TItem array
+        PageSize: int
     }
 
 type Msg =
+    | HighlightItemOnePageAfter
+    | HighlightItemOnePageBefore
     | HighlightPreviousItem
     | HighlightNextItem
+    | PageSizeChanged of int
 
-let init itemPresenter items =
+let init pageSize itemPresenter items =
     {
         HighlightedIndex = 0
         ItemPresenter = itemPresenter
         Items = items
+        PageSize = pageSize
     }
 
 let update msg model =
+    let clampIndex index =
+        if index < 0 then 0
+        else if index >= model.Items.Length then model.Items.Length - 1
+        else index
+
+    let updatePageSize newPageSize =
+        if model.HighlightedIndex >= newPageSize then
+            { model with HighlightedIndex = newPageSize - 1 }
+        else
+            model
+
     match msg with
+    | HighlightItemOnePageAfter ->
+        { model with HighlightedIndex = clampIndex (model.HighlightedIndex + model.PageSize - 1) }
+    | HighlightItemOnePageBefore ->
+        { model with HighlightedIndex = clampIndex (model.HighlightedIndex - model.PageSize + 1) }
     | HighlightPreviousItem ->
-        { model with HighlightedIndex = Math.Max(0, model.HighlightedIndex - 1) }
+        { model with HighlightedIndex = clampIndex (model.HighlightedIndex - 1) }
     | HighlightNextItem ->
-        { model with HighlightedIndex = Math.Min(model.Items.Length - 1, model.HighlightedIndex + 1) }
+        { model with HighlightedIndex = clampIndex (model.HighlightedIndex + 1) }
+    | PageSizeChanged newPageSize ->
+        updatePageSize newPageSize
 
 let view uiContext model =
     let normalOddColors = Theme.ItemNormalForeground, Theme.RowOddBackground
@@ -53,5 +75,5 @@ let view uiContext model =
     let areaHeight = UIContext.getAreaHeight uiContext
 
     model.Items
-    |> Seq.take areaHeight
+    |> Seq.take model.PageSize
     |> Seq.iteri drawItem

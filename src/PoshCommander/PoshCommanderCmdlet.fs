@@ -66,6 +66,8 @@ type PoshCommanderCmdlet() =
                 this.Host.UI.WriteLine("You cancelled")
 
     member private this.TestListView() =
+        let flip f a b = f b a
+
         let items =
             Seq.init 100 (fun i -> sprintf "Item %d" i)
             |> Seq.toArray
@@ -73,7 +75,8 @@ type PoshCommanderCmdlet() =
         let itemPresenter item =
             item
 
-        let initialModel = ListView.init itemPresenter items
+        let pageSize = this.Host.UI.RawUI.WindowSize.Height
+        let initialModel = ListView.init pageSize itemPresenter items
 
         let rec mainLoop model =
             let width = this.Host.UI.RawUI.WindowSize.Width / 2
@@ -83,16 +86,25 @@ type PoshCommanderCmdlet() =
 
             let keyInfo = Console.ReadKey(intercept = true)
             if keyInfo.Key <> ConsoleKey.Q then
-                let maybeCommand =
+                let maybeKeyMsg =
                     match keyInfo.Key with
-                    | ConsoleKey.UpArrow -> Some ListView.HighlightPreviousItem
                     | ConsoleKey.DownArrow -> Some ListView.HighlightNextItem
+                    | ConsoleKey.PageDown -> Some ListView.HighlightItemOnePageAfter
+                    | ConsoleKey.PageUp -> Some ListView.HighlightItemOnePageBefore
+                    | ConsoleKey.UpArrow -> Some ListView.HighlightPreviousItem
                     | _ -> None
 
+                let maybePageMsg =
+                    let newPageSize = this.Host.UI.RawUI.WindowSize.Height
+                    if newPageSize <> model.PageSize then
+                        Some (ListView.PageSizeChanged newPageSize)
+                    else
+                        None
+
                 let updatedModel =
-                    maybeCommand
-                    |> Option.map (fun c -> ListView.update c model)
-                    |> Option.defaultValue model
+                    [maybeKeyMsg; maybePageMsg]
+                    |> Seq.choose id
+                    |> Seq.fold (flip ListView.update) model
 
                 mainLoop updatedModel
 
