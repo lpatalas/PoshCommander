@@ -16,6 +16,8 @@
     <!-- <Compile Include="Command.fs" /> -->
     <Compile Include="UI.fs" />
     <Compile Include="ListView.fs" />
+    <Compile Include="Pane.fs" />
+    <Compile Include="App.fs" />
     <Compile Include="PoshCommanderCmdlet.fs" />
     <None Include="PoshCommander.psm1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

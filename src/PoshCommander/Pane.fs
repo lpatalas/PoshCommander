@@ -1,111 +1,55 @@
-﻿namespace PoshCommander
+module PoshCommander.Pane
 
-type Pane = {
-    CurrentDirectory: DirectoryContent
-    FirstVisibleIndex: int
-    HighlightedIndex: int
-    IsActive: bool
-    RowCount: int
+open System
+
+type PaneItem =
+    {
+        FullPath: string
+        Name: string
     }
 
-module Pane =
-    let create rowCount isActive path =
+type Model =
+    {
+        CurrentPath: string
+        ListView: ListView.Model<PaneItem>
+    }
+
+type Msg =
+    | ListViewMsg of ListView.Msg
+    | KeyPressed of ConsoleKey
+    | PageSizeChanged of int
+
+let private itemPresenter item =
+    item.Name
+
+let init pageSize path =
+    let makeItem index =
+        let name = sprintf "Item%d.txt" index
         {
-            CurrentDirectory = FileSystem.readDirectory path
-            FirstVisibleIndex = 0
-            HighlightedIndex = 0
-            IsActive = isActive
-            RowCount = rowCount
+            FullPath = sprintf "%s\\%s" path name
+            Name = name
         }
 
-    let getHighlightedItem pane =
-        pane.CurrentDirectory.Items.[pane.HighlightedIndex]
+    let items =
+        Seq.initInfinite makeItem
+        |> Seq.take 100
+        |> Seq.toArray
 
-    let tryGetItem index pane =
-        if index >= 0 && index < pane.CurrentDirectory.Items.Count then
-            Some pane.CurrentDirectory.Items.[index]
-        else
-            None
+    {
+        CurrentPath = path
+        ListView = ListView.init pageSize itemPresenter items
+    }
 
-    let tryGetItemPath index pane =
-        tryGetItem index pane
-        |> Option.map Item.getPath
+let mapKey key =
+    ListView.mapKey key
+    |> Option.map ListViewMsg
 
-    let getItemCount pane =
-        pane.CurrentDirectory.Items.Count
+let update msg model =
+    match msg with
+    | ListViewMsg listViewMsg ->
+        { model with ListView = ListView.update listViewMsg model.ListView }
+    | _ ->
+        model
 
-    let getLastItemIndex pane =
-        if pane.CurrentDirectory.Items.Count > 0 then
-            pane.CurrentDirectory.Items.Count - 1
-        else
-            invalidOp "Can't get last item index because directory is empty"
-
-    let setHighlightedIndex index (pane: Pane) =
-        let newIndex =
-            if index < 0 then 0
-            else if index > getLastItemIndex pane then getLastItemIndex pane
-            else index
-
-        if newIndex <> pane.HighlightedIndex then
-            let newFirstVisibleIndex =
-                if newIndex - pane.FirstVisibleIndex >= pane.RowCount then
-                    newIndex - pane.RowCount + 1
-                else if newIndex < pane.FirstVisibleIndex then
-                    newIndex
-                else
-                    pane.FirstVisibleIndex
-
-            { pane with
-                FirstVisibleIndex = newFirstVisibleIndex
-                HighlightedIndex = newIndex }
-        else
-            pane
-
-    let highlightFirstItem pane =
-        setHighlightedIndex 0 pane
-
-    let highlightLastItem pane =
-        setHighlightedIndex (getLastItemIndex pane) pane
-
-    let highlightNextItem pane =
-        setHighlightedIndex (pane.HighlightedIndex + 1) pane
-
-    let highlightPreviousItem pane =
-        setHighlightedIndex (pane.HighlightedIndex - 1) pane
-
-    let highlightItemOnePageBefore pane =
-        setHighlightedIndex (pane.HighlightedIndex - pane.RowCount + 1) pane
-
-    let highlightItemOnePageAfter pane =
-        setHighlightedIndex (pane.HighlightedIndex + pane.RowCount - 1) pane
-
-    let setCurrentDirectory directoryContent pane =
-        let highlightedIndex =
-                let originalDirectoryIndex =
-                    directoryContent.Items
-                    |> Seq.tryFindIndex (fun item -> item.Path = pane.CurrentDirectory.FullPath)
-                match originalDirectoryIndex with
-                | Some index -> index
-                | None -> 0
-
-        { pane with
-            CurrentDirectory = directoryContent
-            HighlightedIndex = highlightedIndex }
-
-    let navigateToHighlightedDirectory directory pane =
-        let newContent = FileSystem.readDirectory directory
-        setCurrentDirectory newContent pane
-
-    let navigateToParentDirectory readDirectory pane =
-        match FileSystem.tryGetParentDirectoryPath pane.CurrentDirectory.FullPath with
-        | Some parentPath ->
-            let parentContent = readDirectory parentPath
-            setCurrentDirectory parentContent pane
-        | None ->
-            pane
-
-    let invokeHighlightedItem invokeDirectory invokeFile pane =
-        let highlightedItem = getHighlightedItem pane
-        match highlightedItem.ItemType with
-        | DirectoryItem -> invokeDirectory highlightedItem.Path pane
-        | FileItem -> invokeFile highlightedItem.Path pane
+let view uiContext model =
+    ListView.view uiContext model.ListView

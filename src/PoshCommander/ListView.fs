@@ -28,6 +28,14 @@ let init pageSize itemPresenter items =
         PageSize = pageSize
     }
 
+let mapKey key =
+    match key with
+    | ConsoleKey.DownArrow -> Some HighlightNextItem
+    | ConsoleKey.PageDown -> Some HighlightItemOnePageAfter
+    | ConsoleKey.PageUp -> Some HighlightItemOnePageBefore
+    | ConsoleKey.UpArrow -> Some HighlightPreviousItem
+    | _ -> None
+
 let update msg model =
     let clampIndex index =
         if index < 0 then 0
@@ -53,6 +61,7 @@ let update msg model =
         updatePageSize newPageSize
 
 let view uiContext model =
+    let uiArea = UIContext.getArea uiContext
     let normalOddColors = Theme.ItemNormalForeground, Theme.RowOddBackground
     let normalEvenColors = Theme.ItemNormalForeground, Theme.RowEvenBackground
     let highlightedColors = Theme.ItemNormalForeground, Theme.RowHightlighedBackground
@@ -69,7 +78,7 @@ let view uiContext model =
         let label = model.ItemPresenter item
         let colors = getItemColors index
 
-        UI.setCursorPosition uiContext 0 index
+        UI.setCursorPosition uiContext uiArea.Left (uiArea.Top + index)
         UI.drawFullLine uiContext colors label
 
     let areaHeight = UIContext.getAreaHeight uiContext

@@ -66,46 +66,19 @@ type PoshCommanderCmdlet() =
                 this.Host.UI.WriteLine("You cancelled")
 
     member private this.TestListView() =
-        let flip f a b = f b a
-
-        let items =
-            Seq.init 100 (fun i -> sprintf "Item %d" i)
-            |> Seq.toArray
-
-        let itemPresenter item =
-            item
-
-        let pageSize = this.Host.UI.RawUI.WindowSize.Height
-        let initialModel = ListView.init pageSize itemPresenter items
+        let app = App.init (this.Host) "C:\\" "D:\\"
 
         let rec mainLoop model =
-            let width = this.Host.UI.RawUI.WindowSize.Width / 2
+            let width = this.Host.UI.RawUI.WindowSize.Width
             let height = this.Host.UI.RawUI.WindowSize.Height
-            let uiContext = UIContext.init (this.Host.UI) width height
-            ListView.view uiContext model
+            let uiContext = UIContext.init (this.Host.UI) 0 0 width height
+            App.view uiContext model
 
             let keyInfo = Console.ReadKey(intercept = true)
             if keyInfo.Key <> ConsoleKey.Q then
-                let maybeKeyMsg =
-                    match keyInfo.Key with
-                    | ConsoleKey.DownArrow -> Some ListView.HighlightNextItem
-                    | ConsoleKey.PageDown -> Some ListView.HighlightItemOnePageAfter
-                    | ConsoleKey.PageUp -> Some ListView.HighlightItemOnePageBefore
-                    | ConsoleKey.UpArrow -> Some ListView.HighlightPreviousItem
-                    | _ -> None
+                App.mapKey (keyInfo.Key)
+                |> Option.map (fun msg -> App.update msg model)
+                |> Option.defaultValue model
+                |> mainLoop
 
-                let maybePageMsg =
-                    let newPageSize = this.Host.UI.RawUI.WindowSize.Height
-                    if newPageSize <> model.PageSize then
-                        Some (ListView.PageSizeChanged newPageSize)
-                    else
-                        None
-
-                let updatedModel =
-                    [maybeKeyMsg; maybePageMsg]
-                    |> Seq.choose id
-                    |> Seq.fold (flip ListView.update) model
-
-                mainLoop updatedModel
-
-        mainLoop initialModel
+        mainLoop app

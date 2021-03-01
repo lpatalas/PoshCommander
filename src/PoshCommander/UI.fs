@@ -21,9 +21,9 @@ module UIContext =
             HostUI: PSHostUserInterface
         }
 
-    let init hostUI width height =
+    let init hostUI left top width height =
         {
-            Area = { Left = 0; Top = 0; Width = width; Height = height }
+            Area = { Left = left; Top = top; Width = width; Height = height }
             HostUI = hostUI
         }
 
@@ -38,6 +38,29 @@ module UIContext =
 
     let getHostUI context =
         context.HostUI
+
+    let splitVertically context =
+        let area = getArea context
+        let middle = area.Width / 2
+        let leftContext = init context.HostUI 0 area.Top middle area.Height
+        let rightContext = init context.HostUI middle area.Top (area.Width - middle) area.Height
+
+        leftContext, rightContext
+
+module UILayout =
+    let verticalSplit ui left right =
+        UIContext.splitVertically ui
+
+    let row drawer ui =
+        ()
+
+    let stretch drawer ui =
+        ()
+
+    let verticalStack drawer ui =
+        ()
+
+
 
 module UI =
 
