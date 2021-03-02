@@ -9,6 +9,7 @@
     <None Include="coverlet.runsettings" />
     <Compile Include="Theme.fs" />
     <Compile Include="Input.fs" />
+    <Compile Include="ListViewTests.fs" />
     <!-- <Compile Include="HighlightingCommands.fs" />
     <Compile Include="NavigationCommands.fs" /> -->
   </ItemGroup>
