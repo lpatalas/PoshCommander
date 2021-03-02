@@ -36,12 +36,12 @@ let setActivePane appModel newPaneModel =
     | Right -> { appModel with RightPane = newPaneModel }
 
 let init (host: PSHost) leftPath rightPath =
-    let pageSize = host.UI.RawUI.WindowSize.Height
+    let windowHeight = host.UI.RawUI.WindowSize.Height
     {
         ActivePane = Left
         Host = host
-        LeftPane = Pane.init pageSize leftPath
-        RightPane = Pane.init pageSize rightPath
+        LeftPane = Pane.init windowHeight leftPath
+        RightPane = Pane.init windowHeight rightPath
     }
 
 let mapKey key =

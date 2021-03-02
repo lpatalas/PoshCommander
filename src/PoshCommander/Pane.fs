@@ -19,13 +19,16 @@ type Msg =
     | KeyPressed of ConsoleKey
     | PageSizeChanged of int
 
-let init pageSize path =
+let init windowHeight path =
     let makeItem index =
         let name = sprintf "Item%d.txt" index
         {
             FullPath = sprintf "%s\\%s" path name
             Name = name
         }
+
+    // window height minus title and status bars
+    let pageSize = windowHeight - 2
 
     let items =
         Seq.initInfinite makeItem
@@ -34,7 +37,7 @@ let init pageSize path =
 
     {
         CurrentPath = path
-        ListView = ListView.init (pageSize - 2) items
+        ListView = ListView.init pageSize items
     }
 
 let mapKey key =
