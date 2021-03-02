@@ -6,11 +6,17 @@ open Swensen.Unquote
 let dummyListView itemCount =
     ListView.init itemCount (Array.init itemCount (fun i -> sprintf "Item%d" i))
 
+let withFirstVisibleIndex index (listView: ListView.Model<string>) =
+    { listView with FirstVisibleIndex = index }
+
 let withHighlightedIndex index (listView: ListView.Model<string>) =
     { listView with HighlightedIndex = index }
 
 let withPageSize pageSize (listView: ListView.Model<string>) =
     { listView with PageSize = pageSize }
+
+let getFirstVisibleIndex (listView: ListView.Model<string>) =
+    listView.FirstVisibleIndex
 
 let getHighlightedIndex (listView: ListView.Model<string>) =
     listView.HighlightedIndex
@@ -30,6 +36,22 @@ module highlightingTests =
             |> getHighlightedIndex
 
         test <@ updatedIndex = expectedIndex @>
+
+    [<TestCase(0, 0, 0)>]
+    [<TestCase(1, 0, 0)>]
+    [<TestCase(1, 1, 0)>]
+    [<TestCase(2, 1, 1)>]
+    [<TestCase(4, 1, 1)>]
+    let ``should adjust FirstVisibleIndex when highlighting previous item``(highlightedIndex, initialFirstVisibleIndex, expectedFirstVisibleIndex) =
+        let updatedIndex =
+            initialListView
+            |> withPageSize 5
+            |> withFirstVisibleIndex initialFirstVisibleIndex
+            |> withHighlightedIndex highlightedIndex
+            |> ListView.update ListView.HighlightPreviousItem
+            |> getFirstVisibleIndex
+
+        test <@ updatedIndex = expectedFirstVisibleIndex @>
 
     [<TestCase(0, 1)>]
     [<TestCase(8, 9)>]

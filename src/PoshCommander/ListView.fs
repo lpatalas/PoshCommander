@@ -4,6 +4,7 @@ open System
 
 type Model<'TItem> =
     {
+        FirstVisibleIndex: int
         HighlightedIndex: int
         Items: 'TItem array
         PageSize: int
@@ -18,6 +19,7 @@ type Msg =
 
 let init pageSize items =
     {
+        FirstVisibleIndex = 0
         HighlightedIndex = 0
         Items = items
         PageSize = pageSize
@@ -37,6 +39,20 @@ let update msg model =
         else if index >= model.Items.Length then model.Items.Length - 1
         else index
 
+    let setHighlightedIndex index model =
+        let newHighlightedIndex =
+            clampIndex index
+
+        let newFirstVisibleIndex =
+            if newHighlightedIndex < model.FirstVisibleIndex then newHighlightedIndex
+            else model.FirstVisibleIndex
+
+        {
+            model with
+                FirstVisibleIndex = newFirstVisibleIndex
+                HighlightedIndex = newHighlightedIndex
+        }
+
     let updatePageSize newPageSize =
         if model.HighlightedIndex >= newPageSize then
             { model with HighlightedIndex = newPageSize - 1 }
@@ -45,13 +61,13 @@ let update msg model =
 
     match msg with
     | HighlightItemOnePageAfter ->
-        { model with HighlightedIndex = clampIndex (model.HighlightedIndex + model.PageSize - 1) }
+        model |> setHighlightedIndex (model.HighlightedIndex + model.PageSize - 1)
     | HighlightItemOnePageBefore ->
-        { model with HighlightedIndex = clampIndex (model.HighlightedIndex - model.PageSize + 1) }
+        model |> setHighlightedIndex (model.HighlightedIndex - model.PageSize + 1)
     | HighlightPreviousItem ->
-        { model with HighlightedIndex = clampIndex (model.HighlightedIndex - 1) }
+        model |> setHighlightedIndex (model.HighlightedIndex - 1)
     | HighlightNextItem ->
-        { model with HighlightedIndex = clampIndex (model.HighlightedIndex + 1) }
+        model |> setHighlightedIndex (model.HighlightedIndex + 1)
     | PageSizeChanged newPageSize ->
         updatePageSize newPageSize
 
