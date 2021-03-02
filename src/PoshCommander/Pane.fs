@@ -19,9 +19,6 @@ type Msg =
     | KeyPressed of ConsoleKey
     | PageSizeChanged of int
 
-let private itemPresenter item =
-    item.Name
-
 let init pageSize path =
     let makeItem index =
         let name = sprintf "Item%d.txt" index
@@ -37,7 +34,7 @@ let init pageSize path =
 
     {
         CurrentPath = path
-        ListView = ListView.init (pageSize - 2) itemPresenter items
+        ListView = ListView.init (pageSize - 2) items
     }
 
 let mapKey key =
@@ -64,6 +61,9 @@ let private drawStatusBar ui text =
     UI.initCursor ui
     UI.drawFullLine ui style text
 
+let private itemPresenter item =
+    item.Name
+
 let view uiContext isActive model =
     let (titleArea, rest) =
         UIContext.splitTop uiContext
@@ -72,5 +72,5 @@ let view uiContext isActive model =
         UIContext.splitBottom rest
 
     drawTitleBar titleArea isActive model.CurrentPath
-    ListView.view contentArea model.ListView
+    ListView.view contentArea itemPresenter model.ListView
     drawStatusBar statusArea "Ready"

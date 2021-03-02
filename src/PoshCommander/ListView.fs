@@ -1,14 +1,10 @@
 module PoshCommander.ListView
 
 open System
-open System.Management.Automation.Host
-
-type ItemPresenter<'T> = ('T) -> string
 
 type Model<'TItem> =
     {
         HighlightedIndex: int
-        ItemPresenter: ItemPresenter<'TItem>
         Items: 'TItem array
         PageSize: int
     }
@@ -20,10 +16,9 @@ type Msg =
     | HighlightNextItem
     | PageSizeChanged of int
 
-let init pageSize itemPresenter items =
+let init pageSize items =
     {
         HighlightedIndex = 0
-        ItemPresenter = itemPresenter
         Items = items
         PageSize = pageSize
     }
@@ -60,7 +55,7 @@ let update msg model =
     | PageSizeChanged newPageSize ->
         updatePageSize newPageSize
 
-let view uiContext model =
+let view uiContext itemPresenter model =
     let uiArea = UIContext.getArea uiContext
     let normalOddColors = Theme.ItemNormalForeground, Theme.RowOddBackground
     let normalEvenColors = Theme.ItemNormalForeground, Theme.RowEvenBackground
@@ -75,13 +70,11 @@ let view uiContext model =
             normalOddColors
 
     let drawItem index item =
-        let label = model.ItemPresenter item
+        let label = itemPresenter item
         let colors = getItemColors index
 
         UI.setCursorPosition uiContext uiArea.Left (uiArea.Top + index)
         UI.drawFullLine uiContext colors label
-
-    let areaHeight = UIContext.getAreaHeight uiContext
 
     model.Items
     |> Seq.take model.PageSize
