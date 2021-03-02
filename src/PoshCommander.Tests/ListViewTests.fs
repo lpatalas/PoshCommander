@@ -3,37 +3,19 @@ module PoshCommander.ListViewTests
 open NUnit.Framework
 open Swensen.Unquote
 
-let dummyListView itemCount =
-    ListView.init itemCount (Array.init itemCount (fun i -> sprintf "Item%d" i))
-
-let withFirstVisibleIndex index (listView: ListView.Model<string>) =
-    { listView with FirstVisibleIndex = index }
-
-let withHighlightedIndex index (listView: ListView.Model<string>) =
-    { listView with HighlightedIndex = index }
-
-let withPageSize pageSize (listView: ListView.Model<string>) =
-    { listView with PageSize = pageSize }
-
-let getFirstVisibleIndex (listView: ListView.Model<string>) =
-    listView.FirstVisibleIndex
-
-let getHighlightedIndex (listView: ListView.Model<string>) =
-    listView.HighlightedIndex
-
 module highlightingTests =
     let initialListView =
-        dummyListView 10
+        ListView.init 10 (Array.init 10 (fun i -> sprintf "Item%d" i))
 
     [<TestCase(0, 0)>]
     [<TestCase(1, 0)>]
     [<TestCase(9, 8)>]
     let ``should highlight previous item``(initialIndex, expectedIndex) =
         let updatedIndex =
-            initialListView
-            |> withHighlightedIndex initialIndex
+            { initialListView with
+                HighlightedIndex = initialIndex }
             |> ListView.update ListView.HighlightPreviousItem
-            |> getHighlightedIndex
+            |> ListView.getHighlightedIndex
 
         test <@ updatedIndex = expectedIndex @>
 
@@ -44,12 +26,12 @@ module highlightingTests =
     [<TestCase(4, 1, 1)>]
     let ``should adjust FirstVisibleIndex when highlighting previous item``(highlightedIndex, initialFirstVisibleIndex, expectedFirstVisibleIndex) =
         let updatedIndex =
-            initialListView
-            |> withPageSize 5
-            |> withFirstVisibleIndex initialFirstVisibleIndex
-            |> withHighlightedIndex highlightedIndex
+            { initialListView with
+                PageSize = 5
+                FirstVisibleIndex = initialFirstVisibleIndex
+                HighlightedIndex = highlightedIndex }
             |> ListView.update ListView.HighlightPreviousItem
-            |> getFirstVisibleIndex
+            |> ListView.getFirstVisibleIndex
 
         test <@ updatedIndex = expectedFirstVisibleIndex @>
 
@@ -58,10 +40,10 @@ module highlightingTests =
     [<TestCase(9, 9)>]
     let ``should highlight next item``(initialIndex, expectedIndex) =
         let updatedIndex =
-            initialListView
-            |> withHighlightedIndex initialIndex
+            { initialListView with
+                HighlightedIndex = initialIndex }
             |> ListView.update ListView.HighlightNextItem
-            |> getHighlightedIndex
+            |> ListView.getHighlightedIndex
 
         test <@ updatedIndex = expectedIndex @>
 
@@ -72,11 +54,11 @@ module highlightingTests =
     [<TestCase(9, 5)>]
     let ``should highlight item page before``(initialIndex, expectedIndex) =
         let updatedIndex =
-            initialListView
-            |> withPageSize 5
-            |> withHighlightedIndex initialIndex
+            { initialListView with
+                PageSize = 5
+                HighlightedIndex = initialIndex }
             |> ListView.update ListView.HighlightItemOnePageBefore
-            |> getHighlightedIndex
+            |> ListView.getHighlightedIndex
 
         test <@ updatedIndex = expectedIndex @>
 
@@ -87,10 +69,10 @@ module highlightingTests =
     [<TestCase(9, 9)>]
     let ``should highlight item page after``(initialIndex, expectedIndex) =
         let updatedIndex =
-            initialListView
-            |> withPageSize 5
-            |> withHighlightedIndex initialIndex
+            { initialListView with
+                PageSize = 5
+                HighlightedIndex = initialIndex }
             |> ListView.update ListView.HighlightItemOnePageAfter
-            |> getHighlightedIndex
+            |> ListView.getHighlightedIndex
 
         test <@ updatedIndex = expectedIndex @>

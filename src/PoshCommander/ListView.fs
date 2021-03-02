@@ -10,6 +10,12 @@ type Model<'TItem> =
         PageSize: int
     }
 
+let getFirstVisibleIndex model =
+    model.FirstVisibleIndex
+
+let getHighlightedIndex model =
+    model.HighlightedIndex
+
 type Msg =
     | HighlightItemOnePageAfter
     | HighlightItemOnePageBefore
