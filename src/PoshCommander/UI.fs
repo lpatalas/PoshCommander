@@ -41,26 +41,25 @@ module UIContext =
 
     let splitVertically context =
         let area = getArea context
-        let middle = area.Width / 2
-        let leftContext = init context.HostUI 0 area.Top middle area.Height
+        let middle = area.Left + area.Width / 2
+        let leftContext = init context.HostUI area.Left area.Top middle area.Height
         let rightContext = init context.HostUI middle area.Top (area.Width - middle) area.Height
 
         leftContext, rightContext
 
-module UILayout =
-    let verticalSplit ui left right =
-        UIContext.splitVertically ui
+    let splitTop context =
+        let area = getArea context
+        let topContext = init context.HostUI area.Left area.Top area.Width 1
+        let bottomContext = init context.HostUI area.Left (area.Top + 1) area.Width (area.Height - 1)
 
-    let row drawer ui =
-        ()
+        topContext, bottomContext
 
-    let stretch drawer ui =
-        ()
+    let splitBottom context =
+        let area = getArea context
+        let topContext = init context.HostUI area.Left area.Top area.Width (area.Height - 1)
+        let bottomContext = init context.HostUI area.Left (area.Top + area.Height - 1) area.Width 1
 
-    let verticalStack drawer ui =
-        ()
-
-
+        topContext, bottomContext
 
 module UI =
 
@@ -76,6 +75,10 @@ module UI =
     let setCursorPosition context x y =
         let ui = UIContext.getHostUI context
         ui.RawUI.CursorPosition <- Coordinates(x, 1000 - ui.RawUI.WindowSize.Height +  y)
+
+    let initCursor context =
+        let area = UIContext.getArea context
+        setCursorPosition context area.Left area.Top
 
     let drawColoredText context (fg, bg) text =
         let ansiBgColor = bg |> toAnsiBgColorCode

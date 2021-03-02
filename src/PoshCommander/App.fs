@@ -65,5 +65,5 @@ let update msg model =
 
 let view uiContext model =
     let (leftUI, rightUI) = UIContext.splitVertically uiContext
-    Pane.view leftUI model.LeftPane
-    Pane.view rightUI model.RightPane
+    Pane.view leftUI (model.ActivePane = Left) model.LeftPane
+    Pane.view rightUI (model.ActivePane = Right) model.RightPane

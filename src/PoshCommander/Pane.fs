@@ -37,7 +37,7 @@ let init pageSize path =
 
     {
         CurrentPath = path
-        ListView = ListView.init pageSize itemPresenter items
+        ListView = ListView.init (pageSize - 2) itemPresenter items
     }
 
 let mapKey key =
@@ -51,5 +51,26 @@ let update msg model =
     | _ ->
         model
 
-let view uiContext model =
-    ListView.view uiContext model.ListView
+let private drawTitleBar ui isActive location =
+    let style =
+        if isActive then (Theme.TitleBarActiveForeground, Theme.TitleBarActiveBackground)
+        else (Theme.TitleBarInactiveForeground, Theme.TitleBarInactiveBackground)
+
+    UI.initCursor ui
+    UI.drawFullLine ui style location
+
+let private drawStatusBar ui text =
+    let style = (Theme.StatusBarForeground, Theme.StatusBarBackground)
+    UI.initCursor ui
+    UI.drawFullLine ui style text
+
+let view uiContext isActive model =
+    let (titleArea, rest) =
+        UIContext.splitTop uiContext
+
+    let (contentArea, statusArea) =
+        UIContext.splitBottom rest
+
+    drawTitleBar titleArea isActive model.CurrentPath
+    ListView.view contentArea model.ListView
+    drawStatusBar statusArea "Ready"
