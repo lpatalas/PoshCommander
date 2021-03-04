@@ -3,7 +3,7 @@ module PoshCommander.ListViewTests
 open NUnit.Framework
 open Swensen.Unquote
 
-module highlightingTests =
+module HighlightingTests =
     let initialListView =
         ListView.init 10 (Array.init 10 (fun i -> sprintf "Item%d" i))
 
@@ -126,3 +126,37 @@ module highlightingTests =
             |> ListView.getFirstVisibleIndex
 
         test <@ updatedIndex = expectedFirstVisibleIndex @>
+
+module SelectionTests =
+    let items = Array.init 10 (fun i -> sprintf "Item%d" i)
+    let listView = ListView.init (Array.length items) items
+
+    [<Test>]
+    let ``should select highlighted item if it was unselected``() =
+        let selectedItems =
+            { listView with HighlightedIndex = 1 }
+            |> ListView.update ListView.ToggleItemSelection
+            |> ListView.getSelectedItems
+
+        test <@ selectedItems = Set.ofList [ items.[1] ] @>
+
+    [<Test>]
+    let ``should unselect highlighted item if it was selected``() =
+        let selectedItems =
+            { listView with
+                HighlightedIndex = 1
+                SelectedItems = Set.ofList [ items.[1] ] }
+            |> ListView.update ListView.ToggleItemSelection
+            |> ListView.getSelectedItems
+
+        test <@ selectedItems = Set.empty @>
+
+    [<Test>]
+    let ``should revert selection if it was toggled two times``() =
+        let selectedItems =
+            { listView with HighlightedIndex = 1 }
+            |> ListView.update ListView.ToggleItemSelection
+            |> ListView.update ListView.ToggleItemSelection
+            |> ListView.getSelectedItems
+
+        test <@ selectedItems = Set.empty @>
