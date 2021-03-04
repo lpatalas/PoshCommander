@@ -97,11 +97,12 @@ let view uiContext itemPresenter model =
 
     let drawItem index item =
         let label = itemPresenter item
-        let colors = getItemColors index
+        let colors = getItemColors (index + model.FirstVisibleIndex)
 
         UI.setCursorPosition uiContext uiArea.Left (uiArea.Top + index)
         UI.drawFullLine uiContext colors label
 
     model.Items
+    |> Seq.skip model.FirstVisibleIndex
     |> Seq.take model.PageSize
     |> Seq.iteri drawItem
