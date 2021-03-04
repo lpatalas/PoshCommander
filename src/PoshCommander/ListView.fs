@@ -50,8 +50,12 @@ let update msg model =
             clampIndex index
 
         let newFirstVisibleIndex =
-            if newHighlightedIndex < model.FirstVisibleIndex then newHighlightedIndex
-            else model.FirstVisibleIndex
+            if newHighlightedIndex < model.FirstVisibleIndex then
+                newHighlightedIndex
+            else if newHighlightedIndex >= model.FirstVisibleIndex + model.PageSize then
+                newHighlightedIndex - model.PageSize + 1
+            else
+                model.FirstVisibleIndex
 
         {
             model with

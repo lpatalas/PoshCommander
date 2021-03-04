@@ -47,6 +47,22 @@ module highlightingTests =
 
         test <@ updatedIndex = expectedIndex @>
 
+    [<TestCase(0, 0, 0)>]
+    [<TestCase(1, 0, 0)>]
+    [<TestCase(3, 0, 0)>]
+    [<TestCase(4, 0, 1)>]
+    [<TestCase(6, 2, 3)>]
+    let ``should adjust FirstVisibleIndex when highlighting next item``(highlightedIndex, initialFirstVisibleIndex, expectedFirstVisibleIndex) =
+        let updatedIndex =
+            { initialListView with
+                PageSize = 5
+                FirstVisibleIndex = initialFirstVisibleIndex
+                HighlightedIndex = highlightedIndex }
+            |> ListView.update ListView.HighlightNextItem
+            |> ListView.getFirstVisibleIndex
+
+        test <@ updatedIndex = expectedFirstVisibleIndex @>
+
     [<TestCase(0, 0)>]
     [<TestCase(1, 0)>]
     [<TestCase(4, 0)>]
