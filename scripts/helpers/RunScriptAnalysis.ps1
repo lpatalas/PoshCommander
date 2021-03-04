@@ -20,5 +20,5 @@ if (@($results).Count -gt 0) {
     throw "PSScriptAnalyzer returned errors for directory: $Path"
 }
 else {
-    Write-Verbose "PSScriptAnalyzer did not find any errors"
+    Write-Host "PSScriptAnalyzer did not find any errors"
 }

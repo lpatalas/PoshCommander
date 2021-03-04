@@ -15,6 +15,13 @@ function Main {
         & "$helpersDir\RunScriptAnalysis.ps1" -Path $PSScriptRoot
     }
 
+    RunStep "Restoring tools" {
+        dotnet tool restore
+        if ($LASTEXITCODE -ne 0) {
+            throw "dotnet tool restore exited with error code $LASTEXITCODE"
+        }
+    }
+
     & "$helpersDir\ClearArtifacts.ps1"
 
     RunStep "Compilation" {
