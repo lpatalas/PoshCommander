@@ -78,6 +78,23 @@ module highlightingTests =
 
         test <@ updatedIndex = expectedIndex @>
 
+    [<TestCase(0, 0, 0)>]
+    [<TestCase(1, 0, 0)>]
+    [<TestCase(4, 0, 0)>]
+    [<TestCase(4, 1, 0)>]
+    [<TestCase(5, 5, 1)>]
+    [<TestCase(9, 5, 5)>]
+    let ``should adjust FirstVisibleIndex when highlighting item one page before``(highlightedIndex, initialFirstVisibleIndex, expectedFirstVisibleIndex) =
+        let updatedIndex =
+            { initialListView with
+                PageSize = 5
+                FirstVisibleIndex = initialFirstVisibleIndex
+                HighlightedIndex = highlightedIndex }
+            |> ListView.update ListView.HighlightItemOnePageBefore
+            |> ListView.getFirstVisibleIndex
+
+        test <@ updatedIndex = expectedFirstVisibleIndex @>
+
     [<TestCase(0, 4)>]
     [<TestCase(5, 9)>]
     [<TestCase(6, 9)>]
@@ -92,3 +109,20 @@ module highlightingTests =
             |> ListView.getHighlightedIndex
 
         test <@ updatedIndex = expectedIndex @>
+
+    [<TestCase(0, 0, 0)>]
+    [<TestCase(1, 0, 1)>]
+    [<TestCase(4, 0, 4)>]
+    [<TestCase(4, 1, 4)>]
+    [<TestCase(8, 4, 5)>]
+    [<TestCase(9, 5, 5)>]
+    let ``should adjust FirstVisibleIndex when highlighting item one page after``(highlightedIndex, initialFirstVisibleIndex, expectedFirstVisibleIndex) =
+        let updatedIndex =
+            { initialListView with
+                PageSize = 5
+                FirstVisibleIndex = initialFirstVisibleIndex
+                HighlightedIndex = highlightedIndex }
+            |> ListView.update ListView.HighlightItemOnePageAfter
+            |> ListView.getFirstVisibleIndex
+
+        test <@ updatedIndex = expectedFirstVisibleIndex @>
