@@ -173,7 +173,7 @@ module SelectionTests =
         test <@ selectedItems = Set.empty @>
 
 module FilterTests =
-    let items = Array.init 10 (fun i -> sprintf "Item%d" i)
+    let items = [| "abc"; "bbc"; "cab"; "cba" |]
     let listView = ListView.init (Array.length items) items
 
     [<TestCase('a')>]
@@ -211,6 +211,17 @@ module FilterTests =
             |> ListView.mapKey (ConsoleKeyInfo.fromConsoleKey ConsoleKey.Escape)
 
         let expectedMsg = Some ListView.ResetFilter
+        test <@ msg = expectedMsg @>
+
+    [<TestCase("abc", "ab")>]
+    [<TestCase("a", "")>]
+    [<TestCase("", "")>]
+    let ``should erase last character when backspace is pressed``(initialFilter, expectedFilter) =
+        let msg =
+            { listView with Filter = ListView.Filter initialFilter }
+            |> ListView.mapKey (ConsoleKeyInfo.fromConsoleKey ConsoleKey.Backspace)
+
+        let expectedMsg = Some (ListView.SetFilter expectedFilter)
         test <@ msg = expectedMsg @>
 
 

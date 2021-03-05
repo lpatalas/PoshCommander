@@ -65,6 +65,11 @@ let isFilterInitChar keyChar =
 let isFilterUpdateChar keyChar =
     Set.contains keyChar filterUpdateChars
 
+let private eraseLastChar str =
+    match str with
+    | "" -> ""
+    | s -> s.Substring(0, s.Length - 1)
+
 let tryMapFilterMsg (keyInfo: ConsoleKeyInfo) model =
     match model.Filter with
     | NoFilter ->
@@ -75,6 +80,8 @@ let tryMapFilterMsg (keyInfo: ConsoleKeyInfo) model =
     | Filter filterString ->
         if isFilterUpdateChar keyInfo.KeyChar then
             Some (SetFilter (filterString + string keyInfo.KeyChar))
+        else if keyInfo.Key = ConsoleKey.Backspace then
+            Some (SetFilter (eraseLastChar filterString))
         else if keyInfo.Key = ConsoleKey.Escape then
             Some ResetFilter
         else
