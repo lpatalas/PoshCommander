@@ -40,8 +40,8 @@ let init windowHeight path =
         ListView = ListView.init pageSize items
     }
 
-let mapKey key =
-    ListView.mapKey key
+let mapKey (keyInfo: ConsoleKeyInfo) model =
+    ListView.mapKey keyInfo model.ListView
     |> Option.map ListViewMsg
 
 let update msg model =

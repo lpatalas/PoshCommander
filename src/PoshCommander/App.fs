@@ -44,12 +44,12 @@ let init (host: PSHost) leftPath rightPath =
         RightPane = Pane.init windowHeight rightPath
     }
 
-let mapKey key =
-    match key with
+let mapKey (keyInfo: ConsoleKeyInfo) model =
+    match keyInfo.Key with
     | ConsoleKey.Tab ->
         Some SwitchActivePane
     | _ ->
-        Pane.mapKey key
+        Pane.mapKey keyInfo (getActivePane model)
         |> Option.map ActivePaneMsg
 
 let update msg model =

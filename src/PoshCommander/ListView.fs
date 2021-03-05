@@ -40,8 +40,8 @@ let init pageSize items =
         SelectedItems = Set.empty
     }
 
-let mapKey key =
-    match key with
+let mapKey (keyInfo: ConsoleKeyInfo) model =
+    match keyInfo.Key with
     | ConsoleKey.DownArrow -> Some HighlightNextItem
     | ConsoleKey.Spacebar -> Some ToggleItemSelection
     | ConsoleKey.PageDown -> Some HighlightItemOnePageAfter

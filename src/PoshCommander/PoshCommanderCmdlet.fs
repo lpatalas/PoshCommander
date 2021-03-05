@@ -76,7 +76,7 @@ type PoshCommanderCmdlet() =
 
             let keyInfo = Console.ReadKey(intercept = true)
             if keyInfo.Key <> ConsoleKey.Q then
-                App.mapKey (keyInfo.Key)
+                App.mapKey keyInfo model
                 |> Option.map (fun msg -> App.update msg model)
                 |> Option.defaultValue model
                 |> mainLoop
