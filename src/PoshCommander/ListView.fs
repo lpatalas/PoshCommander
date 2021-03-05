@@ -124,9 +124,6 @@ let update msg model =
                 HighlightedIndex = newHighlightedIndex
         }
 
-    let apply2 a b f =
-        f a b
-
     let toggleItemSelection model =
         let highlightedItem = getHighlightedItem model
         let updatedSet =
@@ -161,10 +158,15 @@ let update msg model =
     | ToggleItemSelection ->
         model |> toggleItemSelection
 
+[<Struct>]
+type private ListViewRow<'TItem> =
+    | EmptyRow
+    | ItemRow of 'TItem
+
 let view uiContext itemPresenter model =
     let uiArea = UIContext.getArea uiContext
 
-    let getItemColors index item =
+    let getItemColors index isSelected =
         let backgroundColor =
             if index = model.HighlightedIndex then
                 Theme.RowHightlighedBackground
@@ -174,21 +176,38 @@ let view uiContext itemPresenter model =
                 Theme.RowOddBackground
 
         let foregroundColor =
-            if Set.contains item model.SelectedItems then
+            if isSelected then
                 Theme.ItemSelectedForeground
             else
                 Theme.ItemNormalForeground
 
         (foregroundColor, backgroundColor)
 
+    let drawEmptyRow index =
+        let colors = getItemColors (index + model.FirstVisibleIndex) false
+
+        UI.setCursorPosition uiContext uiArea.Left (uiArea.Top + index)
+        UI.drawFullLine uiContext colors ""
+
     let drawItem index item =
+        let isSelected = Set.contains item model.SelectedItems
         let label = itemPresenter item
-        let colors = getItemColors (index + model.FirstVisibleIndex) item
+        let colors = getItemColors (index + model.FirstVisibleIndex) isSelected
 
         UI.setCursorPosition uiContext uiArea.Left (uiArea.Top + index)
         UI.drawFullLine uiContext colors label
 
+    let drawRow index row =
+        match row with
+        | EmptyRow -> drawEmptyRow index
+        | ItemRow item -> drawItem index item
+
+    let emptyRows =
+        Seq.initInfinite (fun _ -> EmptyRow)
+
     model.Items
     |> Seq.skip model.FirstVisibleIndex
+    |> Seq.map ItemRow
+    |> Seq.concatWith emptyRows
     |> Seq.take model.PageSize
-    |> Seq.iteri drawItem
+    |> Seq.iteri drawRow

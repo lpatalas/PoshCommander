@@ -1,4 +1,7 @@
-﻿module PoshCommander.SeqEx
+﻿module Seq
+
+let concatWith seq2 seq1 =
+    Seq.append seq1 seq2
 
 let takeUntil predicate (inputSeq: 'T seq) = seq {
     use enumerator = inputSeq.GetEnumerator()

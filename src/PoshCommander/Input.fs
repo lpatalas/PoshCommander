@@ -45,7 +45,7 @@ let readInput isCharValid (changeCallback: InputChangeCallback) keySequence =
         keySequence
         |> Seq.scan readNextChar (PartialInput String.Empty)
         |> peekValue changeCallback
-        |> SeqEx.takeUntil isFinishedInput
+        |> Seq.takeUntil isFinishedInput
         |> Seq.last
 
     match result with
