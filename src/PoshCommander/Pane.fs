@@ -59,9 +59,15 @@ let private drawTitleBar ui isActive location =
     UI.initCursor ui
     UI.drawFullLine ui style location
 
-let private drawStatusBar ui text =
+let private drawStatusBar ui model =
     let style = (Theme.StatusBarForeground, Theme.StatusBarBackground)
     UI.initCursor ui
+
+    let text =
+        match model.ListView.Filter with
+        | ListView.NoFilter -> "10 Dirs / 18 Files"
+        | ListView.Filter filterString -> sprintf "Filter: %s" filterString
+
     UI.drawFullLine ui style text
 
 let private itemPresenter item =
@@ -76,4 +82,4 @@ let view uiContext isActive model =
 
     drawTitleBar titleArea isActive model.CurrentPath
     ListView.view contentArea itemPresenter model.ListView
-    drawStatusBar statusArea "Ready"
+    drawStatusBar statusArea model

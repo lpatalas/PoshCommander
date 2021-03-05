@@ -2,6 +2,17 @@ module PoshCommander.ListViewTests
 
 open NUnit.Framework
 open Swensen.Unquote
+open System
+
+module ConsoleKeyInfo =
+    let fromChar c =
+        let shift = Char.IsLetter(c) && Char.IsUpper(c)
+        let consoleKey = enum (int (Char.ToUpperInvariant(c)))
+        ConsoleKeyInfo(c, consoleKey, shift, alt = false, control = false)
+
+    let fromConsoleKey consoleKey =
+        let c = char consoleKey
+        ConsoleKeyInfo(c, consoleKey, shift = false, alt = false, control = false)
 
 module HighlightingTests =
     let initialListView =
@@ -160,3 +171,47 @@ module SelectionTests =
             |> ListView.getSelectedItems
 
         test <@ selectedItems = Set.empty @>
+
+module FilterTests =
+    let items = Array.init 10 (fun i -> sprintf "Item%d" i)
+    let listView = ListView.init (Array.length items) items
+
+    [<TestCase('a')>]
+    [<TestCase('A')>]
+    [<TestCase('1')>]
+    [<TestCase('_')>]
+    [<TestCase('.')>]
+    [<TestCase(',')>]
+    let ``should start filtering when letter or number is pressed``(c) =
+        let msg =
+            listView
+            |> ListView.mapKey (ConsoleKeyInfo.fromChar c)
+
+        test <@ msg = Some (ListView.SetFilter (string c)) @>
+
+    [<TestCase('a')>]
+    [<TestCase('A')>]
+    [<TestCase('1')>]
+    [<TestCase('_')>]
+    [<TestCase('.')>]
+    [<TestCase(',')>]
+    let ``should append character to filter when it is active``(c) =
+        let initialFilter = "abc"
+        let msg =
+            { listView with Filter = ListView.Filter initialFilter }
+            |> ListView.mapKey (ConsoleKeyInfo.fromChar c)
+
+        let expectedMsg = Some (ListView.SetFilter (initialFilter + string c))
+        test <@ msg = expectedMsg @>
+
+    [<Test>]
+    let ``should disable filter when escape is pressed``() =
+        let msg =
+            { listView with Filter = ListView.Filter "abc" }
+            |> ListView.mapKey (ConsoleKeyInfo.fromConsoleKey ConsoleKey.Escape)
+
+        let expectedMsg = Some ListView.ResetFilter
+        test <@ msg = expectedMsg @>
+
+
+

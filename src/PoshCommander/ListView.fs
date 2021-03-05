@@ -2,10 +2,15 @@ module PoshCommander.ListView
 
 open System
 
+type Filter =
+    | NoFilter
+    | Filter of string
+
 type Model<'TItem when 'TItem : comparison> =
     {
         FirstVisibleIndex: int
         HighlightedIndex: int
+        Filter: Filter
         Items: 'TItem array
         PageSize: int
         SelectedItems: Set<'TItem>
@@ -29,25 +34,64 @@ type Msg =
     | HighlightPreviousItem
     | HighlightNextItem
     | PageSizeChanged of int
+    | ResetFilter
+    | SetFilter of string
     | ToggleItemSelection
 
 let init pageSize items =
     {
         FirstVisibleIndex = 0
         HighlightedIndex = 0
+        Filter = NoFilter
         Items = items
         PageSize = pageSize
         SelectedItems = Set.empty
     }
 
-let mapKey (keyInfo: ConsoleKeyInfo) model =
-    match keyInfo.Key with
+let private filterInitChars =
+    [ 'a'..'z' ]
+    @ [ 'A'..'Z' ]
+    @ [ '0'..'9' ]
+    @ [ ','; '.'; '_' ]
+    |> Set.ofList
+
+let private filterUpdateChars =
+    filterInitChars
+    |> Set.add ' '
+
+let isFilterInitChar keyChar =
+    Set.contains keyChar filterInitChars
+
+let isFilterUpdateChar keyChar =
+    Set.contains keyChar filterUpdateChars
+
+let tryMapFilterMsg (keyInfo: ConsoleKeyInfo) model =
+    match model.Filter with
+    | NoFilter ->
+        if isFilterInitChar keyInfo.KeyChar then
+            Some (SetFilter (string keyInfo.KeyChar))
+        else
+            None
+    | Filter filterString ->
+        if isFilterUpdateChar keyInfo.KeyChar then
+            Some (SetFilter (filterString + string keyInfo.KeyChar))
+        else if keyInfo.Key = ConsoleKey.Escape then
+            Some ResetFilter
+        else
+            None
+
+let tryMapOtherMsg key =
+    match key with
     | ConsoleKey.DownArrow -> Some HighlightNextItem
     | ConsoleKey.Spacebar -> Some ToggleItemSelection
     | ConsoleKey.PageDown -> Some HighlightItemOnePageAfter
     | ConsoleKey.PageUp -> Some HighlightItemOnePageBefore
     | ConsoleKey.UpArrow -> Some HighlightPreviousItem
     | _ -> None
+
+let mapKey (keyInfo: ConsoleKeyInfo) model =
+    tryMapFilterMsg keyInfo model
+    |> Option.orElseWith (fun () -> tryMapOtherMsg keyInfo.Key)
 
 let update msg model =
     let clampIndex index =
@@ -103,6 +147,10 @@ let update msg model =
         model |> setHighlightedIndex (model.HighlightedIndex + 1)
     | PageSizeChanged newPageSize ->
         updatePageSize newPageSize
+    | ResetFilter ->
+        { model with Filter = NoFilter }
+    | SetFilter filterString ->
+        { model with Filter = Filter filterString }
     | ToggleItemSelection ->
         model |> toggleItemSelection
 
