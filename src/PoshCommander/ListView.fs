@@ -11,9 +11,11 @@ type Model<'TItem when 'TItem : comparison> =
         FirstVisibleIndex: int
         HighlightedIndex: int
         Filter: Filter
+        FilterPredicate: string -> 'TItem -> bool
         Items: 'TItem array
         PageSize: int
         SelectedItems: Set<'TItem>
+        VisibleItems: 'TItem array
     }
 
 let getFirstVisibleIndex model =
@@ -28,6 +30,9 @@ let getHighlightedItem model =
 let getSelectedItems model =
     model.SelectedItems
 
+let getVisibleItems model =
+    model.VisibleItems
+
 type Msg =
     | HighlightItemOnePageAfter
     | HighlightItemOnePageBefore
@@ -38,14 +43,16 @@ type Msg =
     | SetFilter of string
     | ToggleItemSelection
 
-let init pageSize items =
+let init pageSize filterPredicate items =
     {
         FirstVisibleIndex = 0
         HighlightedIndex = 0
         Filter = NoFilter
+        FilterPredicate = filterPredicate
         Items = items
         PageSize = pageSize
         SelectedItems = Set.empty
+        VisibleItems = items
     }
 
 let private filterInitChars =
@@ -106,6 +113,18 @@ let update msg model =
         else if index >= model.Items.Length then model.Items.Length - 1
         else index
 
+    let resetFilter model =
+        { model with
+            Filter = NoFilter
+            VisibleItems = model.Items }
+
+    let setFilter filter model =
+        let filteredItems =
+            model.Items
+            |> Array.filter (model.FilterPredicate filter)
+
+        { model with VisibleItems = filteredItems }
+
     let setHighlightedIndex index model =
         let newHighlightedIndex =
             clampIndex index
@@ -152,9 +171,9 @@ let update msg model =
     | PageSizeChanged newPageSize ->
         updatePageSize newPageSize
     | ResetFilter ->
-        { model with Filter = NoFilter }
+        resetFilter model
     | SetFilter filterString ->
-        { model with Filter = Filter filterString }
+        setFilter filterString model
     | ToggleItemSelection ->
         model |> toggleItemSelection
 

@@ -4,6 +4,10 @@ open NUnit.Framework
 open Swensen.Unquote
 open System
 
+module String =
+    let contains (substring: string) (input: string) =
+        input.IndexOf(substring, StringComparison.Ordinal) >= 0
+
 module ConsoleKeyInfo =
     let fromChar c =
         let shift = Char.IsLetter(c) && Char.IsUpper(c)
@@ -14,9 +18,18 @@ module ConsoleKeyInfo =
         let c = char consoleKey
         ConsoleKeyInfo(c, consoleKey, shift = false, alt = false, control = false)
 
+module TestListView =
+    let fromItemCount count =
+        let items = (Array.init count (fun i -> sprintf "Item%d" i))
+        ListView.init count String.contains items
+
+    let fromItems items =
+        let itemsArray = items |> Seq.toArray
+        ListView.init (Array.length itemsArray) String.contains itemsArray
+
 module HighlightingTests =
     let initialListView =
-        ListView.init 10 (Array.init 10 (fun i -> sprintf "Item%d" i))
+        TestListView.fromItemCount 10
 
     [<TestCase(0, 0)>]
     [<TestCase(1, 0)>]
@@ -140,7 +153,7 @@ module HighlightingTests =
 
 module SelectionTests =
     let items = Array.init 10 (fun i -> sprintf "Item%d" i)
-    let listView = ListView.init (Array.length items) items
+    let listView = TestListView.fromItems items
 
     [<Test>]
     let ``should select highlighted item if it was unselected``() =
@@ -174,7 +187,7 @@ module SelectionTests =
 
 module FilterTests =
     let items = [| "abc"; "bbc"; "cab"; "cba" |]
-    let listView = ListView.init (Array.length items) items
+    let listView = TestListView.fromItems items
 
     [<TestCase('a')>]
     [<TestCase('A')>]
@@ -224,6 +237,26 @@ module FilterTests =
         let expectedMsg = Some (ListView.SetFilter expectedFilter)
         test <@ msg = expectedMsg @>
 
+    [<Test>]
+    let ``should filter items matching pattern``() =
+        let visibleItems =
+            TestListView.fromItems [ "abc"; "bbc"; "cab"; "cba" ]
+            |> ListView.update (ListView.SetFilter "ab")
+            |> ListView.getVisibleItems
+
+        let expected = [| "abc"; "cab" |]
+        test <@ visibleItems = expected @>
+
+    [<Test>]
+    let ``should show all items when filter is reset``() =
+        let initialItems = [| "abc"; "bbc"; "cab"; "cba" |]
+        let visibleItems =
+            TestListView.fromItems initialItems
+            |> ListView.update (ListView.SetFilter "ab")
+            |> ListView.update ListView.ResetFilter
+            |> ListView.getVisibleItems
+
+        test <@ visibleItems = initialItems @>
 
 
 

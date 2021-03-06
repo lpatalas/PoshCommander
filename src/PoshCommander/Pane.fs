@@ -27,6 +27,9 @@ let init windowHeight path =
             Name = name
         }
 
+    let filterPredicate filter item =
+        item.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0
+
     // window height minus title and status bars
     let pageSize = windowHeight - 2
 
@@ -37,7 +40,7 @@ let init windowHeight path =
 
     {
         CurrentPath = path
-        ListView = ListView.init pageSize items
+        ListView = ListView.init pageSize filterPredicate items
     }
 
 let mapKey (keyInfo: ConsoleKeyInfo) model =
