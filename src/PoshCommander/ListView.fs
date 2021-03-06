@@ -123,7 +123,15 @@ let update msg model =
             model.Items
             |> Array.filter (model.FilterPredicate filter)
 
-        { model with VisibleItems = filteredItems }
+        let newHighlightedIndex =
+            seq { for i = model.HighlightedIndex downto 0 do (i, model.Items.[i]) }
+            |> Seq.filter (fun (_, item) -> model.FilterPredicate filter item)
+            |> Seq.head
+            |> fst
+
+        { model with
+            HighlightedIndex = newHighlightedIndex
+            VisibleItems = filteredItems }
 
     let setHighlightedIndex index model =
         let newHighlightedIndex =

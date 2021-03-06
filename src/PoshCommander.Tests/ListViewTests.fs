@@ -258,6 +258,19 @@ module FilterTests =
 
         test <@ visibleItems = initialItems @>
 
+    [<TestCase(1, "bc", 1)>]
+    [<TestCase(2, "bc", 1)>]
+    [<TestCase(3, "bc", 1)>]
+    let ``should move highlight to previous visible items when current one is filtered out``(initialHighlightedIndex, filter, expectedHighlightedIndex) =
+        let initialItems = [| "abc"; "bbc"; "cab"; "cba" |]
+        let highlightedIndex =
+            { TestListView.fromItems initialItems with
+                HighlightedIndex = initialHighlightedIndex }
+            |> ListView.update (ListView.SetFilter filter)
+            |> ListView.getHighlightedIndex
+
+        test <@ highlightedIndex = expectedHighlightedIndex @>
+
 
 
 
