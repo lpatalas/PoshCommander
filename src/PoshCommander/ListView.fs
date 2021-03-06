@@ -12,10 +12,10 @@ type Model<'TItem when 'TItem : comparison> =
         HighlightedIndex: int
         Filter: Filter
         FilterPredicate: string -> 'TItem -> bool
-        Items: 'TItem array
+        Items: ImmutableArray<'TItem>
         PageSize: int
         SelectedItems: Set<'TItem>
-        VisibleItems: 'TItem array
+        VisibleItems: ImmutableArray<'TItem>
     }
 
 let getFirstVisibleIndex model =
@@ -25,7 +25,8 @@ let getHighlightedIndex model =
     model.HighlightedIndex
 
 let getHighlightedItem model =
-    model.Items.[getHighlightedIndex model]
+    model.Items
+    |> ImmutableArray.get (getHighlightedIndex model)
 
 let getSelectedItems model =
     model.SelectedItems
@@ -121,10 +122,13 @@ let update msg model =
     let setFilter filter model =
         let filteredItems =
             model.Items
-            |> Array.filter (model.FilterPredicate filter)
+            |> ImmutableArray.filter (model.FilterPredicate filter)
 
         let newHighlightedIndex =
-            seq { for i = model.HighlightedIndex downto 0 do (i, model.Items.[i]) }
+            seq {
+                for i = model.HighlightedIndex downto 0 do
+                    (i, ImmutableArray.get i model.Items)
+            }
             |> Seq.filter (fun (_, item) -> model.FilterPredicate filter item)
             |> Seq.head
             |> fst

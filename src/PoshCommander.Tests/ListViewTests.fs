@@ -20,12 +20,12 @@ module ConsoleKeyInfo =
 
 module TestListView =
     let fromItemCount count =
-        let items = (Array.init count (fun i -> sprintf "Item%d" i))
+        let items = (ImmutableArray.init count (fun i -> sprintf "Item%d" i))
         ListView.init count String.contains items
 
     let fromItems items =
-        let itemsArray = items |> Seq.toArray
-        ListView.init (Array.length itemsArray) String.contains itemsArray
+        let itemsArray = items |> ImmutableArray.fromSeq
+        ListView.init (ImmutableArray.length itemsArray) String.contains itemsArray
 
 module HighlightingTests =
     let initialListView =
@@ -244,12 +244,12 @@ module FilterTests =
             |> ListView.update (ListView.SetFilter "ab")
             |> ListView.getVisibleItems
 
-        let expected = [| "abc"; "cab" |]
+        let expected = ImmutableArray.wrap [| "abc"; "cab" |]
         test <@ visibleItems = expected @>
 
     [<Test>]
     let ``should show all items when filter is reset``() =
-        let initialItems = [| "abc"; "bbc"; "cab"; "cba" |]
+        let initialItems = ImmutableArray.wrap [| "abc"; "bbc"; "cab"; "cba" |]
         let visibleItems =
             TestListView.fromItems initialItems
             |> ListView.update (ListView.SetFilter "ab")

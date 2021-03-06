@@ -36,7 +36,7 @@ let init windowHeight path =
     let items =
         Seq.initInfinite makeItem
         |> Seq.take 10
-        |> Seq.toArray
+        |> ImmutableArray.fromSeq
 
     {
         CurrentPath = path
