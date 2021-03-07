@@ -9,7 +9,7 @@ type Filter =
 type Model<'TItem when 'TItem : comparison> =
     {
         FirstVisibleIndex: int
-        HighlightedIndex: int
+        HighlightedIndex: int option
         Filter: Filter
         FilterPredicate: string -> 'TItem -> bool
         Items: ImmutableArray<'TItem>
@@ -18,6 +18,9 @@ type Model<'TItem when 'TItem : comparison> =
         VisibleItems: ImmutableArray<'TItem>
     }
 
+let getFilter model =
+    model.Filter
+
 let getFirstVisibleIndex model =
     model.FirstVisibleIndex
 
@@ -25,8 +28,9 @@ let getHighlightedIndex model =
     model.HighlightedIndex
 
 let getHighlightedItem model =
-    model.Items
-    |> ImmutableArray.get (getHighlightedIndex model)
+    match getHighlightedIndex model with
+    | Some index -> Some (ImmutableArray.get index model.Items)
+    | None -> None
 
 let getSelectedItems model =
     model.SelectedItems
@@ -47,7 +51,7 @@ type Msg =
 let init pageSize filterPredicate items =
     {
         FirstVisibleIndex = 0
-        HighlightedIndex = 0
+        HighlightedIndex = if ImmutableArray.isEmpty items then None else Some 0
         Filter = NoFilter
         FilterPredicate = filterPredicate
         Items = items
@@ -109,6 +113,9 @@ let mapKey (keyInfo: ConsoleKeyInfo) model =
     |> Option.orElseWith (fun () -> tryMapOtherMsg keyInfo.Key)
 
 let update msg model =
+    let inline add a b =
+        a + b
+
     let clampIndex index =
         if index < 0 then 0
         else if index >= model.Items.Length then model.Items.Length - 1
@@ -117,6 +124,9 @@ let update msg model =
     let resetFilter model =
         { model with
             Filter = NoFilter
+            HighlightedIndex =
+                if ImmutableArray.isEmpty model.Items then None
+                else Some 0
             VisibleItems = model.Items }
 
     let setFilter filter model =
@@ -125,28 +135,43 @@ let update msg model =
             |> ImmutableArray.filter (model.FilterPredicate filter)
 
         let newHighlightedIndex =
-            seq {
-                for i = model.HighlightedIndex downto 0 do
-                    (i, ImmutableArray.get i model.Items)
-            }
-            |> Seq.filter (fun (_, item) -> model.FilterPredicate filter item)
-            |> Seq.head
-            |> fst
+            match getHighlightedIndex model with
+            | Some index ->
+                seq {
+                    for i = index downto 0 do
+                        (i, ImmutableArray.get i model.Items)
+                }
+                |> Seq.filter (fun (_, item) -> model.FilterPredicate filter item)
+                |> Seq.tryHead
+                |> Option.map fst
+            | None when not (ImmutableArray.isEmpty filteredItems) ->
+                model.Items
+                |> Seq.mapi (fun index item -> (index, item))
+                |> Seq.filter (fun (_, item) -> model.FilterPredicate filter item)
+                |> Seq.tryHead
+                |> Option.map fst
+            | None ->
+                None
 
         { model with
+            Filter = Filter filter
             HighlightedIndex = newHighlightedIndex
             VisibleItems = filteredItems }
 
-    let setHighlightedIndex index model =
+    let setHighlightedIndex model index =
         let newHighlightedIndex =
-            clampIndex index
+            index |> Option.map clampIndex
 
         let newFirstVisibleIndex =
-            if newHighlightedIndex < model.FirstVisibleIndex then
-                newHighlightedIndex
-            else if newHighlightedIndex >= model.FirstVisibleIndex + model.PageSize then
-                newHighlightedIndex - model.PageSize + 1
-            else
+            match newHighlightedIndex with
+            | Some newIndexValue ->
+                if newIndexValue < model.FirstVisibleIndex then
+                    newIndexValue
+                else if newIndexValue >= model.FirstVisibleIndex + model.PageSize then
+                    newIndexValue - model.PageSize + 1
+                else
+                    model.FirstVisibleIndex
+            | None ->
                 model.FirstVisibleIndex
 
         {
@@ -155,39 +180,53 @@ let update msg model =
                 HighlightedIndex = newHighlightedIndex
         }
 
+    let offsetHighlightedIndex offset model =
+        model
+        |> getHighlightedIndex
+        |> Option.map (add offset)
+        |> setHighlightedIndex model
+
     let toggleItemSelection model =
-        let highlightedItem = getHighlightedItem model
-        let updatedSet =
-            if Set.contains highlightedItem model.SelectedItems then
-                Set.remove highlightedItem model.SelectedItems
-            else
-                Set.add highlightedItem model.SelectedItems
+        match getHighlightedItem model with
+        | Some highlightedItem ->
+            let updatedSet =
+                if Set.contains highlightedItem model.SelectedItems then
+                    Set.remove highlightedItem model.SelectedItems
+                else
+                    Set.add highlightedItem model.SelectedItems
 
-        { model with SelectedItems = updatedSet }
-
-    let updatePageSize newPageSize =
-        if model.HighlightedIndex >= newPageSize then
-            { model with HighlightedIndex = newPageSize - 1 }
-        else
+            { model with SelectedItems = updatedSet }
+        | None ->
             model
 
-    match msg with
-    | HighlightItemOnePageAfter ->
-        model |> setHighlightedIndex (model.HighlightedIndex + model.PageSize - 1)
-    | HighlightItemOnePageBefore ->
-        model |> setHighlightedIndex (model.HighlightedIndex - model.PageSize + 1)
-    | HighlightPreviousItem ->
-        model |> setHighlightedIndex (model.HighlightedIndex - 1)
-    | HighlightNextItem ->
-        model |> setHighlightedIndex (model.HighlightedIndex + 1)
-    | PageSizeChanged newPageSize ->
-        updatePageSize newPageSize
-    | ResetFilter ->
-        resetFilter model
-    | SetFilter filterString ->
-        setFilter filterString model
-    | ToggleItemSelection ->
-        model |> toggleItemSelection
+    let updatePageSize newPageSize model =
+        match getHighlightedIndex model with
+        | Some highlightedIndex ->
+            if highlightedIndex >= newPageSize then
+                { model with HighlightedIndex = Some (newPageSize - 1) }
+            else
+                model
+        | None ->
+            model
+
+    model |>
+        match msg with
+        | HighlightItemOnePageAfter ->
+            offsetHighlightedIndex (model.PageSize - 1)
+        | HighlightItemOnePageBefore ->
+            offsetHighlightedIndex (-model.PageSize + 1)
+        | HighlightPreviousItem ->
+            offsetHighlightedIndex (-1)
+        | HighlightNextItem ->
+            offsetHighlightedIndex 1
+        | PageSizeChanged newPageSize ->
+            updatePageSize newPageSize
+        | ResetFilter ->
+            resetFilter
+        | SetFilter filterString ->
+            setFilter filterString
+        | ToggleItemSelection ->
+            toggleItemSelection
 
 [<Struct>]
 type private ListViewRow<'TItem> =
@@ -199,7 +238,7 @@ let view uiContext itemPresenter model =
 
     let getItemColors index isSelected =
         let backgroundColor =
-            if index = model.HighlightedIndex then
+            if Some index = getHighlightedIndex model then
                 Theme.RowHightlighedBackground
             else if index % 2 = 0 then
                 Theme.RowEvenBackground

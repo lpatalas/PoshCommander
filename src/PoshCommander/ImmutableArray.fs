@@ -43,12 +43,18 @@ type ImmutableArray<'TItem when 'TItem : equality> =
             this.IsEqualTo(other)
 
 module ImmutableArray =
+    let empty<'TItem when 'TItem : equality> : ImmutableArray<'TItem> =
+        ImmutableArray(Array.empty)
+
     let wrap array =
         ImmutableArray(array)
 
     let fromSeq seq =
         let items = seq |> Seq.toArray
         ImmutableArray(items)
+
+    let isEmpty (array: ImmutableArray<_>) =
+        array.Length = 0
 
     let filter predicate (array: ImmutableArray<_>) =
         array.Items
