@@ -121,43 +121,6 @@ let update msg model =
         else if index >= model.Items.Length then model.Items.Length - 1
         else index
 
-    let resetFilter model =
-        { model with
-            Filter = NoFilter
-            HighlightedIndex =
-                if ImmutableArray.isEmpty model.Items then None
-                else Some 0
-            VisibleItems = model.Items }
-
-    let setFilter filter model =
-        let filteredItems =
-            model.Items
-            |> ImmutableArray.filter (model.FilterPredicate filter)
-
-        let newHighlightedIndex =
-            match getHighlightedIndex model with
-            | Some index ->
-                seq {
-                    for i = index downto 0 do
-                        (i, ImmutableArray.get i model.Items)
-                }
-                |> Seq.filter (fun (_, item) -> model.FilterPredicate filter item)
-                |> Seq.tryHead
-                |> Option.map fst
-            | None when not (ImmutableArray.isEmpty filteredItems) ->
-                model.Items
-                |> Seq.mapi (fun index item -> (index, item))
-                |> Seq.filter (fun (_, item) -> model.FilterPredicate filter item)
-                |> Seq.tryHead
-                |> Option.map fst
-            | None ->
-                None
-
-        { model with
-            Filter = Filter filter
-            HighlightedIndex = newHighlightedIndex
-            VisibleItems = filteredItems }
-
     let setHighlightedIndex model index =
         let newHighlightedIndex =
             index |> Option.map clampIndex
@@ -185,6 +148,43 @@ let update msg model =
         |> getHighlightedIndex
         |> Option.map (add offset)
         |> setHighlightedIndex model
+
+    let resetFilter model =
+        let newHighlightedIndex =
+            if ImmutableArray.isEmpty model.Items then None
+            else Some 0
+
+        { setHighlightedIndex model newHighlightedIndex with
+            Filter = NoFilter
+            VisibleItems = model.Items }
+
+    let setFilter filter model =
+        let filteredItems =
+            model.Items
+            |> ImmutableArray.filter (model.FilterPredicate filter)
+
+        let newHighlightedIndex =
+            match getHighlightedIndex model with
+            | Some index ->
+                seq {
+                    for i = index downto 0 do
+                        (i, ImmutableArray.get i model.Items)
+                }
+                |> Seq.filter (fun (_, item) -> model.FilterPredicate filter item)
+                |> Seq.tryHead
+                |> Option.map fst
+            | None when not (ImmutableArray.isEmpty filteredItems) ->
+                model.Items
+                |> Seq.mapi (fun index item -> (index, item))
+                |> Seq.filter (fun (_, item) -> model.FilterPredicate filter item)
+                |> Seq.tryHead
+                |> Option.map fst
+            | None ->
+                None
+
+        { setHighlightedIndex model newHighlightedIndex with
+            Filter = Filter filter
+            VisibleItems = filteredItems }
 
     let toggleItemSelection model =
         match getHighlightedItem model with
