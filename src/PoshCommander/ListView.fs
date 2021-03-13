@@ -10,16 +10,11 @@ type Model<'TItem when 'TItem : comparison> =
     {
         FirstVisibleIndex: int
         HighlightedIndex: int option
-        Filter: Filter
-        FilterPredicate: string -> 'TItem -> bool
         Items: ImmutableArray<'TItem>
         PageSize: int
         SelectedItems: Set<'TItem>
         VisibleItems: ImmutableArray<'TItem>
     }
-
-let getFilter model =
-    model.Filter
 
 let getFirstVisibleIndex model =
     model.FirstVisibleIndex
@@ -44,73 +39,26 @@ type Msg =
     | HighlightPreviousItem
     | HighlightNextItem
     | PageSizeChanged of int
-    | ResetFilter
-    | SetFilter of string
     | ToggleItemSelection
 
-let init pageSize filterPredicate items =
+let init pageSize items =
     {
         FirstVisibleIndex = 0
         HighlightedIndex = if ImmutableArray.isEmpty items then None else Some 0
-        Filter = NoFilter
-        FilterPredicate = filterPredicate
         Items = items
         PageSize = pageSize
         SelectedItems = Set.empty
         VisibleItems = items
     }
 
-let private filterInitChars =
-    [ 'a'..'z' ]
-    @ [ 'A'..'Z' ]
-    @ [ '0'..'9' ]
-    @ [ ','; '.'; '_' ]
-    |> Set.ofList
-
-let private filterUpdateChars =
-    filterInitChars
-    |> Set.add ' '
-
-let isFilterInitChar keyChar =
-    Set.contains keyChar filterInitChars
-
-let isFilterUpdateChar keyChar =
-    Set.contains keyChar filterUpdateChars
-
-let private eraseLastChar str =
-    match str with
-    | "" -> ""
-    | s -> s.Substring(0, s.Length - 1)
-
-let tryMapFilterMsg (keyInfo: ConsoleKeyInfo) model =
-    match model.Filter with
-    | NoFilter ->
-        if isFilterInitChar keyInfo.KeyChar then
-            Some (SetFilter (string keyInfo.KeyChar))
-        else
-            None
-    | Filter filterString ->
-        if isFilterUpdateChar keyInfo.KeyChar then
-            Some (SetFilter (filterString + string keyInfo.KeyChar))
-        else if keyInfo.Key = ConsoleKey.Backspace then
-            Some (SetFilter (eraseLastChar filterString))
-        else if keyInfo.Key = ConsoleKey.Escape then
-            Some ResetFilter
-        else
-            None
-
-let tryMapOtherMsg key =
-    match key with
+let mapKey (keyInfo: ConsoleKeyInfo) model =
+    match keyInfo.Key with
     | ConsoleKey.DownArrow -> Some HighlightNextItem
     | ConsoleKey.Spacebar -> Some ToggleItemSelection
     | ConsoleKey.PageDown -> Some HighlightItemOnePageAfter
     | ConsoleKey.PageUp -> Some HighlightItemOnePageBefore
     | ConsoleKey.UpArrow -> Some HighlightPreviousItem
     | _ -> None
-
-let mapKey (keyInfo: ConsoleKeyInfo) model =
-    tryMapFilterMsg keyInfo model
-    |> Option.orElseWith (fun () -> tryMapOtherMsg keyInfo.Key)
 
 let update msg model =
     let inline add a b =
@@ -149,43 +97,6 @@ let update msg model =
         |> Option.map (add offset)
         |> setHighlightedIndex model
 
-    let resetFilter model =
-        let newHighlightedIndex =
-            if ImmutableArray.isEmpty model.Items then None
-            else Some 0
-
-        { setHighlightedIndex model newHighlightedIndex with
-            Filter = NoFilter
-            VisibleItems = model.Items }
-
-    let setFilter filter model =
-        let filteredItems =
-            model.Items
-            |> ImmutableArray.filter (model.FilterPredicate filter)
-
-        let newHighlightedIndex =
-            match getHighlightedIndex model with
-            | Some index ->
-                seq {
-                    for i = index downto 0 do
-                        (i, ImmutableArray.get i model.Items)
-                }
-                |> Seq.filter (fun (_, item) -> model.FilterPredicate filter item)
-                |> Seq.tryHead
-                |> Option.map fst
-            | None when not (ImmutableArray.isEmpty filteredItems) ->
-                model.Items
-                |> Seq.mapi (fun index item -> (index, item))
-                |> Seq.filter (fun (_, item) -> model.FilterPredicate filter item)
-                |> Seq.tryHead
-                |> Option.map fst
-            | None ->
-                None
-
-        { setHighlightedIndex model newHighlightedIndex with
-            Filter = Filter filter
-            VisibleItems = filteredItems }
-
     let toggleItemSelection model =
         match getHighlightedItem model with
         | Some highlightedItem ->
@@ -221,10 +132,6 @@ let update msg model =
             offsetHighlightedIndex 1
         | PageSizeChanged newPageSize ->
             updatePageSize newPageSize
-        | ResetFilter ->
-            resetFilter
-        | SetFilter filterString ->
-            setFilter filterString
         | ToggleItemSelection ->
             toggleItemSelection
 

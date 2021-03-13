@@ -40,7 +40,7 @@ let init windowHeight path =
 
     {
         CurrentPath = path
-        ListView = ListView.init pageSize filterPredicate items
+        ListView = ListView.init pageSize items
     }
 
 let mapKey (keyInfo: ConsoleKeyInfo) model =
@@ -66,10 +66,10 @@ let private drawStatusBar ui model =
     let style = (Theme.StatusBarForeground, Theme.StatusBarBackground)
     UI.initCursor ui
 
-    let text =
-        match model.ListView.Filter with
-        | ListView.NoFilter -> "10 Dirs / 18 Files"
-        | ListView.Filter filterString -> sprintf "Filter: %s" filterString
+    let text = "Status"
+        // match model.ListView.Filter with
+        // | ListView.NoFilter -> "10 Dirs / 18 Files"
+        // | ListView.Filter filterString -> sprintf "Filter: %s" filterString
 
     UI.drawFullLine ui style text
 
