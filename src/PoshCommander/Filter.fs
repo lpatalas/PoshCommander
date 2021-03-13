@@ -1,18 +1,24 @@
-module PoshCommander.ItemFilter
+module PoshCommander.Filter
 
 open System
 
-type Filter =
-    | NoFilter
-    | Filter of string
+type FilterState =
+    | Disabled
+    | Enabled of string
 
 type FilterPredicate<'TItem> =
     string -> 'TItem -> bool
 
 type Model<'TItem> =
     {
-        Filter: Filter
+        FilterState: FilterState
         FilterPredicate: FilterPredicate<'TItem>
+    }
+
+let init predicate =
+    {
+        FilterState = Disabled
+        FilterPredicate = predicate
     }
 
 type Msg =
@@ -41,14 +47,14 @@ let private eraseLastChar str =
     | "" -> ""
     | s -> s.Substring(0, s.Length - 1)
 
-let tryMapFilterMsg (keyInfo: ConsoleKeyInfo) model =
-    match model.Filter with
-    | NoFilter ->
+let mapKey (keyInfo: ConsoleKeyInfo) model =
+    match model.FilterState with
+    | Disabled ->
         if isFilterInitChar keyInfo.KeyChar then
             Some (SetFilter (string keyInfo.KeyChar))
         else
             None
-    | Filter filterString ->
+    | Enabled filterString ->
         if isFilterUpdateChar keyInfo.KeyChar then
             Some (SetFilter (filterString + string keyInfo.KeyChar))
         else if keyInfo.Key = ConsoleKey.Backspace then
@@ -57,4 +63,18 @@ let tryMapFilterMsg (keyInfo: ConsoleKeyInfo) model =
             Some ResetFilter
         else
             None
+
+let update msg model =
+    match msg with
+    | ResetFilter ->
+        { model with FilterState = Disabled }
+    | SetFilter newFilterString ->
+        { model with FilterState = Enabled newFilterString }
+
+let apply items model =
+    match model.FilterState with
+    | Disabled -> items
+    | Enabled filterString ->
+        items
+        |> ImmutableArray.filter (model.FilterPredicate filterString)
 

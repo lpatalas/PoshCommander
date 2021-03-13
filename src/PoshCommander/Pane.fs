@@ -11,10 +11,12 @@ type PaneItem =
 type Model =
     {
         CurrentPath: string
+        Filter: Filter.Model<PaneItem>
         ListView: ListView.Model<PaneItem>
     }
 
 type Msg =
+    | FilterMsg of Filter.Msg
     | ListViewMsg of ListView.Msg
     | KeyPressed of ConsoleKey
     | PageSizeChanged of int
@@ -40,15 +42,21 @@ let init windowHeight path =
 
     {
         CurrentPath = path
+        Filter = Filter.init filterPredicate
         ListView = ListView.init pageSize items
     }
 
 let mapKey (keyInfo: ConsoleKeyInfo) model =
-    ListView.mapKey keyInfo model.ListView
-    |> Option.map ListViewMsg
+    seq {
+        Filter.mapKey keyInfo model.Filter |> Option.map FilterMsg
+        ListView.mapKey keyInfo model.ListView |> Option.map ListViewMsg
+    }
+    |> Seq.tryPick id
 
 let update msg model =
     match msg with
+    | FilterMsg filterMsg ->
+        { model with Filter = Filter.update filterMsg model.Filter }
     | ListViewMsg listViewMsg ->
         { model with ListView = ListView.update listViewMsg model.ListView }
     | _ ->
@@ -66,10 +74,12 @@ let private drawStatusBar ui model =
     let style = (Theme.StatusBarForeground, Theme.StatusBarBackground)
     UI.initCursor ui
 
-    let text = "Status"
-        // match model.ListView.Filter with
-        // | ListView.NoFilter -> "10 Dirs / 18 Files"
-        // | ListView.Filter filterString -> sprintf "Filter: %s" filterString
+    let text =
+        match model.Filter.FilterState with
+        | Filter.Disabled ->
+            "10 Dirs / 18 Files"
+        | Filter.Enabled filterString ->
+            sprintf "Filter: %s_" filterString
 
     UI.drawFullLine ui style text
 
