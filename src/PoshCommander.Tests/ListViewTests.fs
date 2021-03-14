@@ -55,6 +55,11 @@ let assertModelEquals (initial: ListView.Model<_>) (expected: ListView.Model<_>)
         |> String.concat "; "
         |> sprintf "[%s]"
 
+    let optStr option =
+        match option with
+        | Some x -> string x
+        | None -> "None"
+
     if actual <> expected then
         let initialItems = formatItems initial.Items
         let expectedItems = formatItems expected.Items
@@ -65,23 +70,22 @@ let assertModelEquals (initial: ListView.Model<_>) (expected: ListView.Model<_>)
             ""
             sprintf "         | ScrollIndex | HighlightedIndex | PageSize | %s | Selected" (String.padLeft itemsColumnLength "Items")
             sprintf "---------|-------------|------------------|----------|-%s-|----------" (String ('-', itemsColumnLength))
-            sprintf "Initial  | %11i | %16s | %8i | %s | %s" initial.FirstVisibleIndex (string initial.HighlightedIndex) initial.PageSize (String.padLeft itemsColumnLength initialItems) (formatItems initial.SelectedItems)
-            sprintf "Expected | %11i | %16s | %8i | %s | %s" expected.FirstVisibleIndex (string expected.HighlightedIndex) expected.PageSize (String.padLeft itemsColumnLength expectedItems) (formatItems expected.SelectedItems)
-            sprintf "Actual   | %11i | %16s | %8i | %s | %s" actual.FirstVisibleIndex (string actual.HighlightedIndex) actual.PageSize (String.padLeft itemsColumnLength actualItems) (formatItems actual.SelectedItems)
+            sprintf "Initial  | %11i | %16s | %8i | %s | %s" initial.FirstVisibleIndex (optStr initial.HighlightedIndex) initial.PageSize (String.padLeft itemsColumnLength initialItems) (formatItems initial.SelectedItems)
+            sprintf "Expected | %11i | %16s | %8i | %s | %s" expected.FirstVisibleIndex (optStr expected.HighlightedIndex) expected.PageSize (String.padLeft itemsColumnLength expectedItems) (formatItems expected.SelectedItems)
+            sprintf "Actual   | %11i | %16s | %8i | %s | %s" actual.FirstVisibleIndex (optStr actual.HighlightedIndex) actual.PageSize (String.padLeft itemsColumnLength actualItems) (formatItems actual.SelectedItems)
             ""
         ]
         |> String.joinLines
         |> Assert.Fail
 
-let testMsg msg initialList expectedList =
-    let initialModel = ListView.fromAsciiArt id initialList
-    let expectedModel = ListView.fromAsciiArt id expectedList
-
-    let actualModel =
-        initialModel
-        |> ListView.update msg
-
+let testAction action initial expected =
+    let initialModel = ListView.fromAsciiArt id initial
+    let expectedModel = ListView.fromAsciiArt id expected
+    let actualModel = action initialModel expectedModel
     assertModelEquals initialModel expectedModel actualModel
+
+let testMsg msg =
+    testAction (fun initial _ -> ListView.update msg initial)
 
 let toTestData input =
     input
@@ -249,79 +253,37 @@ module SelectionTests =
         testMsg ListView.ToggleItemSelection initial expected
 
 module SetItemsTests =
-    [<Test>]
-    let ``should not change state if new items are exactly the same as current ones``() =
-        let initialModel = TestListView.fromItemCount 10
-        let updatedModel =
-            initialModel
-            |> ListView.update (ListView.SetItems initialModel.Items)
+    let setItemsTestCases =
+        [
+            [ "> A", "> A"
+              "  B", "  B"
+              "  C", "  C" ]
 
-        test <@ updatedModel = initialModel @>
+            [ "  A", "  D"
+              "> B", "  E"
+              "  C", "> B" ]
 
-    [<Test>]
-    let ``should update items collection``() =
-        let newItems = TestItems.init 12
-        let updatedItems =
-            TestListView.fromItemCount 10
-            |> ListView.update (ListView.SetItems newItems)
-            |> ListView.getItems
+            [ "  A", "> D"
+              "> B", "  E"
+              "  C", "  F" ]
 
-        test <@ updatedItems = newItems @>
+            [ "  A", ""
+              "> B", ""
+              "  C", "" ]
 
-    [<Test>]
-    let ``should keep highlight at the same item if it exists in updated collection``() =
-        let initialItems = TestItems.init 10
-        let highlightedIndex = 3
+            [ "", "> A"
+              "", "  B"
+              "", "  C" ]
+        ]
+        |> toTestData
 
-        let newItems =
-            initialItems
-            |> ImmutableArray.filter (fun item -> item.Index % highlightedIndex = 0)
+    [<TestCaseSource(nameof setItemsTestCases)>]
+    let ``should correctly set new items``(initial, expected) =
+        let action initial expected =
+            initial
+            |> ListView.update (ListView.getItems expected |> ListView.SetItems)
 
-        let initialModel =
-            { TestListView.fromItems initialItems with HighlightedIndex = Some 3 }
-        let initialHighlightedItem =
-            initialModel
-            |> ListView.getHighlightedItem
-
-        let newHighlightedItem =
-            initialModel
-            |> ListView.update (ListView.SetItems newItems)
-            |> ListView.getHighlightedItem
-
-        test <@ newHighlightedItem = initialHighlightedItem @>
-
-
-    [<Test>]
-    let ``should highlight first item if previously highlighted does not exist in updated collection``() =
-        let initialItems = TestItems.init 10
-        let highlightedIndex = 3
-
-        let newItems =
-            initialItems
-            |> ImmutableArray.filter (fun item -> item.Index <> highlightedIndex)
-
-        let newHighlightedIndex =
-            { TestListView.fromItems initialItems with
-                HighlightedIndex = Some highlightedIndex }
-            |> ListView.update (ListView.SetItems newItems)
-            |> ListView.getHighlightedIndex
-
-        test <@ newHighlightedIndex = Some 0 @>
-
-    [<Test>]
-    let ``should set highlighted index to None if new collection is empty``() =
-        let initialItems = TestItems.init 10
-
-        let initialList =
-            { TestListView.fromItems initialItems with
-                HighlightedIndex = Some 3 }
-
-        let newHighlightedIndex =
-            initialList
-            |> ListView.update (ListView.SetItems ImmutableArray.empty)
-            |> ListView.getHighlightedIndex
-
-        test <@ newHighlightedIndex = None @>
+        testAction action initial expected
 
 // module FilterTests =
 //     let items = [| "abc"; "bbc"; "cab"; "cba" |]
