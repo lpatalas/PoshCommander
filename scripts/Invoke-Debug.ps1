@@ -9,7 +9,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 $workspaceRoot = & "$PSScriptRoot\helpers\GetWorkspaceRoot.ps1"
-$modulePath = "$workspaceRoot\src\PoshCommander\bin\$Configuration\netstandard2.0\PoshCommander.psd1"
+$modulePath = "$workspaceRoot\src\bin\$Configuration\netstandard2.0\PoshCommander.psd1"
 
 & "$PSScriptRoot\helpers\BuildSolution.ps1" -Configuration $Configuration
 

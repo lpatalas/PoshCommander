@@ -11,7 +11,6 @@ Set-StrictMode -Version Latest
 
 $workspaceRoot = & "$PSScriptRoot\GetWorkspaceRoot.ps1"
 $artifactsDir = Join-Path $workspaceRoot 'artifacts'
-$solutionDir = Join-Path $workspaceRoot 'src'
 
 function Main {
     $modulePath = PublishProjectToOutputDirectory
@@ -24,11 +23,11 @@ function Main {
 
 function PublishProjectToOutputDirectory {
     $publishOutputPath = Join-Path $artifactsDir 'PoshCommander'
-    $projectPath = Join-Path $solutionDir 'PoshCommander' 'PoshCommander.fsproj'
-    $sourceManifestPath = Join-Path $solutionDir 'PoshCommander' "PoshCommander.psd1"
+    $projectPath = Join-Path $workspaceRoot 'src' 'PoshCommander.fsproj'
+    $sourceManifestPath = Join-Path $workspaceRoot 'src' "PoshCommander.psd1"
     $manifest = Import-PowerShellDataFile -Path $sourceManifestPath
 
-    Write-Verbose "Publishing solution '$projectPath' to '$publishOutputPath'"
+    Write-Verbose "Publishing project '$projectPath' to '$publishOutputPath'"
     Write-Verbose "Module Version: $($manifest.ModuleVersion)"
 
     if (Test-Path $publishOutputPath) {

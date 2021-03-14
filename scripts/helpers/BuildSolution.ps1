@@ -6,7 +6,7 @@ param(
 )
 
 $workspaceRoot = & "$PSScriptRoot\GetWorkspaceRoot.ps1"
-$solutionPath = Join-Path $workspaceRoot 'src' "PoshCommander.sln"
+$solutionPath = Join-Path $workspaceRoot 'PoshCommander.sln'
 
 dotnet build `
     --configuration $Configuration `

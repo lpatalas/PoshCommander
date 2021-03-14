@@ -22,7 +22,7 @@
                 "--nologo",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary",
-                "${workspaceFolder}/src/PoshCommander.sln"
+                "${workspaceFolder}/PoshCommander.sln"
             ],
             "presentation": {
                 "clear": true,
