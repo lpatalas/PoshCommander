@@ -1,52 +1,7 @@
 module PoshCommander.ListViewTests
 
 open NUnit.Framework
-open Swensen.Unquote
 open System
-
-module String =
-    let contains (substring: string) (input: string) =
-        input.IndexOf(substring, StringComparison.Ordinal) >= 0
-
-module ConsoleKeyInfo =
-    let fromChar c =
-        let shift = Char.IsLetter(c) && Char.IsUpper(c)
-        let consoleKey = enum (int (Char.ToUpperInvariant(c)))
-        ConsoleKeyInfo(c, consoleKey, shift, alt = false, control = false)
-
-    let fromConsoleKey consoleKey =
-        let c = char consoleKey
-        ConsoleKeyInfo(c, consoleKey, shift = false, alt = false, control = false)
-
-module TestItems =
-    type Item = { Index: int; Name: string }
-
-    let init count =
-        ImmutableArray.init count (fun i -> { Index = i; Name = sprintf "Item%d" i })
-
-module TestListView =
-    let fromItemCount count =
-        let items = TestItems.init count
-        ListView.init count items
-
-    let fromItems items =
-        let itemsArray = items |> ImmutableArray.fromSeq
-        ListView.init (ImmutableArray.length itemsArray) itemsArray
-
-    let fromString input =
-        let parts = String.split '|' input
-        let names =
-            parts
-            |> Array.map (String.trim "[]<>")
-            |> ImmutableArray.wrap
-        let highlightedIndex =
-            parts
-            |> Array.tryFindIndex (fun item -> item.[0] = '>')
-
-        let pageSize = ImmutableArray.length names
-        { ListView.init pageSize names with
-            HighlightedIndex = highlightedIndex }
-
 
 let assertModelEquals (initial: ListView.Model<_>) (expected: ListView.Model<_>) (actual: ListView.Model<_>) =
     let formatItems items =
@@ -97,21 +52,36 @@ let toTestData input =
 module InitializationTests =
     [<Test>]
     let ``should set highlighted index to None if item collection is empty``() =
-        let highlightedIndex =
+        let actual =
             ImmutableArray.empty
-            |> ListView.init 1
-            |> ListView.getHighlightedIndex
+            |> ListView.init 3
 
-        test <@ highlightedIndex = None @>
+        let expected: ListView.Model<_> =
+            {
+                FirstVisibleIndex = 0
+                HighlightedIndex = None
+                Items = ImmutableArray.empty
+                PageSize = 3
+                SelectedItems = Set.empty
+            }
+
+        assertModelEquals actual expected actual
 
     [<Test>]
     let ``should set highlighted index to zero if item collection is not empty``() =
-        let highlightedIndex =
-            ImmutableArray.init 1 (fun i -> "Item")
-            |> ListView.init 1
-            |> ListView.getHighlightedIndex
+        let items = ImmutableArray.init 4 (sprintf "Item%i")
+        let actual = ListView.init 3 items
 
-        test <@ highlightedIndex = Some 0 @>
+        let expected: ListView.Model<_> =
+            {
+                FirstVisibleIndex = 0
+                HighlightedIndex = Some 0
+                Items = items
+                PageSize = 3
+                SelectedItems = Set.empty
+            }
+
+        assertModelEquals actual expected actual
 
 module HighlightingTests =
     let highlightPreviousItemTestCases =
@@ -225,9 +195,6 @@ module HighlightingTests =
         testMsg ListView.HighlightItemOnePageAfter initialList expectedList
 
 module SelectionTests =
-    let items = Array.init 10 (fun i -> sprintf "Item%d" i)
-    let listView = TestListView.fromItems items
-
     let selectionTestCases =
         [
             [ "> A", "> [A]"

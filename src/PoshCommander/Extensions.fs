@@ -1,5 +1,17 @@
 ﻿namespace PoshCommander
 
+module ConsoleKeyInfo =
+    open System
+
+    let fromChar c =
+        let shift = Char.IsLetter(c) && Char.IsUpper(c)
+        let consoleKey = enum (int (Char.ToUpperInvariant(c)))
+        ConsoleKeyInfo(c, consoleKey, shift, alt = false, control = false)
+
+    let fromConsoleKey consoleKey =
+        let c = char consoleKey
+        ConsoleKeyInfo(c, consoleKey, shift = false, alt = false, control = false)
+
 module Seq =
     let concatWith seq2 seq1 =
         Seq.append seq1 seq2
