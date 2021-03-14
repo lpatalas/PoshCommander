@@ -61,6 +61,11 @@ module ImmutableArray =
         |> Seq.filter predicate
         |> fromSeq
 
+    let map mapping (array: ImmutableArray<_>) =
+        array.Items
+        |> Seq.map mapping
+        |> fromSeq
+
     let skip count (array: ImmutableArray<_>) =
         array.Items
         |> Seq.skip count

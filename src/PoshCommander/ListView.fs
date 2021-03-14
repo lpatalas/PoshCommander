@@ -1,6 +1,7 @@
 module PoshCommander.ListView
 
 open System
+open System.Text.RegularExpressions
 
 type Filter =
     | NoFilter
@@ -226,19 +227,38 @@ let fromAsciiArt itemFromString input =
         |> Option.map (fun index -> index - firstVisibleIndex + 1)
         |> Option.defaultValue lines.Length
 
-    let items =
+    let parseItem input =
+        let isSelected = String.startsWith "[" input
+        let value =
+            input
+            |> String.trim "[]"
+            |> itemFromString
+
+        (value, isSelected)
+
+    let itemData =
         lines
-        |> Seq.map (String.trim " >[]|")
         |> Seq.filter (not << String.IsNullOrEmpty)
-        |> Seq.map itemFromString
+        |> Seq.map (String.trim " >|")
+        |> Seq.map parseItem
         |> ImmutableArray.fromSeq
+
+    let items =
+        itemData
+        |> ImmutableArray.map fst
+
+    let selectedItems =
+        itemData
+        |> Seq.filter snd
+        |> Seq.map fst
+        |> Set.ofSeq
 
     {
         FirstVisibleIndex = firstVisibleIndex
         HighlightedIndex = highlightedIndex
         Items = items
         PageSize = pageSize
-        SelectedItems = Set.empty
+        SelectedItems = selectedItems
     }
 
 let toAsciiArt itemToString model =

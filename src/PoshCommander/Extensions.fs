@@ -55,6 +55,9 @@ module Seq =
 module String =
     open System
 
+    let contains substring (input: string) =
+        input.IndexOf(substring, StringComparison.Ordinal) >= 0
+
     let endsWith value (input: string) =
         input.EndsWith(value)
 

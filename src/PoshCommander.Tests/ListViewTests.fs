@@ -47,6 +47,49 @@ module TestListView =
         { ListView.init pageSize names with
             HighlightedIndex = highlightedIndex }
 
+
+let assertModelEquals (initial: ListView.Model<_>) (expected: ListView.Model<_>) (actual: ListView.Model<_>) =
+    let formatItems items =
+        items
+        |> Seq.map string
+        |> String.concat "; "
+        |> sprintf "[%s]"
+
+    if actual <> expected then
+        let initialItems = formatItems initial.Items
+        let expectedItems = formatItems expected.Items
+        let actualItems = formatItems actual.Items
+        let itemsColumnLength = max initialItems.Length (max expectedItems.Length actualItems.Length)
+
+        [
+            ""
+            sprintf "         | ScrollIndex | HighlightedIndex | PageSize | %s | Selected" (String.padLeft itemsColumnLength "Items")
+            sprintf "---------|-------------|------------------|----------|-%s-|----------" (String ('-', itemsColumnLength))
+            sprintf "Initial  | %11i | %16s | %8i | %s | %s" initial.FirstVisibleIndex (string initial.HighlightedIndex) initial.PageSize (String.padLeft itemsColumnLength initialItems) (formatItems initial.SelectedItems)
+            sprintf "Expected | %11i | %16s | %8i | %s | %s" expected.FirstVisibleIndex (string expected.HighlightedIndex) expected.PageSize (String.padLeft itemsColumnLength expectedItems) (formatItems expected.SelectedItems)
+            sprintf "Actual   | %11i | %16s | %8i | %s | %s" actual.FirstVisibleIndex (string actual.HighlightedIndex) actual.PageSize (String.padLeft itemsColumnLength actualItems) (formatItems actual.SelectedItems)
+            ""
+        ]
+        |> String.joinLines
+        |> Assert.Fail
+
+let testMsg msg initialList expectedList =
+    let initialModel = ListView.fromAsciiArt id initialList
+    let expectedModel = ListView.fromAsciiArt id expectedList
+
+    let actualModel =
+        initialModel
+        |> ListView.update msg
+
+    assertModelEquals initialModel expectedModel actualModel
+
+let toTestData input =
+    input
+    |> Seq.map (fun testCase ->
+        let firstArg = testCase |> Seq.map fst |> String.joinLines :> obj
+        let secondArg = testCase |> Seq.map snd |> String.joinLines :> obj
+        [| firstArg; secondArg |])
+
 module InitializationTests =
     [<Test>]
     let ``should set highlighted index to None if item collection is empty``() =
@@ -67,51 +110,6 @@ module InitializationTests =
         test <@ highlightedIndex = Some 0 @>
 
 module HighlightingTests =
-    let initialListView =
-        TestListView.fromItemCount 10
-
-    let assertModelEquals (initial: ListView.Model<_>) (expected: ListView.Model<_>) (actual: ListView.Model<_>) =
-        let formatItems items =
-            items
-            |> Seq.map string
-            |> String.concat "; "
-            |> sprintf "[%s]"
-
-        if actual <> expected then
-            let initialItems = formatItems initial.Items
-            let expectedItems = formatItems expected.Items
-            let actualItems = formatItems actual.Items
-            let itemsColumnLength = max initialItems.Length (max expectedItems.Length actualItems.Length)
-
-            [
-                ""
-                sprintf "         | ScrollIndex | HighlightedIndex | PageSize | %s | Selected" (String.padLeft itemsColumnLength "Items")
-                sprintf "---------|-------------|------------------|----------|-%s-|----------" (String ('-', itemsColumnLength))
-                sprintf "Initial  | %11i | %16s | %8i | %s | %s" initial.FirstVisibleIndex (string initial.HighlightedIndex) initial.PageSize (String.padLeft itemsColumnLength initialItems) (formatItems initial.SelectedItems)
-                sprintf "Expected | %11i | %16s | %8i | %s | %s" expected.FirstVisibleIndex (string expected.HighlightedIndex) expected.PageSize (String.padLeft itemsColumnLength expectedItems) (formatItems expected.SelectedItems)
-                sprintf "Actual   | %11i | %16s | %8i | %s | %s" actual.FirstVisibleIndex (string actual.HighlightedIndex) actual.PageSize (String.padLeft itemsColumnLength actualItems) (formatItems actual.SelectedItems)
-                ""
-            ]
-            |> String.joinLines
-            |> Assert.Fail
-
-    let testMsg msg initialList expectedList =
-        let initialModel = ListView.fromAsciiArt id initialList
-        let expectedModel = ListView.fromAsciiArt id expectedList
-
-        let actualModel =
-            initialModel
-            |> ListView.update msg
-
-        assertModelEquals initialModel expectedModel actualModel
-
-    let toTestData input =
-        input
-        |> Seq.map (fun testCase ->
-            let firstArg = testCase |> Seq.map fst |> String.joinLines :> obj
-            let secondArg = testCase |> Seq.map snd |> String.joinLines :> obj
-            [| firstArg; secondArg |])
-
     let highlightPreviousItemTestCases =
         [
             [ "> A", "> A"
@@ -173,8 +171,8 @@ module HighlightingTests =
               "  E  ", "  E  " ]
 
             [ "  A  ", "  A  "
-              "  B  ", "  B |"
-              "  C |", "> C |"
+              "  B  ", "> B |"
+              "  C |", "  C |"
               "> D |", "  D |"
               "  E |", "  E  " ]
 
@@ -226,35 +224,29 @@ module SelectionTests =
     let items = Array.init 10 (fun i -> sprintf "Item%d" i)
     let listView = TestListView.fromItems items
 
-    [<Test>]
-    let ``should select highlighted item if it was unselected``() =
-        let selectedItems =
-            { listView with HighlightedIndex = Some 1 }
-            |> ListView.update ListView.ToggleItemSelection
-            |> ListView.getSelectedItems
+    let selectionTestCases =
+        [
+            [ "> A", "> [A]"
+              "  B", "   B"
+              "  C", "   C" ]
 
-        test <@ selectedItems = Set.ofList [ items.[1] ] @>
+            [ "> [A]", "> A"
+              "   B", "   B"
+              "   C", "   C" ]
 
-    [<Test>]
-    let ``should unselect highlighted item if it was selected``() =
-        let selectedItems =
-            { listView with
-                HighlightedIndex = Some 1
-                SelectedItems = Set.ofList [ items.[1] ] }
-            |> ListView.update ListView.ToggleItemSelection
-            |> ListView.getSelectedItems
+            [ "  [A]", "  [A]"
+              ">  B", " > [B]"
+              "   C", "    C" ]
 
-        test <@ selectedItems = Set.empty @>
+            [ "  [A]", "   [A]"
+              "> [B]", " >  B "
+              "  [C]", "   [C]" ]
+        ]
+        |> toTestData
 
-    [<Test>]
-    let ``should revert selection if it was toggled two times``() =
-        let selectedItems =
-            { listView with HighlightedIndex = Some 1 }
-            |> ListView.update ListView.ToggleItemSelection
-            |> ListView.update ListView.ToggleItemSelection
-            |> ListView.getSelectedItems
-
-        test <@ selectedItems = Set.empty @>
+    [<TestCaseSource(nameof selectionTestCases)>]
+    let ``should correctly toggle selection for highlighted item``(initial, expected) =
+        testMsg ListView.ToggleItemSelection initial expected
 
 module SetItemsTests =
     [<Test>]
