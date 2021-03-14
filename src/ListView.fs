@@ -1,11 +1,6 @@
 module PoshCommander.ListView
 
 open System
-open System.Text.RegularExpressions
-
-type Filter =
-    | NoFilter
-    | Filter of string
 
 type Model<'TItem when 'TItem : comparison> =
     {

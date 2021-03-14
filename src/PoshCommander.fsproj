@@ -16,7 +16,6 @@
     <Compile Include="Application.fs" /> -->
     <!-- <Compile Include="Command.fs" /> -->
     <Compile Include="UI.fs" />
-    <Compile Include="Filter.fs" />
     <Compile Include="ListView.fs" />
     <Compile Include="Pane.fs" />
     <Compile Include="App.fs" />

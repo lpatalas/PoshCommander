@@ -8,18 +8,23 @@ type PaneItem =
         Name: string
     }
 
+type Filter =
+    | NoFilter
+    | Filter of string
+
 type Model =
     {
         CurrentPath: string
-        Filter: Filter.Model<PaneItem>
+        Filter: Filter
         ListView: ListView.Model<PaneItem>
     }
 
 type Msg =
-    | FilterMsg of Filter.Msg
     | ListViewMsg of ListView.Msg<PaneItem>
     | KeyPressed of ConsoleKey
     | PageSizeChanged of int
+    | ResetFilter
+    | SetFilter of string
 
 let init windowHeight path =
     let makeItem index =
@@ -42,21 +47,58 @@ let init windowHeight path =
 
     {
         CurrentPath = path
-        Filter = Filter.init filterPredicate
+        Filter = NoFilter
         ListView = ListView.init pageSize items
     }
 
+let mapFilterKey (keyInfo: ConsoleKeyInfo) model =
+    let filterInitChars =
+        [ 'a'..'z' ]
+        @ [ 'A'..'Z' ]
+        @ [ '0'..'9' ]
+        @ [ ','; '.'; '_' ]
+        |> Set.ofList
+
+    let filterUpdateChars =
+        filterInitChars
+        |> Set.add ' '
+
+    let isFilterInitChar keyChar =
+        Set.contains keyChar filterInitChars
+
+    let isFilterUpdateChar keyChar =
+        Set.contains keyChar filterUpdateChars
+
+    let eraseLastChar str =
+        match str with
+        | "" -> ""
+        | s -> s.Substring(0, s.Length - 1)
+
+    match model.Filter with
+    | NoFilter ->
+        if isFilterInitChar keyInfo.KeyChar then
+            Some (SetFilter (string keyInfo.KeyChar))
+        else
+            None
+    | Filter filterString ->
+        if isFilterUpdateChar keyInfo.KeyChar then
+            Some (SetFilter (filterString + string keyInfo.KeyChar))
+        else if keyInfo.Key = ConsoleKey.Backspace then
+            Some (SetFilter (eraseLastChar filterString))
+        else if keyInfo.Key = ConsoleKey.Escape then
+            Some ResetFilter
+        else
+            None
+
 let mapKey (keyInfo: ConsoleKeyInfo) model =
     seq {
-        Filter.mapKey keyInfo model.Filter |> Option.map FilterMsg
+        mapFilterKey keyInfo model
         ListView.mapKey keyInfo model.ListView |> Option.map ListViewMsg
     }
     |> Seq.tryPick id
 
 let update msg model =
     match msg with
-    | FilterMsg filterMsg ->
-        { model with Filter = Filter.update filterMsg model.Filter }
     | ListViewMsg listViewMsg ->
         { model with ListView = ListView.update listViewMsg model.ListView }
     | _ ->
@@ -75,10 +117,10 @@ let private drawStatusBar ui model =
     UI.initCursor ui
 
     let text =
-        match model.Filter.FilterState with
-        | Filter.Disabled ->
+        match model.Filter with
+        | NoFilter ->
             "10 Dirs / 18 Files"
-        | Filter.Enabled filterString ->
+        | Filter filterString ->
             sprintf "Filter: %s_" filterString
 
     UI.drawFullLine ui style text
