@@ -18,14 +18,34 @@ module ConsoleKeyInfo =
         let c = char consoleKey
         ConsoleKeyInfo(c, consoleKey, shift = false, alt = false, control = false)
 
+module TestItems =
+    type Item = { Index: int; Name: string }
+
+    let init count =
+        ImmutableArray.init count (fun i -> { Index = i; Name = sprintf "Item%d" i })
+
 module TestListView =
     let fromItemCount count =
-        let items = (ImmutableArray.init count (fun i -> sprintf "Item%d" i))
+        let items = TestItems.init count
         ListView.init count items
 
     let fromItems items =
         let itemsArray = items |> ImmutableArray.fromSeq
         ListView.init (ImmutableArray.length itemsArray) itemsArray
+
+    let fromString input =
+        let parts = String.split '|' input
+        let names =
+            parts
+            |> Array.map (String.trim "[]<>")
+            |> ImmutableArray.wrap
+        let highlightedIndex =
+            parts
+            |> Array.tryFindIndex (fun item -> item.[0] = '>')
+
+        let pageSize = ImmutableArray.length names
+        { ListView.init pageSize names with
+            HighlightedIndex = highlightedIndex }
 
 module InitializationTests =
     [<Test>]
@@ -50,125 +70,157 @@ module HighlightingTests =
     let initialListView =
         TestListView.fromItemCount 10
 
-    [<TestCase(0, 0)>]
-    [<TestCase(1, 0)>]
-    [<TestCase(9, 8)>]
-    let ``should highlight previous item``(initialIndex, expectedIndex) =
-        let updatedIndex =
-            { initialListView with
-                HighlightedIndex = Some initialIndex }
-            |> ListView.update ListView.HighlightPreviousItem
-            |> ListView.getHighlightedIndex
+    let assertModelEquals (initial: ListView.Model<_>) (expected: ListView.Model<_>) (actual: ListView.Model<_>) =
+        let formatItems items =
+            items
+            |> Seq.map string
+            |> String.concat "; "
+            |> sprintf "[%s]"
 
-        test <@ updatedIndex = Some expectedIndex @>
+        if actual <> expected then
+            let initialItems = formatItems initial.Items
+            let expectedItems = formatItems expected.Items
+            let actualItems = formatItems actual.Items
+            let itemsColumnLength = max initialItems.Length (max expectedItems.Length actualItems.Length)
 
-    [<TestCase(0, 0, 0)>]
-    [<TestCase(1, 0, 0)>]
-    [<TestCase(1, 1, 0)>]
-    [<TestCase(2, 1, 1)>]
-    [<TestCase(4, 1, 1)>]
-    let ``should adjust FirstVisibleIndex when highlighting previous item``(highlightedIndex, initialFirstVisibleIndex, expectedFirstVisibleIndex) =
-        let updatedIndex =
-            { initialListView with
-                PageSize = 5
-                FirstVisibleIndex = initialFirstVisibleIndex
-                HighlightedIndex = Some highlightedIndex }
-            |> ListView.update ListView.HighlightPreviousItem
-            |> ListView.getFirstVisibleIndex
+            [
+                ""
+                sprintf "         | ScrollIndex | HighlightedIndex | PageSize | %s | Selected" (String.padLeft itemsColumnLength "Items")
+                sprintf "---------|-------------|------------------|----------|-%s-|----------" (String ('-', itemsColumnLength))
+                sprintf "Initial  | %11i | %16s | %8i | %s | %s" initial.FirstVisibleIndex (string initial.HighlightedIndex) initial.PageSize (String.padLeft itemsColumnLength initialItems) (formatItems initial.SelectedItems)
+                sprintf "Expected | %11i | %16s | %8i | %s | %s" expected.FirstVisibleIndex (string expected.HighlightedIndex) expected.PageSize (String.padLeft itemsColumnLength expectedItems) (formatItems expected.SelectedItems)
+                sprintf "Actual   | %11i | %16s | %8i | %s | %s" actual.FirstVisibleIndex (string actual.HighlightedIndex) actual.PageSize (String.padLeft itemsColumnLength actualItems) (formatItems actual.SelectedItems)
+                ""
+            ]
+            |> String.joinLines
+            |> Assert.Fail
 
-        test <@ updatedIndex = expectedFirstVisibleIndex @>
+    let testMsg msg initialList expectedList =
+        let initialModel = ListView.fromAsciiArt id initialList
+        let expectedModel = ListView.fromAsciiArt id expectedList
 
-    [<TestCase(0, 1)>]
-    [<TestCase(8, 9)>]
-    [<TestCase(9, 9)>]
-    let ``should highlight next item``(initialIndex, expectedIndex) =
-        let updatedIndex =
-            { initialListView with
-                HighlightedIndex = Some initialIndex }
-            |> ListView.update ListView.HighlightNextItem
-            |> ListView.getHighlightedIndex
+        let actualModel =
+            initialModel
+            |> ListView.update msg
 
-        test <@ updatedIndex = Some expectedIndex @>
+        assertModelEquals initialModel expectedModel actualModel
 
-    [<TestCase(0, 0, 0)>]
-    [<TestCase(1, 0, 0)>]
-    [<TestCase(3, 0, 0)>]
-    [<TestCase(4, 0, 1)>]
-    [<TestCase(6, 2, 3)>]
-    let ``should adjust FirstVisibleIndex when highlighting next item``(highlightedIndex, initialFirstVisibleIndex, expectedFirstVisibleIndex) =
-        let updatedIndex =
-            { initialListView with
-                PageSize = 5
-                FirstVisibleIndex = initialFirstVisibleIndex
-                HighlightedIndex = Some highlightedIndex }
-            |> ListView.update ListView.HighlightNextItem
-            |> ListView.getFirstVisibleIndex
+    let toTestData input =
+        input
+        |> Seq.map (fun testCase ->
+            let firstArg = testCase |> Seq.map fst |> String.joinLines :> obj
+            let secondArg = testCase |> Seq.map snd |> String.joinLines :> obj
+            [| firstArg; secondArg |])
 
-        test <@ updatedIndex = expectedFirstVisibleIndex @>
+    let highlightPreviousItemTestCases =
+        [
+            [ "> A", "> A"
+              "  B", "  B"
+              "  C", "  C" ]
 
-    [<TestCase(0, 0)>]
-    [<TestCase(1, 0)>]
-    [<TestCase(4, 0)>]
-    [<TestCase(5, 1)>]
-    [<TestCase(9, 5)>]
-    let ``should highlight item page before``(initialIndex, expectedIndex) =
-        let updatedIndex =
-            { initialListView with
-                PageSize = 5
-                HighlightedIndex = Some initialIndex }
-            |> ListView.update ListView.HighlightItemOnePageBefore
-            |> ListView.getHighlightedIndex
+            [ "  A", "> A"
+              "> B", "  B"
+              "  C", "  C" ]
 
-        test <@ updatedIndex = Some expectedIndex @>
+            [ "  A  ", "> A |"
+              "> B |", "  B |"
+              "  C |", "  C  " ]
 
-    [<TestCase(0, 0, 0)>]
-    [<TestCase(1, 0, 0)>]
-    [<TestCase(4, 0, 0)>]
-    [<TestCase(4, 1, 0)>]
-    [<TestCase(5, 5, 1)>]
-    [<TestCase(9, 5, 5)>]
-    let ``should adjust FirstVisibleIndex when highlighting item one page before``(highlightedIndex, initialFirstVisibleIndex, expectedFirstVisibleIndex) =
-        let updatedIndex =
-            { initialListView with
-                PageSize = 5
-                FirstVisibleIndex = initialFirstVisibleIndex
-                HighlightedIndex = Some highlightedIndex }
-            |> ListView.update ListView.HighlightItemOnePageBefore
-            |> ListView.getFirstVisibleIndex
+            [ "  A  ", "  A  "
+              "  B |", "> B |"
+              "> C |", "  C |" ]
+        ]
+        |> toTestData
 
-        test <@ updatedIndex = expectedFirstVisibleIndex @>
+    [<TestCaseSource(nameof highlightPreviousItemTestCases)>]
+    let ``should correctly highlight previous item``(initialList, expectedList) =
+        testMsg ListView.HighlightPreviousItem initialList expectedList
 
-    [<TestCase(0, 4)>]
-    [<TestCase(5, 9)>]
-    [<TestCase(6, 9)>]
-    [<TestCase(8, 9)>]
-    [<TestCase(9, 9)>]
-    let ``should highlight item page after``(initialIndex, expectedIndex) =
-        let updatedIndex =
-            { initialListView with
-                PageSize = 5
-                HighlightedIndex = Some initialIndex }
-            |> ListView.update ListView.HighlightItemOnePageAfter
-            |> ListView.getHighlightedIndex
+    let highlightNextItemTestCases =
+        [
+            [ "  A", "  A"
+              "> B", "  B"
+              "  C", "> C" ]
 
-        test <@ updatedIndex = Some expectedIndex @>
+            [ "  A", "  A"
+              "  B", "  B"
+              "> C", "> C" ]
 
-    [<TestCase(0, 0, 0)>]
-    [<TestCase(1, 0, 1)>]
-    [<TestCase(4, 0, 4)>]
-    [<TestCase(4, 1, 4)>]
-    [<TestCase(8, 4, 5)>]
-    [<TestCase(9, 5, 5)>]
-    let ``should adjust FirstVisibleIndex when highlighting item one page after``(highlightedIndex, initialFirstVisibleIndex, expectedFirstVisibleIndex) =
-        let updatedIndex =
-            { initialListView with
-                PageSize = 5
-                FirstVisibleIndex = initialFirstVisibleIndex
-                HighlightedIndex = Some highlightedIndex }
-            |> ListView.update ListView.HighlightItemOnePageAfter
-            |> ListView.getFirstVisibleIndex
+            [ "> A |", "  A |"
+              "  B |", "> B |"
+              "  C  ", "  C  " ]
 
-        test <@ updatedIndex = expectedFirstVisibleIndex @>
+            [ "  A |", "  A  "
+              "> B |", "  B |"
+              "  C  ", "> C |" ]
+        ]
+        |> toTestData
+
+    [<TestCaseSource(nameof highlightNextItemTestCases)>]
+    let ``should correctly highlight next item``(initialList, expectedList) =
+        testMsg ListView.HighlightNextItem initialList expectedList
+
+    let highlightItemOnePageBeforeTestCases =
+        [
+            [ "> A |", "> A |"
+              "  B |", "  B |"
+              "  C  ", "  C  " ]
+
+            [ "  A  ", "  A  "
+              "  B |", "> B |"
+              "  C |", "  C |"
+              "> D |", "  D |"
+              "  E  ", "  E  " ]
+
+            [ "  A  ", "  A  "
+              "  B  ", "  B |"
+              "  C |", "> C |"
+              "> D |", "  D |"
+              "  E |", "  E  " ]
+
+            [ "  A  ", "  A  "
+              "  B  ", "> B |"
+              "  C  ", "  C |"
+              "> D |", "  D |"
+              "  E |", "  E  "
+              "  F |", "  F  " ]
+        ]
+        |> toTestData
+
+    [<TestCaseSource(nameof highlightItemOnePageBeforeTestCases)>]
+    let ``should correctly highlight item one page before``(initialList, expectedList) =
+        testMsg ListView.HighlightItemOnePageBefore initialList expectedList
+
+    let highlightItemOnePageAfterTestCases =
+        [
+            [ "  A  ", "  A  "
+              "  B |", "  B |"
+              "> C |", "> C |" ]
+
+            [ "  A  ", "  A  "
+              "> B |", "  B |"
+              "  C |", "  C |"
+              "  D |", "> D |"
+              "  E  ", "  E  " ]
+
+            [ "  A |", "  A  "
+              "> B |", "  B |"
+              "  C |", "  C |"
+              "  D  ", "> D |"
+              "  E  ", "  E  " ]
+
+            [ "  A |", "  A  "
+              "  B |", "  B  "
+              "> C |", "  C |"
+              "  D  ", "  D |"
+              "  E  ", "> E |"
+              "  F  ", "  F  " ]
+        ]
+        |> toTestData
+
+    [<TestCaseSource(nameof highlightItemOnePageAfterTestCases)>]
+    let ``should correctly highlight item one page after``(initialList, expectedList) =
+        testMsg ListView.HighlightItemOnePageAfter initialList expectedList
 
 module SelectionTests =
     let items = Array.init 10 (fun i -> sprintf "Item%d" i)
@@ -203,6 +255,81 @@ module SelectionTests =
             |> ListView.getSelectedItems
 
         test <@ selectedItems = Set.empty @>
+
+module SetItemsTests =
+    [<Test>]
+    let ``should not change state if new items are exactly the same as current ones``() =
+        let initialModel = TestListView.fromItemCount 10
+        let updatedModel =
+            initialModel
+            |> ListView.update (ListView.SetItems initialModel.Items)
+
+        test <@ updatedModel = initialModel @>
+
+    [<Test>]
+    let ``should update items collection``() =
+        let newItems = TestItems.init 12
+        let updatedItems =
+            TestListView.fromItemCount 10
+            |> ListView.update (ListView.SetItems newItems)
+            |> ListView.getItems
+
+        test <@ updatedItems = newItems @>
+
+    [<Test>]
+    let ``should keep highlight at the same item if it exists in updated collection``() =
+        let initialItems = TestItems.init 10
+        let highlightedIndex = 3
+
+        let newItems =
+            initialItems
+            |> ImmutableArray.filter (fun item -> item.Index % highlightedIndex = 0)
+
+        let initialModel =
+            { TestListView.fromItems initialItems with HighlightedIndex = Some 3 }
+        let initialHighlightedItem =
+            initialModel
+            |> ListView.getHighlightedItem
+
+        let newHighlightedItem =
+            initialModel
+            |> ListView.update (ListView.SetItems newItems)
+            |> ListView.getHighlightedItem
+
+        test <@ newHighlightedItem = initialHighlightedItem @>
+
+
+    [<Test>]
+    let ``should highlight first item if previously highlighted does not exist in updated collection``() =
+        let initialItems = TestItems.init 10
+        let highlightedIndex = 3
+
+        let newItems =
+            initialItems
+            |> ImmutableArray.filter (fun item -> item.Index <> highlightedIndex)
+
+        let newHighlightedIndex =
+            { TestListView.fromItems initialItems with
+                HighlightedIndex = Some highlightedIndex }
+            |> ListView.update (ListView.SetItems newItems)
+            |> ListView.getHighlightedIndex
+
+        test <@ newHighlightedIndex = Some 0 @>
+
+    [<Test>]
+    let ``should set highlighted index to None if new collection is empty``() =
+        let initialItems = TestItems.init 10
+
+        let initialList =
+            { TestListView.fromItems initialItems with
+                HighlightedIndex = Some 3 }
+
+        let newHighlightedIndex =
+            initialList
+            |> ListView.update (ListView.SetItems ImmutableArray.empty)
+            |> ListView.getHighlightedIndex
+
+        test <@ newHighlightedIndex = None @>
 
 // module FilterTests =
 //     let items = [| "abc"; "bbc"; "cab"; "cba" |]
@@ -326,6 +453,7 @@ module SelectionTests =
 //     let ``should move highlight to previous visible items when current one is filtered out``(initialHighlightedIndex, filter, expectedHighlightedIndex) =
 //         let initialItems = [| "abc"; "bbc"; "cab"; "cba" |]
 //         let highlightedIndex =
+
 //             { TestListView.fromItems initialItems with
 //                 HighlightedIndex = Some initialHighlightedIndex }
 //             |> ListView.update (ListView.SetFilter filter)

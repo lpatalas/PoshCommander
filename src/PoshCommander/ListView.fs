@@ -13,7 +13,6 @@ type Model<'TItem when 'TItem : comparison> =
         Items: ImmutableArray<'TItem>
         PageSize: int
         SelectedItems: Set<'TItem>
-        VisibleItems: ImmutableArray<'TItem>
     }
 
 let getFirstVisibleIndex model =
@@ -27,18 +26,19 @@ let getHighlightedItem model =
     | Some index -> Some (ImmutableArray.get index model.Items)
     | None -> None
 
+let getItems model =
+    model.Items
+
 let getSelectedItems model =
     model.SelectedItems
 
-let getVisibleItems model =
-    model.VisibleItems
-
-type Msg =
+type Msg<'TItem when 'TItem : equality> =
     | HighlightItemOnePageAfter
     | HighlightItemOnePageBefore
     | HighlightPreviousItem
     | HighlightNextItem
     | PageSizeChanged of int
+    | SetItems of ImmutableArray<'TItem>
     | ToggleItemSelection
 
 let init pageSize items =
@@ -48,7 +48,6 @@ let init pageSize items =
         Items = items
         PageSize = pageSize
         SelectedItems = Set.empty
-        VisibleItems = items
     }
 
 let mapKey (keyInfo: ConsoleKeyInfo) model =
@@ -97,6 +96,22 @@ let update msg model =
         |> Option.map (add offset)
         |> setHighlightedIndex model
 
+    let setItems newItems model =
+        if model.Items <> newItems then
+            let newHighlightedIndex =
+                getHighlightedItem model
+                |> Option.bind (fun item -> Seq.tryFindItemIndex item newItems)
+                |> Option.orElse (
+                    if ImmutableArray.isEmpty newItems then None
+                    else Some 0
+                    )
+
+            { model with
+                HighlightedIndex = newHighlightedIndex
+                Items = newItems }
+        else
+            model
+
     let toggleItemSelection model =
         match getHighlightedItem model with
         | Some highlightedItem ->
@@ -132,6 +147,8 @@ let update msg model =
             offsetHighlightedIndex 1
         | PageSizeChanged newPageSize ->
             updatePageSize newPageSize
+        | SetItems newItems ->
+            setItems newItems
         | ToggleItemSelection ->
             toggleItemSelection
 
@@ -188,3 +205,92 @@ let view uiContext itemPresenter model =
     |> Seq.concatWith emptyRows
     |> Seq.take model.PageSize
     |> Seq.iteri drawRow
+
+let fromAsciiArt itemFromString input =
+    let lines =
+        String.splitLines input
+        |> Array.map String.trimWhitespace
+
+    let highlightedIndex =
+        lines
+        |> Array.tryFindIndex (String.startsWith ">")
+
+    let firstVisibleIndex =
+        lines
+        |> Array.tryFindIndex (String.endsWith "|")
+        |> Option.defaultValue 0
+
+    let pageSize =
+        lines
+        |> Array.tryFindIndexBack (String.endsWith "|")
+        |> Option.map (fun index -> index - firstVisibleIndex + 1)
+        |> Option.defaultValue lines.Length
+
+    let items =
+        lines
+        |> Seq.map (String.trim " >[]|")
+        |> Seq.filter (not << String.IsNullOrEmpty)
+        |> Seq.map itemFromString
+        |> ImmutableArray.fromSeq
+
+    {
+        FirstVisibleIndex = firstVisibleIndex
+        HighlightedIndex = highlightedIndex
+        Items = items
+        PageSize = pageSize
+        SelectedItems = Set.empty
+    }
+
+let toAsciiArt itemToString model =
+    let getItemText maybeItem =
+        match maybeItem with
+        | Some item -> itemToString item
+        | None -> String.Empty
+
+    let applyHighlight index =
+        if Some index = model.HighlightedIndex then
+            sprintf "> %s"
+        else
+            sprintf "  %s"
+
+    let applySelection maybeItem =
+        match maybeItem with
+        | Some item ->
+            if Set.contains item model.SelectedItems then
+                sprintf "[%s]"
+            else
+                sprintf " %s "
+        | None ->
+            sprintf " %s "
+
+    let applyScroll index =
+        let lastVisibleIndex = model.FirstVisibleIndex + model.PageSize - 1
+        if index >= model.FirstVisibleIndex && index <= lastVisibleIndex then
+            sprintf "%s |"
+        else
+            sprintf "%s  "
+
+    let applyPadding maxLength item =
+        let paddingCount = maxLength - String.length item
+        if paddingCount > 0 then
+            sprintf "%s%s" item (String (' ', paddingCount))
+        else
+            item
+
+    let formatItem maxLabelLength index item =
+        getItemText item
+        |> applyPadding maxLabelLength
+        |> applySelection item
+        |> applyHighlight index
+        |> applyScroll index
+
+    let maxLabelLength =
+        model.Items
+        |> Seq.map (itemToString >> String.length)
+        |> Seq.tryMax
+        |> Option.defaultValue 0
+
+    seq { 0..(Math.Max(model.PageSize, ImmutableArray.length model.Items)) }
+    |> Seq.map (fun i -> ImmutableArray.tryGet i model.Items)
+    |> Seq.mapi (formatItem maxLabelLength)
+    |> Seq.fold (fun s1 s2 -> String.concat "\n" [|s1; s2|]) ""

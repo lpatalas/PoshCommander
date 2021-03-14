@@ -17,7 +17,7 @@ type Model =
 
 type Msg =
     | FilterMsg of Filter.Msg
-    | ListViewMsg of ListView.Msg
+    | ListViewMsg of ListView.Msg<PaneItem>
     | KeyPressed of ConsoleKey
     | PageSizeChanged of int
 

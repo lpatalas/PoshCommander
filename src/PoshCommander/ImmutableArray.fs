@@ -61,8 +61,19 @@ module ImmutableArray =
         |> Seq.filter predicate
         |> fromSeq
 
+    let skip count (array: ImmutableArray<_>) =
+        array.Items
+        |> Seq.skip count
+        |> fromSeq
+
     let get index (array: ImmutableArray<_>) =
         array.Items.[index]
+
+    let tryGet index (array: ImmutableArray<_>) =
+        if index >= 0 && index < array.Length then
+            Some (array.Items.[index])
+        else
+            None
 
     let init count initializer =
         Array.init count initializer
