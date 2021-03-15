@@ -4,15 +4,15 @@ open System
 
 type Model<'TItem when 'TItem : comparison> =
     {
-        FirstVisibleIndex: int
         HighlightedIndex: int option
         Items: ImmutableArray<'TItem>
         PageSize: int
+        ScrollIndex: int
         SelectedItems: Set<'TItem>
     }
 
-let getFirstVisibleIndex model =
-    model.FirstVisibleIndex
+let getScrollIndex model =
+    model.ScrollIndex
 
 let getHighlightedIndex model =
     model.HighlightedIndex
@@ -39,10 +39,10 @@ type Msg<'TItem when 'TItem : equality> =
 
 let init pageSize items =
     {
-        FirstVisibleIndex = 0
         HighlightedIndex = if ImmutableArray.isEmpty items then None else Some 0
         Items = items
         PageSize = pageSize
+        ScrollIndex = 0
         SelectedItems = Set.empty
     }
 
@@ -68,21 +68,21 @@ let update msg model =
         let newHighlightedIndex =
             index |> Option.map clampIndex
 
-        let newFirstVisibleIndex =
+        let newScrollIndex =
             match newHighlightedIndex with
             | Some newIndexValue ->
-                if newIndexValue < model.FirstVisibleIndex then
+                if newIndexValue < model.ScrollIndex then
                     newIndexValue
-                else if newIndexValue >= model.FirstVisibleIndex + model.PageSize then
+                else if newIndexValue >= model.ScrollIndex + model.PageSize then
                     newIndexValue - model.PageSize + 1
                 else
-                    model.FirstVisibleIndex
+                    model.ScrollIndex
             | None ->
-                model.FirstVisibleIndex
+                model.ScrollIndex
 
         {
             model with
-                FirstVisibleIndex = newFirstVisibleIndex
+                ScrollIndex = newScrollIndex
                 HighlightedIndex = newHighlightedIndex
         }
 
@@ -180,7 +180,7 @@ let view uiContext itemPresenter model =
         (foregroundColor, backgroundColor)
 
     let drawEmptyRow index =
-        let colors = getItemColors (index + model.FirstVisibleIndex) false
+        let colors = getItemColors (index + model.ScrollIndex) false
 
         UI.setCursorPosition uiContext uiArea.Left (uiArea.Top + index)
         UI.drawFullLine uiContext colors ""
@@ -188,7 +188,7 @@ let view uiContext itemPresenter model =
     let drawItem index item =
         let isSelected = Set.contains item model.SelectedItems
         let label = itemPresenter item
-        let colors = getItemColors (index + model.FirstVisibleIndex) isSelected
+        let colors = getItemColors (index + model.ScrollIndex) isSelected
 
         UI.setCursorPosition uiContext uiArea.Left (uiArea.Top + index)
         UI.drawFullLine uiContext colors label
@@ -202,7 +202,7 @@ let view uiContext itemPresenter model =
         Seq.initInfinite (fun _ -> EmptyRow)
 
     model.Items
-    |> Seq.skip model.FirstVisibleIndex
+    |> Seq.skip model.ScrollIndex
     |> Seq.map ItemRow
     |> Seq.concatWith emptyRows
     |> Seq.take model.PageSize
@@ -217,7 +217,7 @@ let fromAsciiArt itemFromString input =
         lines
         |> Array.tryFindIndex (String.startsWith ">")
 
-    let firstVisibleIndex =
+    let scrollIndex =
         lines
         |> Array.tryFindIndex (String.endsWith "|")
         |> Option.defaultValue 0
@@ -225,7 +225,7 @@ let fromAsciiArt itemFromString input =
     let pageSize =
         lines
         |> Array.tryFindIndexBack (String.endsWith "|")
-        |> Option.map (fun index -> index - firstVisibleIndex + 1)
+        |> Option.map (fun index -> index - scrollIndex + 1)
         |> Option.defaultValue lines.Length
 
     let parseItem input =
@@ -255,7 +255,7 @@ let fromAsciiArt itemFromString input =
         |> Set.ofSeq
 
     {
-        FirstVisibleIndex = firstVisibleIndex
+        ScrollIndex = scrollIndex
         HighlightedIndex = highlightedIndex
         Items = items
         PageSize = pageSize
@@ -285,8 +285,8 @@ let toAsciiArt itemToString model =
             sprintf " %s "
 
     let applyScroll index =
-        let lastVisibleIndex = model.FirstVisibleIndex + model.PageSize - 1
-        if index >= model.FirstVisibleIndex && index <= lastVisibleIndex then
+        let lastVisibleIndex = model.ScrollIndex + model.PageSize - 1
+        if index >= model.ScrollIndex && index <= lastVisibleIndex then
             sprintf "%s |"
         else
             sprintf "%s  "

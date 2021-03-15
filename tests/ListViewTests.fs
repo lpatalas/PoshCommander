@@ -25,9 +25,9 @@ let assertModelEquals (initial: ListView.Model<_>) (expected: ListView.Model<_>)
             ""
             sprintf "         | ScrollIndex | HighlightedIndex | PageSize | %s | Selected" (String.padLeft itemsColumnLength "Items")
             sprintf "---------|-------------|------------------|----------|-%s-|----------" (String ('-', itemsColumnLength))
-            sprintf "Initial  | %11i | %16s | %8i | %s | %s" initial.FirstVisibleIndex (optStr initial.HighlightedIndex) initial.PageSize (String.padLeft itemsColumnLength initialItems) (formatItems initial.SelectedItems)
-            sprintf "Expected | %11i | %16s | %8i | %s | %s" expected.FirstVisibleIndex (optStr expected.HighlightedIndex) expected.PageSize (String.padLeft itemsColumnLength expectedItems) (formatItems expected.SelectedItems)
-            sprintf "Actual   | %11i | %16s | %8i | %s | %s" actual.FirstVisibleIndex (optStr actual.HighlightedIndex) actual.PageSize (String.padLeft itemsColumnLength actualItems) (formatItems actual.SelectedItems)
+            sprintf "Initial  | %11i | %16s | %8i | %s | %s" initial.ScrollIndex (optStr initial.HighlightedIndex) initial.PageSize (String.padLeft itemsColumnLength initialItems) (formatItems initial.SelectedItems)
+            sprintf "Expected | %11i | %16s | %8i | %s | %s" expected.ScrollIndex (optStr expected.HighlightedIndex) expected.PageSize (String.padLeft itemsColumnLength expectedItems) (formatItems expected.SelectedItems)
+            sprintf "Actual   | %11i | %16s | %8i | %s | %s" actual.ScrollIndex (optStr actual.HighlightedIndex) actual.PageSize (String.padLeft itemsColumnLength actualItems) (formatItems actual.SelectedItems)
             ""
         ]
         |> String.joinLines
@@ -58,10 +58,10 @@ module InitializationTests =
 
         let expected: ListView.Model<_> =
             {
-                FirstVisibleIndex = 0
                 HighlightedIndex = None
                 Items = ImmutableArray.empty
                 PageSize = 3
+                ScrollIndex = 0
                 SelectedItems = Set.empty
             }
 
@@ -74,10 +74,10 @@ module InitializationTests =
 
         let expected: ListView.Model<_> =
             {
-                FirstVisibleIndex = 0
                 HighlightedIndex = Some 0
                 Items = items
                 PageSize = 3
+                ScrollIndex = 0
                 SelectedItems = Set.empty
             }
 
