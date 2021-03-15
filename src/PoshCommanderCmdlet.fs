@@ -66,7 +66,7 @@ type PoshCommanderCmdlet() =
                 this.Host.UI.WriteLine("You cancelled")
 
     member private this.TestListView() =
-        let app = App.init (this.Host) "C:\\" "D:\\"
+        let app = App.init (this.Host) this.LeftPath this.RightPath
 
         let rec mainLoop model =
             let width = this.Host.UI.RawUI.WindowSize.Width

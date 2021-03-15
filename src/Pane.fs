@@ -2,51 +2,40 @@ module PoshCommander.Pane
 
 open System
 
-type PaneItem =
-    {
-        FullPath: string
-        Name: string
-    }
-
 type Filter =
     | NoFilter
     | Filter of string
 
 type Model =
     {
-        CurrentPath: string
+        CurrentDirectory: Directory
         Filter: Filter
-        ListView: ListView.Model<PaneItem>
+        ListView: ListView.Model<DirectoryItem>
     }
 
 type Msg =
-    | ListViewMsg of ListView.Msg<PaneItem>
+    | ListViewMsg of ListView.Msg<DirectoryItem>
     | KeyPressed of ConsoleKey
     | PageSizeChanged of int
     | ResetFilter
     | SetFilter of string
 
 let init windowHeight path =
-    let makeItem index =
-        let name = sprintf "Item%d.txt" index
-        {
-            FullPath = sprintf "%s\\%s" path name
-            Name = name
-        }
-
     let filterPredicate filter item =
-        item.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0
+        let name = DirectoryItem.getName item
+        name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0
+
+    let directory = Directory.read path
+    let items =
+        match directory.Content with
+        | DirectoryContent items -> items
+        | _ -> ImmutableArray.empty
 
     // window height minus title and status bars
     let pageSize = windowHeight - 2
 
-    let items =
-        Seq.initInfinite makeItem
-        |> Seq.take 10
-        |> ImmutableArray.fromSeq
-
     {
-        CurrentPath = path
+        CurrentDirectory = directory
         Filter = NoFilter
         ListView = ListView.init pageSize items
     }
@@ -116,17 +105,36 @@ let private drawStatusBar ui model =
     let style = (Theme.StatusBarForeground, Theme.StatusBarBackground)
     UI.initCursor ui
 
+    let countDirectoriesAndFiles items =
+        let dirCount =
+            items
+            |> Seq.filter DirectoryItem.isDirectory
+            |> Seq.length
+        let fileCount = ImmutableArray.length items - dirCount
+        (dirCount, fileCount)
+
+    let formatStatusText (dirCount, fileCount) =
+        let dirLabel = if dirCount = 1 then "directory" else "directories"
+        let fileLabel = if fileCount = 1 then "file" else "files"
+        sprintf "%i %s / %i %s" dirCount dirLabel fileCount fileLabel
+
     let text =
-        match model.Filter with
-        | NoFilter ->
-            "10 Dirs / 18 Files"
-        | Filter filterString ->
-            sprintf "Filter: %s_" filterString
+        match model.CurrentDirectory.Content with
+        | DirectoryContent items ->
+            match model.Filter with
+            | NoFilter ->
+                countDirectoriesAndFiles items
+                |> formatStatusText
+            | Filter filterString ->
+                sprintf "Filter: %s_" filterString
+        | DirectoryAccessDenied ->
+            "Access Denied"
+        | DirectoryNotFound ->
+            "Directory Not Found"
+        | DirectoryReadError ->
+            "Error Reading Directory"
 
     UI.drawFullLine ui style text
-
-let private itemPresenter item =
-    item.Name
 
 let view uiContext isActive model =
     let (titleArea, rest) =
@@ -135,6 +143,9 @@ let view uiContext isActive model =
     let (contentArea, statusArea) =
         UIContext.splitBottom rest
 
-    drawTitleBar titleArea isActive model.CurrentPath
+    let currentPath = model.CurrentDirectory.Path
+    let itemPresenter = DirectoryItem.getName
+
+    drawTitleBar titleArea isActive currentPath
     ListView.view contentArea itemPresenter model.ListView
     drawStatusBar statusArea model
