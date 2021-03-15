@@ -10,8 +10,6 @@
     <Compile Include="Theme.fs" />
     <Compile Include="Input.fs" />
     <Compile Include="ListViewTests.fs" />
-    <!-- <Compile Include="HighlightingCommands.fs" />
-    <Compile Include="NavigationCommands.fs" /> -->
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="1.1.0" />

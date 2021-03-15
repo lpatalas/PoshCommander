@@ -26,14 +26,25 @@ type PoshCommanderCmdlet() =
     member val ViewerPath = String.Empty with get, set
 
     override this.EndProcessing() =
-        FullScreenConsole.enter this.Host.UI.RawUI this.TestListView
+        FullScreenConsole.enter this.Host.UI.RawUI this.RunApp
 
-    // member private this.RunApplication() =
-    //     let windowSize = this.Host.UI.RawUI.WindowSize
-    //     let application = Application.create windowSize this.LeftPath this.RightPath
-    //     let draw = UI.drawApplication this.Host
-    //     let mapCommand = Command.mapKeyToCommand Command.defaultKeyMap
-    //     Application.run draw mapCommand application
+    member private this.RunApp() =
+        let app = App.init (this.Host) this.LeftPath this.RightPath
+
+        let rec mainLoop model =
+            let width = this.Host.UI.RawUI.WindowSize.Width
+            let height = this.Host.UI.RawUI.WindowSize.Height
+            let uiContext = UIContext.init (this.Host.UI) 0 0 width height
+            App.view uiContext model
+
+            let keyInfo = Console.ReadKey(intercept = true)
+            if keyInfo.Key <> ConsoleKey.Q then
+                App.mapKey keyInfo model
+                |> Option.map (fun msg -> App.update msg model)
+                |> Option.defaultValue model
+                |> mainLoop
+
+        mainLoop app
 
     member private this.TestInput() =
         let setCursorX x =
@@ -64,21 +75,3 @@ type PoshCommanderCmdlet() =
                 this.Host.UI.WriteLine("You entered: " + input)
             | None ->
                 this.Host.UI.WriteLine("You cancelled")
-
-    member private this.TestListView() =
-        let app = App.init (this.Host) this.LeftPath this.RightPath
-
-        let rec mainLoop model =
-            let width = this.Host.UI.RawUI.WindowSize.Width
-            let height = this.Host.UI.RawUI.WindowSize.Height
-            let uiContext = UIContext.init (this.Host.UI) 0 0 width height
-            App.view uiContext model
-
-            let keyInfo = Console.ReadKey(intercept = true)
-            if keyInfo.Key <> ConsoleKey.Q then
-                App.mapKey keyInfo model
-                |> Option.map (fun msg -> App.update msg model)
-                |> Option.defaultValue model
-                |> mainLoop
-
-        mainLoop app

@@ -8,13 +8,9 @@
     <Compile Include="Extensions.fs" />
     <Compile Include="Theme.fs" />
     <Compile Include="FullScreenConsole.fs" />
-    <Compile Include="Rect.fs" />
     <Compile Include="ImmutableArray.fs" />
     <Compile Include="FileSystem.fs" />
     <Compile Include="Input.fs" />
-    <!-- <Compile Include="Pane.fs" />
-    <Compile Include="Application.fs" /> -->
-    <!-- <Compile Include="Command.fs" /> -->
     <Compile Include="UI.fs" />
     <Compile Include="ListView.fs" />
     <Compile Include="Pane.fs" />
@@ -24,9 +20,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="PoshCommander.psd1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="FSharp.Core.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
