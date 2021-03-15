@@ -77,7 +77,11 @@ module Directory =
         else
             let directoryInfo = DirectoryInfo(path)
             let parentPath =
-                if not (isNull directoryInfo.Parent) then
+                let hasParent =
+                    not (isNull directoryInfo.Parent)
+                    && not (String.IsNullOrEmpty(directoryInfo.Parent.FullName))
+
+                if hasParent then
                     Some directoryInfo.Parent.FullName
                 else
                     None
