@@ -102,9 +102,15 @@ let update msg model =
                     else Some 0
                     )
 
+            let newSelectedItems =
+                newItems
+                |> Seq.filter (fun item -> Set.contains item model.SelectedItems)
+                |> Set.ofSeq
+
             { model with
                 HighlightedIndex = newHighlightedIndex
-                Items = newItems }
+                Items = newItems
+                SelectedItems = newSelectedItems }
         else
             model
 

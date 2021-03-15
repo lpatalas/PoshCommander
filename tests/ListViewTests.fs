@@ -222,9 +222,9 @@ module SelectionTests =
 module SetItemsTests =
     let setItemsTestCases =
         [
-            [ "> A", "> A"
-              "  B", "  B"
-              "  C", "  C" ]
+            [ "  A  ", "  A "
+              "> B |", "> B |"
+              "  C |", "  C |" ]
 
             [ "  A", "  D"
               "> B", "  E"
@@ -241,6 +241,18 @@ module SetItemsTests =
             [ "", "> A"
               "", "  B"
               "", "  C" ]
+
+            [ "> [A]", "> [A]"
+              "   B", "    B"
+              "   C", "    C" ]
+
+            [ "> [A]", "> D"
+              "   B", "   B"
+              "   C", "   C" ]
+
+            [ "> [A]", "   D"
+              "  [B]", "  [B]"
+              "  [C]", "> [A]" ]
         ]
         |> toTestData
 
