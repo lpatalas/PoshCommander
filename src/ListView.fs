@@ -56,9 +56,6 @@ let mapKey (keyInfo: ConsoleKeyInfo) model =
     | _ -> None
 
 let update msg model =
-    let inline add a b =
-        a + b
-
     let clampIndex index =
         if index < 0 then 0
         else if index >= model.Items.Length then model.Items.Length - 1
@@ -89,7 +86,7 @@ let update msg model =
     let offsetHighlightedIndex offset model =
         model
         |> getHighlightedIndex
-        |> Option.map (add offset)
+        |> Option.map ((+) offset)
         |> setHighlightedIndex model
 
     let setItems newItems model =
