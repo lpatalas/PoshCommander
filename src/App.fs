@@ -37,11 +37,12 @@ let setActivePane appModel newPaneModel =
 
 let init (host: PSHost) leftPath rightPath =
     let windowHeight = host.UI.RawUI.WindowSize.Height
+    let pane = Pane.init Directory.read windowHeight
     {
         ActivePane = Left
         Host = host
-        LeftPane = Pane.init windowHeight leftPath
-        RightPane = Pane.init windowHeight rightPath
+        LeftPane = pane leftPath
+        RightPane = pane rightPath
     }
 
 let mapKey (keyInfo: ConsoleKeyInfo) model =

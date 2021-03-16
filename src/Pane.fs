@@ -13,18 +13,18 @@ type Model =
         ListView: ListView.Model<DirectoryItem>
     }
 
+let getFilter model =
+    model.Filter
+
 type Msg =
     | ListViewMsg of ListView.Msg<DirectoryItem>
     | PageSizeChanged of int
     | ResetFilter
     | SetFilter of string
 
-let init windowHeight path =
-    let directory = Directory.read path
-    let items =
-        match directory.Content with
-        | DirectoryContent items -> items
-        | _ -> ImmutableArray.empty
+let init readDirectory windowHeight path =
+    let directory = readDirectory path
+    let items = Directory.getItems directory
 
     // window height minus title and status bars
     let pageSize = windowHeight - 2
@@ -82,9 +82,40 @@ let mapKey (keyInfo: ConsoleKeyInfo) model =
     |> Seq.tryPick id
 
 let update msg model =
+    let resetFilter model =
+        let items = Directory.getItems model.CurrentDirectory
+        let updatedListView =
+            model.ListView
+            |> ListView.update (ListView.SetItems items)
+
+        { model with
+            Filter = NoFilter
+            ListView = updatedListView }
+
+    let setFilter filterString model =
+        let itemFilter =
+            DirectoryItem.getName
+            >> String.contains filterString
+
+        let items =
+            Directory.getItems model.CurrentDirectory
+            |> ImmutableArray.filter itemFilter
+
+        let updatedListView =
+            model.ListView
+            |> ListView.update (ListView.SetItems items)
+
+        { model with
+            Filter = Filter filterString
+            ListView = updatedListView }
+
     match msg with
     | ListViewMsg listViewMsg ->
         { model with ListView = ListView.update listViewMsg model.ListView }
+    | ResetFilter ->
+        resetFilter model
+    | SetFilter filterString ->
+        setFilter filterString model
     | _ ->
         model
 

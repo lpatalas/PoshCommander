@@ -15,6 +15,13 @@ type DirectoryItem =
     }
 
 module DirectoryItem =
+    let init name path itemType =
+        {
+            Name = name
+            Path = path
+            ItemType = itemType
+        }
+
     let fromFileSystemInfo (info: FileSystemInfo) =
         {
             Name = info.Name
@@ -93,6 +100,10 @@ module Directory =
                 Path = directoryInfo.FullName
             }
 
+    let getItems directory =
+        match directory.Content with
+        | DirectoryContent items -> items
+        | _ -> ImmutableArray.empty
 
 
 

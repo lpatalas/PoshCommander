@@ -10,6 +10,7 @@
     <Compile Include="ThemeTests.fs" />
     <Compile Include="InputTests.fs" />
     <Compile Include="ListViewTests.fs" />
+    <Compile Include="PaneTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="1.1.0" />
