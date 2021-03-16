@@ -7,8 +7,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="coverlet.runsettings" />
-    <Compile Include="Theme.fs" />
-    <Compile Include="Input.fs" />
+    <Compile Include="ThemeTests.fs" />
+    <Compile Include="InputTests.fs" />
     <Compile Include="ListViewTests.fs" />
   </ItemGroup>
   <ItemGroup>

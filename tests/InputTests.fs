@@ -1,4 +1,4 @@
-﻿module PoshCommander.Tests.Input
+﻿module PoshCommander.InputTests
 
 open NUnit.Framework
 open PoshCommander

@@ -1,4 +1,4 @@
-﻿module PoshCommander.Tests.Theme
+﻿module PoshCommander.ThemeTests
 
 open NUnit.Framework
 open PoshCommander
