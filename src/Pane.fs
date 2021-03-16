@@ -15,16 +15,11 @@ type Model =
 
 type Msg =
     | ListViewMsg of ListView.Msg<DirectoryItem>
-    | KeyPressed of ConsoleKey
     | PageSizeChanged of int
     | ResetFilter
     | SetFilter of string
 
 let init windowHeight path =
-    let filterPredicate filter item =
-        let name = DirectoryItem.getName item
-        name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0
-
     let directory = Directory.read path
     let items =
         match directory.Content with
